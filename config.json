@@ -1,0 +1,73 @@
+{
+    "magic": 47908652,
+    "config_file": "config.json",
+    "players": [
+        [
+            "Player0",
+            "Human",
+            [
+                0,
+                4,
+                2,
+                160
+            ]
+        ],
+        [
+            "Player1",
+            "CheapShit",
+            [
+                1,
+                3,
+                2,
+                160
+            ]
+        ],
+        [
+            "Player2",
+            "TakeShit",
+            [
+                1,
+                3,
+                2,
+                153
+            ]
+        ],
+        [
+            "Player3",
+            "DeepShit",
+            [
+                0,
+                2,
+                2,
+                168
+            ]
+        ],
+        [
+            "Player4",
+            "---",
+            [
+                0,
+                0,
+                0,
+                0
+            ]
+        ],
+        [
+            "Player5",
+            "---",
+            [
+                0,
+                0,
+                0,
+                0
+            ]
+        ]
+    ],
+    "fast_play": true,
+    "log_level": "One Line",
+    "log_file": [
+        true,
+        true,
+        "shitlog.log"
+    ]
+}

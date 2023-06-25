@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "masters-of-shithead"
+version = "1.0.0"
+description = "Shithead Card Game"
+readme = "README.md"
+authors = [{ name = "Wolfgang Trachsler", email = "wolbert@bluewin.ch" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["shithead", "card", "game"]
+dependencies = [
+    "arcade >= 2.6.17",
+]
+requires-python = ">=3.10.6"
+
+[project.optional-dependencies]
+# only installed with '$ python -m pip install masters-of-shithead [dev]
+dev = ["pip-tools", "pytest"]
+
+[project.urls]
+Homepage = "https://github.com/wolbert/masters_of_shithead"
+
+[project.scripts]
+shithead = "shithead.__main__:main"

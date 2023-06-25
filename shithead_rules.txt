@@ -1,0 +1,87 @@
+SHITHEAD RULES:
+===============
+
+Shithead is played with a deck of 52 cards (2..10, J, Q, K, A in clubs, spades,
+diamonds, and hearts).
+With more than 4 players additional decks (whole or partial) are added.
+
+
+Preparation:
+
+The SHITHEAD of the last round shuffles the cards and deals 3 cards face down
+in front of each player (don't pick up).
+On top of the 1st 3 cards he then deals another 3 cards face up for each
+player.
+Finally, he deals another 3 cards face down to each player and puts the
+remaining cards as draw stack on the table.
+The last 3 cards are picked up by the players and may be freely exchanged with
+the open cards lying in front of them (The basic strategy is to have good cards
+on the table for the end game).
+
+
+The play:
+
+The player with the worst card on hand (usually the 4 of clubs) starts the game
+by playing this card as start of the discard pile. He may also play any number
+of cards with the same rank as the first one (e.g. 4 of spades and 4 of hearts)
+and then refill his hand to 3 cards. Again he may play cards of the same rank
+as the 1st card, if he draws them during refilling his hand, but still has to
+fill up his hand to 3 cards.
+Now the game continues clockwise, with each player playing at least one card
+and then refilling his hand up to 3 cards (as long as there are cards in the
+draw stack).
+If a player cannot play cards (see rules for playing a card below), he takes
+all the cards from the discard pile onto his hand (but he does not have to take
+a  card from the draw stack) and play continues with the next player, who
+starts a new discard pile with an arbitrary card.
+After the draw stack has been emptied the players first try to get rid of their
+hand cards and then of their table cards, with the last 3 cards played blind.
+Play continues till all but one player have gotten rid of their cards.
+The last player with cards is SHITHEAD and deals for the next game (while the
+player who got rid of his cards first, has time to go to the restrooms and to
+get another round of beers).
+
+
+Rules for playing cards:
+
+- cards played must be of same or higher rank than the top card of the discard
+  pile (suit doesn't matter).
+
+- the natural ranking is 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A but some of the
+  cards have a special meaning.
+
+- It is allowed to play multiple cards of the same rank at the same time.
+
+- If a card with the same rank as the top discard pile card shows up during
+  refilling the hand, it may also be played immediately and another refill card
+  has to be drawn.
+
+- If 4 or more cards of the same rank happen to be on top of the discard pile,
+  the discard pile is killed and the current player plays another card to start
+  a new discard pile.
+
+- If a player with no cards on hand, has to take the discard pile because he
+  cannot play one of his open table cards, he also takes one of the table cards
+  (or several of the same rank) onto his hand.
+
+
+Special cards:
+
+   2: can be played on any card => resets the discard pile rank.
+
+   3: can be played on any card, but is transparent => the discard pile keeps
+      the rank of the last non-3 card.
+
+   7: the next player has to play a rank of 7 or below (2, 3, 4, 5, 6, 7). No
+      10s allowed.
+
+   8: the next player is skipped.
+
+   10: may be played on any card except 7 and kills the discard pile => same
+       player starts a new discard pile.
+
+   Q: must be covered => same player plays another card (any) on top of the
+      queen.
+
+   K: reverses the direction of play.
+  

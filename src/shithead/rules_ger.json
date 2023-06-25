@@ -1,0 +1,39 @@
+{
+    "main_title": "SHITHEAD REGELN",
+    "intro": "Shithead wird mit einem Poker Blatt (2..10, J, Q, K, A in \u2663 (Treff), \u2660 (Pik), \u2666 (Karo) und \u2665 (Herz) gespielt. Bei mehr als 4 Spielern koennen zusaetzliche Blaetter (ganz oder teilweise) dazugenommen werden (insgesamt ca. 17 Karten pro Spieler).",
+    "prep": {
+        "title": "Vorbereitung",
+        "text": "Der SHITHEAD der letzten Runde mischt die Karten und gibt 3 Karten verdeckt vor jedem Spieler (nicht aufnehmen).\nAuf diese ersten 3 Karten werden fuer jeden Spieler 3 weitere Karten offen gegeben.\nSchlussendlich bekommt noch jeder Spieler 3 Karten verdeckt, die auf die Hand genommen werden und die restlichen Karten werden als Zugstapel in die Tischmitte gelegt.\nDie Spieler duerfen nun die Karten die sie auf der Hand haben, frei mit den vor ihnen liegenden offenen Karten tauschen (Die grundlegende Strategie besteht darin, gute Karten fuer das Endspiel auf dem Tisch zu haben)."
+    },
+    "play": {
+        "title": "Spielablauf",
+        "text": "Der Spieler mit der schlechtesten Karte auf der Hand (4\u2663,4\u2660,4\u2666,4\u2665,5\u2663,...) beginnt das Spiel, indem er eine seiner Handkarten als Beginn des Abwurfstapels ausspielt und dann seine Hand sofort wieder vom Nachziehstapel auf 3 ergaenzt. Er kann dabei beliebig viele Handkarten mit demselben Rang wie die erste Karte (z.B. 4\u2660 and 4\u2665) ausspielen, auch wenn er sie gerade nachgezogen hat (nach jeder gespielten Karte zuerst „lutschen“). Am Ende seines Zuges muss der Spieler wieder 3 Karten auf der Hand haben (solange ein Nachziehstapel vorhanden ist).\nJetzt geht das Spiel im Uhrzeigersinn (nur Navajos, Chinesen und Schweizer spielen der Ohrfeige nach) weiter, indem jeder Spieler mindestens eine Karte ausspielt und dann seine Hand wieder auf 3 ergaenzt (solange ein Nachziehstapel vorhanden ist). Falls ein Spieler keine Karte spielen kann (Ausspielregeln folgen weiter unten), muss er alle Karten des Abwurfstapels auf die Hand nehmen (aber er braucht dann keine Karte vom Nachziehstapel mehr zu nehmen) und das Spiel geht beim naechsten Spieler weiter, der nun mit einer beliebigen Karte einen neuen Abwurfstapel eroeffnet.\nNachdem der Nachziehstapel aufgebraucht ist, versuchen die Spieler zuerst die Karten auf ihrer Hand und anschliessend die Tischkarten loszuwerden, wobei die 3 verdeckten Karten als letzte blind (ohne vorher anzusehen) gespielt werden.\nDas Spiel laeuft weiter bis alle ausser einem der Spieler alle ihre Karten losgeworden sind. Der letzte Spieler mit Karten ist der SHITHEAD und gibt fuer die naechste Runde (waehrend der Spieler der seine Karten zuerst losgeworden ist, Zeit hat auf die Toilette zu gehen und die naechste Runde Bier zu besorgen)."
+    },
+    "cards": {
+        "title": "Ausspielregeln",
+        "text1": "Gespielte Karten muessen von gleichem oder hoeherem Rang als die oberste Karte des Abwurfstapels sein (die Farbe spielt keine Rolle).",
+        "text2": "Die natuerliche Reihenfolge ist 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A. Aber einige der Karten haben eine spezielle Bedeutung.",
+        "text3": "Es ist erlaubt mehrere Karten mit selbem Rang gleichzeitig auszuspielen.",
+        "text4": "Falls eine Karte mit gleichem Rang wie die oberste Karte des Abwurfstapels nachgezogen wird, kann sie ebenfalls sofort gespielt werden und eine andere Karte muss nachgezogen werden (falls moeglich).",
+        "text5": "Falls 4 oder mehr ranggleiche Karten zuoberst auf dem Abwurfstapel liegen, wird der Abwurfstapel abgeraeumt und der aktuelle Spieler spielt eine beliebige weitere Karte um einen neuen Abwurfstapel zu eroeffnen.",
+        "text6": "Falls ein Spieler der keine Karten mehr auf der Hand hat, den Abwurfstapel aufnehmen muss, weil keine seiner offen liegenden Karten gespielt werden kann, dann nimmt er auch noch eine (oder mehrere ranggleiche) seiner offen liegenden Karten mit auf die Hand.",
+        "text7": "Falls eine blind gespielte Karte gegen die Ausspielregeln verstoesst, wird sie zusammen mit dem Abwurfstapel auf die Hand genommen."
+    },
+    "special": {
+        "title": "Spezialkarten",
+        "card1": "2",
+        "text1": "Kann immer gespielt werden und der naechste Spieler kann eine beliebige Karte spielen.",
+        "card2": "3",
+        "text2": "Kann immer gespielt werden, ist aber durchsichtig,\nd.h. fuer den naechsten Spieler gilt die zuletzt gespielte nicht-3er-Karte.",
+        "card3": "7",
+        "text3": "Der naechste Spieler muss eine Karte mit Rang 7 oder tiefer (2,3, 4, 5, 6, 7) spielen. 10er sind nicht erlaubt!",
+        "card4": "8",
+        "text4": "Der naechste Spieler wird ausgelassen (1 Spieler pro gespielte 8).",
+        "card5": "10",
+        "text5": "Kann auf jede Karte ausser der 7 gespielt werden und raeumt zudem den Abwurfstapel ab, d.h. derselbe Spieler eroeffnet einen neuen Abwurfstapel.",
+        "card6": "Q",
+        "text6": "Muss zugedeckt werden, d.h. derselbe Spieler spielt eine (oder mehrere gleiche) beliebige Karte auf die Koenigin.\nWenn die Koeniging seine letzte Karte war, oder er eine 3 auf die Koenigin gespielt hat, gelten fuer den naechsten Spieler die normalen Ausspielregeln.",
+        "card7": "K",
+        "text7": "Dreht die Spielrichtung um (2 K => keine Aenderung)."
+    }
+}

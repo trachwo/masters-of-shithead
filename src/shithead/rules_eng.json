@@ -1,0 +1,39 @@
+{
+    "main_title": "SHITHEAD RULES",
+    "intro": "Shithead is played with a deck of 52 cards (2..10, J, Q, K, A in \u2663 (clubs), \u2660 (spades), \u2666 (diamonds), and \u2665 (hearts). With more than 4 players additional decks (whole or partial) are added (for a total of about 17 cards per player).",
+    "prep": {
+        "title": "Preparation",
+        "text": "The SHITHEAD of the last round shuffles the cards and deals 3 cards face down in front of each player (don't pick up).\nOn top of the first 3 cards he then deals another 3 cards face up for each player.\nFinally, he deals another 3 cards face down to each player and puts the remaining cards as draw stack on the table.\nThe last 3 cards are picked up by the players and may be freely exchanged with the open cards lying in front of them (the basic strategy is to have good cards on the table for the end game)."
+    },
+    "play": {
+        "title": "Gameplay",
+        "text": "The player with the worst card on hand (4\u2663,4\u2660,4\u2666,4\u2665,5\u2663,...) starts the game by playing one of his hand cards as start of the discard pile. He may also play any number of hand cards with the same rank as the first one (e.g. 4\u2660 and 4\u2665) and then refills his hand to 3 cards. Again he may play cards of the same rank as the 1st card, if he draws them while refilling his hand, but still has to fill up his hand to 3 cards.\nNow the game continues clockwise, with each player playing at least one card and then refilling his hand up to 3 cards (as long as there are cards in the draw stack).\nIf a player cannot play cards (see rules for playing a card below), he takes all the cards from the discard pile onto his hand (but he does not have to take a card from the draw stack) and play continues with the next player, who starts a new discard pile with an arbitrary card.\nAfter the draw stack has been emptied the players first try to get rid of their hand cards and then of their face up table cards. The face down table cards are played as last cards without looking at them.\nPlay continues till all but one player have gotten rid of their cards.\nThe last player with cards is the SHITHEAD and deals for the next game (while the player who got rid of his cards first, has time to go to the restrooms and to get another round of beers)."
+    },
+    "cards": {
+        "title": "Rules for playing Cards",
+        "text1": "Cards played must be of same or higher rank than the top card of the discard pile (suit doesn't matter).",
+        "text2": "The natural ranking is 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A but some of the cards have a special meaning.",
+        "text3": "It is allowed to play multiple cards of the same rank at the same time.",
+        "text4": "If a card with the same rank as the top discard pile card shows up during refilling the hand, it may also be played immediately and another refill card has to be drawn (if possible).",
+        "text5": "If 4 or more cards of the same rank happen to be on top of the discard pile, the discard pile is killed and the current player plays another card to start a new discard pile.",
+        "text6": "If a player with no cards on hand, has to take the discard pile because he cannot play one of his open table cards, he also takes one of the table cards (or several of the same rank) onto his hand.",
+        "text7": "If a blindly played face down table card does not satisfy the playing rules, it has to be taken on hand together with the discard pile."
+    },
+    "special": {
+        "title": "Special Cards",
+        "card1": "2",
+        "text1": "Can be played on any card and the next player may play any card.",
+        "card2": "3",
+        "text2": "Can be played on any card, but is transparent,\ni.e. the next player has to play according to the last non-3 card.",
+        "card3": "7",
+        "text3": "The next player has to play a rank of 7 or below (2, 3, 4, 5, 6, 7).\n10s are not allowed!",
+        "card4": "8",
+        "text4": "The next player is skipped (skip 1 player per played 8).",
+        "card5": "10",
+        "text5": "May be played on any card except 7 and kills the discard pile,\ni.e. the same player starts a new discard pile.",
+        "card6": "Q",
+        "text6": "Must be covered, i.e. the same player plays another card (any) on top of the queen. If the queen was his last card, or if he covered the queen with a 3, the next player has to play a 2, 3, 10, Q, K, or A.",
+        "card7": "K",
+        "text7": "Reverses the direction of play (2 Ks => no change)."
+    }
+}
