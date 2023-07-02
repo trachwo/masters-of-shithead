@@ -25,40 +25,33 @@ import json
 import argparse
 import os
 
-# Screen title and size
-SCREEN_WIDTH = 1024
-SCREEN_HEIGHT = 768
-SCREEN_TITLE = "Sh*thead"
-
-DEFAULT_LINE_HEIGHT = 18
-DEFAULT_FONT_SIZE = 12
 COLOR = arcade.color.BLACK
-FONT = 'Times New Roman'
 
 class RulesView(arcade.View):
     '''
     View where we show the rules of the shithead game.
     '''
 
-    def __init__(self, filename):
+    def __init__(self, rules):
         '''
         Initializer.
 
-        Loads the rule strings from the specified JSON file into a dictionary.
+        Creates a list of text objects from the texts loaded from a JSON file.
 
-        :param filename:    name of json file with rule strings.
-        :type filename:     str
+        :param rules:       parameters and texts loaded from a JSON file.
+        :type rules:        dir
         '''
 
         super().__init__()
 
-        self.rules = None
-        try:
-            with open(filename, 'r') as json_file:
-                self.rules = json.load(json_file)
-        except OSError as exception:
-            print(f"### Warning: couldn't load rules from file {filename}")
-            return
+        self.rules = rules
+
+        # Screen size
+        SCREEN_WIDTH = self.rules["screen_width"]
+        SCREEN_HEIGHT = self.rules['screen_height']
+        DEFAULT_LINE_HEIGHT = self.rules['default_line_height']
+        DEFAULT_FONT_SIZE = self.rules['default_font_size']
+        FONT = self.rules['font']
 
         # set the background color to beige.
         arcade.set_background_color(arcade.color.BEIGE)
@@ -268,14 +261,19 @@ def main():
     parser.add_argument('filename')
     # parse the command line to get the filename
     args = parser.parse_args()
-    print(f"### {args.filename}")
 
-    # testing the config view
+    try:
+        with open(args.filename, 'r') as json_file:
+            rules = json.load(json_file)
+    except OSError as exception:
+        print(f"### Warning: couldn't load rules from file {filename}")
+
     # open a window with predefined size and title
-    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    window = arcade.Window(rules['screen_width'], rules['screen_height'],
+                rules['screen_title'])
 
     # create a RulesView with texts from the specified file
-    rules_view = RulesView(args.filename)
+    rules_view = RulesView(rules)
     # and make it the view shown in the window
     window.show_view(rules_view)
     # setup the rules view

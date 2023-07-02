@@ -23,6 +23,7 @@ creating alternative game states used to simulate possible outcomes of a play.
 from math import comb
 from random import randrange
 import json
+import sys
 
 # local imports (modules in same package)
 from .cards import Deck

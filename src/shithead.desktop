@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0.0
+Name=Shithead
+GenericName=Card Game
+Comment=Play Shithead against 1-5 AI Players
+Exec=/home/traw/wolbert/wolbert-repo/masters-of-shithead/src/dist/shithead
+Path=/home/traw/wolbert/wolbert-repo/masters-of-shithead/src/dist/
+Icon=/home/traw/wolbert/wolbert-repo/masters-of-shithead/src/shithead/shithead4.ico
+Type=Application
+Categories=Application

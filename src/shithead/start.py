@@ -26,12 +26,16 @@ import subprocess
 import json
 import pkgutil
 import os
+import sys
+import platform
 
 # local imports (modules in same package)
 from .cards import Card, Deck
 from .gui import CardSprite
 from . import config
 from . import rules
+
+VERSION = '1.0.0'
 
 # Screen title and size
 SCREEN_WIDTH = 1024
@@ -127,7 +131,7 @@ class StartView(arcade.View):
 
         # create version text object
         start_y =  VERSION_Y
-        text = arcade.Text('Version 0.1', start_x, start_y,
+        text = arcade.Text(VERSION, start_x, start_y,
                 arcade.color.WHITE, DEFAULT_FONT_SIZE,
                 width=SCREEN_WIDTH, align='center')
         self.text_list.append(text)
@@ -324,8 +328,14 @@ class StartView(arcade.View):
         # TODO find a better way
         rules_dir = os.path.dirname(rules.__file__)
         rules_prg = os.path.join(rules_dir, 'rules.py')
-        rules_eng = os.path.join(rules_dir, 'rules_eng.json')
-        rules_ger = os.path.join(rules_dir, 'rules_ger.json')
+        if platform.system() == 'Linux':
+            # set files with Linux specific parameters (size, font)
+            rules_eng = os.path.join(rules_dir, 'rules_eng.json')
+            rules_ger = os.path.join(rules_dir, 'rules_ger.json')
+        else:
+            # set files with Windows specific parameters (size, font)
+            rules_eng = os.path.join(rules_dir, 'ms_rules_eng.json')
+            rules_ger = os.path.join(rules_dir, 'ms_rules_ger.json')
 
         # load the released button image into all button sprites
         self.english.texture = arcade.load_texture(BUTTON_RELEASED)
@@ -334,10 +344,30 @@ class StartView(arcade.View):
         # execute the action of the pressed button
         if self.state == ENGLISH_STATE:
             # open window with english rules
-            subprocess.Popen(['python3', rules_prg, rules_eng])
+            if os.path.basename(sys.executable) == 'shithead.exe':
+                # pyinstaller executable for windows
+                # shithead.exe -r ms_rules_eng.json
+                subprocess.Popen([sys.executable, '-r', rules_eng])
+            elif os.path.basename(sys.executable) == 'shithead':
+                # pyinstaller executable for linux
+                # shithead -r rules_eng.json
+                subprocess.Popen([sys.executable, '-r', rules_eng])
+            else:
+                # python3 rules.py rules_eng.json
+                subprocess.Popen(['python3', rules_prg, rules_eng])
         elif self.state == GERMAN_STATE:
             # open window with german rules
-            subprocess.Popen(['python3', rules_prg, rules_ger])
+            if os.path.basename(sys.executable) == 'shithead.exe':
+                # pyinstaller executable for windows
+                # shithead.exe -r ms_rules_ger.json
+                subprocess.Popen([sys.executable, '-r', rules_ger])
+            elif os.path.basename(sys.executable) == 'shithead':
+                # pyinstaller executable for windows
+                # shithead -r rules_ger.json
+                subprocess.Popen([sys.executable, '-r', rules_ger])
+            else:
+                # python3 rules.py rules_ger.json
+                subprocess.Popen(['python3', rules_prg, rules_ger])
         elif self.state == CONTINUE_STATE:
             # load the config view into this window
             config_view = config.ConfigView()

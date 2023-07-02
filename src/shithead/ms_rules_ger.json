@@ -1,9 +1,9 @@
 {
     "screen_width": 1024,
-    "screen_height": 918,
-    "default_line_height": 17,
-    "default_font_size": 12,
-    "font": "Times New Roman",
+    "screen_height": 788,
+	    "default_line_height": 15,
+    "default_font_size": 10,
+    "font": "Arial Nova",
     "screen_title": "Sh*thead",
     "main_title": "SHITHEAD RULES",
     "main_title": "SHITHEAD REGELN",
@@ -14,7 +14,7 @@
     },
     "play": {
         "title": "Spielablauf",
-        "text": "Der Spieler mit der schlechtesten Karte auf der Hand (4\u2663,4\u2660,4\u2666,4\u2665,5\u2663,...) beginnt das Spiel, indem er eine seiner Handkarten als Beginn des Abwurfstapels ausspielt und dann seine Hand sofort wieder vom Nachziehstapel auf 3 ergaenzt. Er kann dabei beliebig viele Handkarten mit demselben Rang wie die erste Karte (z.B. 4\u2660 and 4\u2665) ausspielen, auch wenn er sie gerade nachgezogen hat (nach jeder gespielten Karte zuerst „lutschen“). Am Ende seines Zuges muss der Spieler wieder 3 Karten auf der Hand haben (solange ein Nachziehstapel vorhanden ist).\nJetzt geht das Spiel im Uhrzeigersinn (nur Navajos, Chinesen und Schweizer spielen der Ohrfeige nach) weiter, indem jeder Spieler mindestens eine Karte ausspielt und dann seine Hand wieder auf 3 ergaenzt (solange ein Nachziehstapel vorhanden ist). Falls ein Spieler keine Karte spielen kann (Ausspielregeln folgen weiter unten), muss er alle Karten des Abwurfstapels auf die Hand nehmen (aber er braucht dann keine Karte vom Nachziehstapel mehr zu nehmen) und das Spiel geht beim naechsten Spieler weiter, der nun mit einer beliebigen Karte einen neuen Abwurfstapel eroeffnet.\nNachdem der Nachziehstapel aufgebraucht ist, versuchen die Spieler zuerst die Karten auf ihrer Hand und anschliessend die Tischkarten loszuwerden, wobei die 3 verdeckten Karten als letzte blind (ohne vorher anzusehen) gespielt werden.\nDas Spiel laeuft weiter bis alle ausser einem der Spieler alle ihre Karten losgeworden sind. Der letzte Spieler mit Karten ist der SHITHEAD und gibt fuer die naechste Runde (waehrend der Spieler der seine Karten zuerst losgeworden ist, Zeit hat auf die Toilette zu gehen und die naechste Runde Bier zu besorgen)."
+        "text": "Der Spieler mit der schlechtesten Karte auf der Hand (4\u2663,4\u2660,4\u2666,4\u2665,5\u2663,...) beginnt das Spiel, indem er eine seiner Handkarten als Beginn des Abwurfstapels ausspielt und dann seine Hand sofort wieder vom Nachziehstapel auf 3 ergaenzt. Er kann dabei beliebig viele Handkarten mit demselben Rang wie die erste Karte (z.B. 4\u2660 and 4\u2665) ausspielen, auch wenn er sie gerade nachgezogen hat (nach jeder gespielten Karte zuerst 'lutschen'). Am Ende seines Zuges muss der Spieler wieder 3 Karten auf der Hand haben (solange ein Nachziehstapel vorhanden ist).\nJetzt geht das Spiel im Uhrzeigersinn (nur Navajos, Chinesen und Schweizer spielen der Ohrfeige nach) weiter, indem jeder Spieler mindestens eine Karte ausspielt und dann seine Hand wieder auf 3 ergaenzt (solange ein Nachziehstapel vorhanden ist). Falls ein Spieler keine Karte spielen kann (Ausspielregeln folgen weiter unten), muss er alle Karten des Abwurfstapels auf die Hand nehmen (aber er braucht dann keine Karte vom Nachziehstapel mehr zu nehmen) und das Spiel geht beim naechsten Spieler weiter, der nun mit einer beliebigen Karte einen neuen Abwurfstapel eroeffnet.\nNachdem der Nachziehstapel aufgebraucht ist, versuchen die Spieler zuerst die Karten auf ihrer Hand und anschliessend die Tischkarten loszuwerden, wobei die 3 verdeckten Karten als letzte blind (ohne vorher anzusehen) gespielt werden.\nDas Spiel laeuft weiter bis alle ausser einem der Spieler alle ihre Karten losgeworden sind. Der letzte Spieler mit Karten ist der SHITHEAD und gibt fuer die naechste Runde (waehrend der Spieler der seine Karten zuerst losgeworden ist, Zeit hat auf die Toilette zu gehen und die naechste Runde Bier zu besorgen)."
     },
     "cards": {
         "title": "Ausspielregeln",

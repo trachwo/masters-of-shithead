@@ -623,6 +623,34 @@ def test_state_copy():
     state = state.copy()
     state.print()
 
+def open_rules_window(filename):
+    """
+    Open a window with shithead rules.
+
+    :param filename:    name of json-file containing rules text.
+    :type filename:     str
+    """
+    # load parameters and texts from JSON-file
+    try:
+        with open(filename, 'r') as json_file:
+            rls = json.load(json_file)
+    except OSError as exception:
+        print(f"### Warning: couldn't load rules from file {filename}")
+
+    # open a window with predefined size and title
+    window = arcade.Window(rls['screen_width'], rls['screen_height'],
+                rls['screen_title'])
+
+    # create a RulesView with texts from the specified file
+    rules_view = rules.RulesView(rls)
+    # and make it the view shown in the window
+    window.show_view(rules_view)
+    # setup the rules view
+    rules_view.setup()
+
+    # start
+    arcade.run()
+
 def main():
     """
     Starts a shithead game according to the specified command line option:
@@ -646,6 +674,14 @@ def main():
         Start a series of AI only games with random face up table cards to
         generate a table, which helps the AI players to decide which cards to
         swap at the beginning of the game.
+
+        -r FILENAME
+        Opens a window with shithead rules loaded from the specified JSON-file.
+        This was necessary, since in case of 'microsoft windows' the executable
+        we get with sys.executable inside shithead.exe (pyinstaller) is not
+        python itself but shithead.exe. I.e. to open a rules window we cannot
+        call "Popen(sys.executable, 'rules.py', 'rules_eng.json)", but have to
+        call "Popen(sys.executable, '-r', 'rules_eng.json')" instead.
     """
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=False)
@@ -654,6 +690,7 @@ def main():
     group.add_argument("-t", "--test-ai", help="run a number of games to test the AI players", action="store_true")
     group.add_argument("-c", "--cli-game", help="play game with human player using the command line interface", action="store_true")
     group.add_argument("-d", "--debugging", type=str, help="load a game state from a JSON-file written with log-level 'Debugging'")
+    group.add_argument("-r", "--rules", type=str, help="opens a window with shithead rules loaded from the specified JSON-file'")
 
     parser.add_argument("-f", "--filename", type=str, help="config file used when state was written with log-level 'Debugging'")
 
@@ -669,6 +706,9 @@ def main():
         if args.filename is None:
             raise Exception(f"Specify config file used with this debugging state with option '-f'!")
         load_state_from_file(args.filename, args.debugging)
+    elif args.rules:
+        open_rules_window(args.rules)
+
     else:
         gui_start()
 

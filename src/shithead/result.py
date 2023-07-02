@@ -13,6 +13,7 @@ and an 'EXIT GAME' button to leave the game.
 """
 
 import arcade
+import sys
 
 # local imports (modules in same package)
 from .stats import Statistics
@@ -361,7 +362,7 @@ class ResultView(arcade.View):
             # and activate it (via config to avoid circular init)
             config.start_game(self.config, self.window)
         elif self.state == EXIT_STATE:
-            quit()
+            sys.exit()
         else:
             pass
 #            print("None of the buttons pressed")

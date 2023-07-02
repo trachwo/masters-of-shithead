@@ -1,10 +1,10 @@
 {
     "screen_width": 1024,
-    "screen_height": 768,
+    "screen_height": 678,
     "screen_title": "Sh*thead",
-    "default_line_height": 17,
-    "default_font_size": 12,
-    "font": "Times New Roman",
+    "default_line_height": 15,
+    "default_font_size": 10,
+    "font": "Arial Nova",
     "main_title": "SHITHEAD RULES",
     "intro": "Shithead is played with a deck of 52 cards (2..10, J, Q, K, A in \u2663 (clubs), \u2660 (spades), \u2666 (diamonds), and \u2665 (hearts). With more than 4 players additional decks (whole or partial) are added (for a total of about 17 cards per player).",
     "prep": {
