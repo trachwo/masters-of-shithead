@@ -8,7 +8,7 @@ $ mkdir shithead
 ```
 Copy the executable to this directory:
 ```
-$ cp masters-of-shithead/bin/shithead ~/my_path/shithead/.
+$ cp masters-of-shithead/bin/linux/shithead ~/my_path/shithead/.
 ```
 and make sure it can be executed:
 ```
@@ -52,7 +52,7 @@ Now you should be able to start the shithead game with a double click on the ico
 
 Create a shithead folder on your machine (e.g. 'D:\Games\Shithead)
 
-Copy shithead.exe to this folder.
+Copy masters-of-shithead/bin/windows/shithead.exe to this folder.
 
 Start the game from the command prompt:
 ```
