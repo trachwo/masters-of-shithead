@@ -627,7 +627,7 @@ class Game:
             raise Exception(f'Unknown action {action}!')
 
         # if a card has been played log its name
-        if card and action != 'REFILL':
+        if card and action in ['GET','PUT', 'SHOW', 'HAND', 'FUP', 'FDOWN']:
             next_state.log_card = str(card)
         else:
             next_state.log_card = ''
