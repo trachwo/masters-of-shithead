@@ -41,5 +41,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon="~/wolbert/wolberts-repo/masters-of-shithead/src/shithead/shithead4.ico",
+    icon="./shithead/shithead4.ico",
 )
