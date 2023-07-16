@@ -122,7 +122,7 @@ LOAD_X = 500
 LOAD_Y = 100
 
 
-def start_game(config, window):
+def start_game(config, window, shithead=None):
     """
     Start the actual shithead game.
     Creates sets up the game view with the current configuration.
@@ -132,11 +132,13 @@ def start_game(config, window):
     :type config:       dict
     :param window:      arcade window created in main.
     :type window:       arcade.Window
+    :param shithead:    shithead of the last round (None => 1st round)
+    :type shithead:     str
     """
     # start the game with the current configuration
     game_view = gui.GameView(config)
     # setup the new game
-    game_view.setup()
+    game_view.setup(shithead)
     # and switch to the new game view
     window.show_view(game_view)
 

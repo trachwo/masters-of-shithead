@@ -156,6 +156,7 @@ class ResultTable:
         self.lines = []                 # list of result table lines
         self.upper_left = upper_left    # set coords of upper left corner
         self.stats = stats              # set game statistics
+        self.shithead = shithead        # we need it to setup the next round
 
         x, y = upper_left
         # get list of table entries
@@ -360,7 +361,7 @@ class ResultView(arcade.View):
         if self.state == NEXT_STATE:
             # create, setup a game view with the current configuration,
             # and activate it (via config to avoid circular init)
-            config.start_game(self.config, self.window)
+            config.start_game(self.config, self.window, self.shithead)
         elif self.state == EXIT_STATE:
             sys.exit()
         else:
