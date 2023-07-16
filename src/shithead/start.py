@@ -354,7 +354,7 @@ class StartView(arcade.View):
                 subprocess.Popen([sys.executable, '-r', rules_eng])
             else:
                 # python3 rules.py rules_eng.json
-                subprocess.Popen(['python3', rules_prg, rules_eng])
+                subprocess.Popen([sys.executable, rules_prg, rules_eng])
         elif self.state == GERMAN_STATE:
             # open window with german rules
             if os.path.basename(sys.executable) == 'shithead.exe':
@@ -367,7 +367,7 @@ class StartView(arcade.View):
                 subprocess.Popen([sys.executable, '-r', rules_ger])
             else:
                 # python3 rules.py rules_ger.json
-                subprocess.Popen(['python3', rules_prg, rules_ger])
+                subprocess.Popen([sys.executable, rules_prg, rules_ger])
         elif self.state == CONTINUE_STATE:
             # load the config view into this window
             config_view = config.ConfigView()

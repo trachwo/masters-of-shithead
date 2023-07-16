@@ -18,14 +18,14 @@ keywords = ["shithead", "card", "game"]
 dependencies = [
     "arcade >= 2.6.17",
 ]
-requires-python = ">=3.10.6"
+requires-python = ">=3.7.11"
 
 [project.optional-dependencies]
 # only installed with '$ python -m pip install masters-of-shithead [dev]
 dev = ["pip-tools", "pytest"]
 
-[project.urls]
-Homepage = "https://github.com/wolbert/masters_of_shithead"
+# [project.urls]
+# Homepage = "https://github.com/wolbert/masters_of_shithead"
 
 [project.scripts]
 shithead = "shithead.__main__:main"

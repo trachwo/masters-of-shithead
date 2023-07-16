@@ -341,7 +341,7 @@ def fup_table_generator():
     fup_table.print()
     # write the table to new files to avoid inadvertably overwriting existing files.
     fup_table.save('face_up_table_new.json')
-    fup_table.write_to_file('readable_fup_table_new.json')
+    fup_table.write_to_file('readable_fup_table_new.txt')
 
 def play_ai_evaluation_round(players, stats=None):
     '''
