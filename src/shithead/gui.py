@@ -2214,7 +2214,6 @@ class GameView(arcade.View):
         self.set_message('SHOW_STARTER', 0, player.name, '', card)
         if isinstance(player,plr.AiPlayer): # AI player
             self.wait_time = 1
-            # wait for the human player to click anywhere
             if self.fast_play:
                 # fast play => no need to click to continue
                 self.wait_for_human = False
@@ -2266,22 +2265,29 @@ class GameView(arcade.View):
         """
         # get a list of all card sprites in the discard pile
         cards = self.mover.places['discard'].cards[0]
+        # get delay for human or AI
+        delay = self.get_play_delay(player)
         for i, sprite in enumerate(cards[::-1]):
             # add discard pile cards sprites in reversed order to mover list
             # with player's hand as target
-            self.mover.add(sprite, player.name, 3, i * TAKE_DELAY, False )
+            self.mover.add(sprite, player.name, 3, 2 * delay + i * TAKE_DELAY, False )
 
-    def show_kill_play(self):
+    def show_kill_play(self, player):
         """
         Programs the card mover to move all discard pile cards to the removed
         cards pile.
+
+        :param player:  current player.
+        :type player:   Player
         """
         # get a list of all card sprites in the discard pile
         cards = self.mover.places['discard'].cards[0]
+        # get delay for human or AI
+        delay = self.get_play_delay(player)
         for i, sprite in enumerate(cards[::-1]):
             # add discard pile cards in reversed order to mover list
             # with removed cards pile as target
-            self.mover.add(sprite, 'removed', 0, 1 + i * KILL_DELAY, False )
+            self.mover.add(sprite, 'removed', 0, 2 * delay + i * KILL_DELAY, False )
 
     def show_fup_play(self, player, index):
         """
@@ -2396,7 +2402,7 @@ class GameView(arcade.View):
         elif action == 'KILL':
             # kill the discard pile: move cards from discard pile to removed
             # cards
-            self.show_kill_play()
+            self.show_kill_play(player)
 
         elif action == 'FUP':
             # play face up table card: move card at index from face up table
