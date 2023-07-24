@@ -114,7 +114,7 @@ class Statistics():
             total_sh_count += value[SH_COUNT]
             total_sh_percent += sh_percent
             total_score += value[SCORE]
-            total_games += value[GAMES]
+            total_games = value[GAMES]  # don't sum up
             total_turns += value[TURNS]
         total_avg_turns = total_turns / total_games
         # add entry with totals
@@ -180,7 +180,7 @@ class Statistics():
             sh_percent = value[SH_COUNT] / value[GAMES] * 100
             avg_turns = value[TURNS] / value[GAMES]
             print(f'| {name:<19}|{value[SH_COUNT]:>10} |{sh_percent:>6.1f}% |{value[SCORE]:>9} |{value[GAMES]:>9} |{value[TURNS]:>9} |{avg_turns:11.2f} |')
-            total_games += value[GAMES]
+            total_games = value[GAMES] # don't sum up
             total_score += value[SCORE]
             total_turns += value[TURNS]
             total_sh_count += value[SH_COUNT]
@@ -215,7 +215,7 @@ class Statistics():
                 sh_percent = value[SH_COUNT] / value[GAMES] * 100
                 avg_turns = value[TURNS] / value[GAMES]
                 f.write(f'| {name:<19}|{value[SH_COUNT]:>10} |{sh_percent:>6.1f}% |{value[SCORE]:>9} |{value[GAMES]:>9} |{value[TURNS]:>9} |{avg_turns:11.2f} |\n')
-                total_games += value[GAMES]
+                total_games = value[GAMES]  # don't sum up
                 total_score += value[SCORE]
                 total_turns += value[TURNS]
                 total_sh_count += value[SH_COUNT]
