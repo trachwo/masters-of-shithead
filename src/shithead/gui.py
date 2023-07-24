@@ -2213,9 +2213,14 @@ class GameView(arcade.View):
         # print instructions
         self.set_message('SHOW_STARTER', 0, player.name, '', card)
         if isinstance(player,plr.AiPlayer): # AI player
-            # wait for the human player to click anywhere
             self.wait_time = 1
-            self.wait_for_human = True
+            # wait for the human player to click anywhere
+            if self.fast_play:
+                # fast play => no need to click to continue
+                self.wait_for_human = False
+            else:
+                # => wait for the human player to click anywhere
+                self.wait_for_human = True
 
     def show_hand_play(self, player, index):
         """
