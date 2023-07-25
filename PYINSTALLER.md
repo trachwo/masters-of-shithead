@@ -99,7 +99,7 @@ To create a desktop shortcut with the icon *'src/shithead4.ico'*, we need a desk
 (shithead) $ gvim shithead.desktop
 
 [Desktop Entry]
-Version=1.0.0
+Version=1.0.2
 Name=Shithead
 GenericName=Card Game
 Comment=Play Shithead against 1-5 AI Players
