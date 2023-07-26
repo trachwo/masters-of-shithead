@@ -560,7 +560,7 @@ class FastPlayConfig():
         # create the fast play input field
         x += FAST_PLAY_LABEL + HSPACING + FAST_PLAY / 2
         self.is_fast_play = OptionField((x,y), FAST_PLAY,
-                FAST_PLAY_HEIGHT, ['No', 'Yes'])
+                FAST_PLAY_HEIGHT, ['Yes', 'No'])
 
     def draw(self):
         """
@@ -716,7 +716,7 @@ class LogFileConfig():
         # create the log to file selection field
         x += LOG_TO_FILE_LABEL + HSPACING + LOG_TO_FILE / 2
         self.log_to_file = OptionField((x,y), LOG_TO_FILE,
-                LOG_TO_FILE_HEIGHT, ['No', 'Yes', 'Dbg'])
+                LOG_TO_FILE_HEIGHT, ['Dbg', 'No', 'Yes'])
 
         # create the log file label.
         x += LOG_TO_FILE / 2 + HSPACING
