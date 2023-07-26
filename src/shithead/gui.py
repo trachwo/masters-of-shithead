@@ -2732,7 +2732,7 @@ class GameView(arcade.View):
         elif phase == SHITHEAD_FOUND and self.shithead is None:
             self.set_message('IS_SHITHEAD', 0, player.name)
             # update shithead's statistics
-            self.stats.update(player.name, 0, self.state.turn_count)
+            self.stats.update(player.name, 0, player.turn_count)
             self.stats.print()
             self.shithead = player.name
             self.wait_for_human = True

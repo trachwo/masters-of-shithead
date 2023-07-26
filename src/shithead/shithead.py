@@ -248,7 +248,7 @@ def play_round(players, shithead, fup_table=None, stats=None, auto=False):
             input('Press <Return> to continue')
 
     # return name of shithead (last player still in the game)
-    return (state.players[0].name, state.turn_count)
+    return (state.players[0].name, state.players[0].turn_count)
 
 def fup_table_generator():
     '''
@@ -317,7 +317,7 @@ def fup_table_generator():
             n_aborted +=1
             shithead = None
         else:
-            # finished rount => count result, number of turns
+            # finished round => count result, number of turns
             n_finished += 1
             n_turns += turns
 
@@ -434,7 +434,7 @@ def play_ai_evaluation_round(players, stats=None):
         if len(state.players) == 1:
             # shithead found
             shithead = state.players[0].name
-            turns = state.turn_count
+            turns = state.players[0].turn_count
             stats.update(shithead, 0, turns)
             # update the statistic counters
             n_finished += 1

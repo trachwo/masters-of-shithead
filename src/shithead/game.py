@@ -356,10 +356,16 @@ class Game:
         :param out:         True => current player is out.
         :type out:          bool
         '''
-        # increment the turn counter
+        # increment the turn counter of this game
         state.turn_count += 1
 
         player = state.player
+        # increment the turn counter of the current player
+        if state.game_phase == PLAY_GAME:
+            state.players[player].turn_count += 1
+        elif state.game_phase == SWAPPING_CARDS:
+            state.players[player].turn_count = 0
+
         # reset get_fup and get_fup_rank of current player
         # this is used turing a player's turn to indicate that he has to pick
         # up a face up table card after taking the discard pile playing from
@@ -370,13 +376,10 @@ class Game:
         # get direction of play and next player
         direction, next_player = cls.find_next_player(state, out)
 
-#        # activate MCTS when only 2 players and no talon left
-#        if len(state.players) == 2 and len(state.talon) == 0:
-#            state.mcts_active = True
-
         if out:
-            # get name of player for face up table
+            # get name and turn count of player before removing him
             name = state.players[player].name
+            turn_count = state.players[player].turn_count
             # remove the current player from the list
             if state.player < next_player:
                 # index of next player decrements,
@@ -395,7 +398,7 @@ class Game:
                 state.game_phase = SHITHEAD_FOUND
             if stats:
                 # if a statistic has been specified update it
-                stats.update(name, score, state.turn_count)
+                stats.update(name, score, turn_count)
             if fup_table:
                 # if a face up table has been specified (=> fup_table_generator),
                 # update the score fup table score = number of remaining players
