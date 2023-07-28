@@ -557,7 +557,7 @@ class FastPlayConfig():
             anchor_x='left',
             anchor_y='center')
 
-        # create the fast play input field
+        # create the fast play input field (with default 'Yes')
         x += FAST_PLAY_LABEL + HSPACING + FAST_PLAY / 2
         self.is_fast_play = OptionField((x,y), FAST_PLAY,
                 FAST_PLAY_HEIGHT, ['Yes', 'No'])
@@ -599,10 +599,10 @@ class FastPlayConfig():
 
         # everything ok
         if fast_play:
-            self.is_fast_play.sel = 1
+            self.is_fast_play.sel = 0
             self.is_fast_play.add_content('Yes')
         else:
-            self.is_fast_play.sel = 0
+            self.is_fast_play.sel = 1
             self.is_fast_play.add_content('No')
 
 
@@ -713,7 +713,7 @@ class LogFileConfig():
             anchor_x='left',
             anchor_y='center')
 
-        # create the log to file selection field
+        # create the log to file selection field (with default 'Dbg')
         x += LOG_TO_FILE_LABEL + HSPACING + LOG_TO_FILE / 2
         self.log_to_file = OptionField((x,y), LOG_TO_FILE,
                 LOG_TO_FILE_HEIGHT, ['Dbg', 'No', 'Yes'])
@@ -816,16 +816,16 @@ class LogFileConfig():
         # everything ok => set log-to-file selection to 'Yes', 'Dbg', or 'No'
         if log_file[0]:
             if log_file[1]:
-                self.log_to_file.sel = 2
+                self.log_to_file.sel = 0
                 self.log_to_file.add_content('Dbg')
             else:
-                self.log_to_file.sel = 1
+                self.log_to_file.sel = 2
                 self.log_to_file.add_content('Yes')
             # set the log-file-name without the extension
             self.name_field.text = log_file[2][:-4]
             self.name_field.add_content(log_file[2][:-4], 'right')
         else:
-            self.log_to_file.sel = 0
+            self.log_to_file.sel = 1
             self.log_to_file.add_content('No')
             # set empty log-file-name without the extension
             self.name_field.text = 'shitlog'
@@ -1108,7 +1108,7 @@ class ConfigView(arcade.View):
         Write configuration to json file.
         '''
         config = self.get_config()
-#        print(f'### config: {config}')
+#        print(f'### saved config: {config}')
         filename = config['config_file']
         with open(filename, 'w') as json_file:
             json.dump(config, json_file, indent=4)
@@ -1154,6 +1154,7 @@ class ConfigView(arcade.View):
             print(f"### Warning: couldn't load file {filename}, continue with current configuration")
             return
 
+#        print(f'### loaded config: {config}')
         # set the loaded configuration in the input fields
         self.set_config(config)
 
