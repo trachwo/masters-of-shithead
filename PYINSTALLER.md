@@ -4,6 +4,8 @@
 
 ## Linux
 
+**IMPORTANT** Do not install masters-of-shithead locally (with *python -m pip install -e .*) before calling pyinstaller, it would result in extremly large executables.
+
 If not already created (venv directory), create a virtual environment:
 ```
 $ cd ~/my-user/my-path/masters-of-shithead

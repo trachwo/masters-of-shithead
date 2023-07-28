@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "masters-of-shithead"
-version = "1.0.2"
+version = "1.0.3"
 description = "Shithead Card Game"
 readme = "README.md"
 authors = [{ name = "Wolfgang Trachsler", email = "wolbert@bluewin.ch" }]
