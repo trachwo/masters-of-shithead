@@ -635,6 +635,9 @@ class Game:
         else:
             next_state.log_card = ''
 
+        # add this play to the play history of the next state
+        next_state.history.append(str(play))
+
         return next_state
 
     @classmethod
@@ -671,6 +674,23 @@ class Game:
         else:
             return None
 
+    @classmethod
+    def loser(cls, state):
+        '''
+        Return loser (Shithead) of the game.
+
+        This is used for end game evaluation using MCTS.
+        Checks if only one player is left and returns his name.
+
+        :param state:       current shithead state
+        :type state:        State
+        :return:            Name of Shithead or None (game not finished yet)
+        :rtype:             str
+        '''
+        if len(state.players) == 1:
+            return state.players[0].name
+        else:
+            return None
 
 def test_discard_pile():
     print('------------------------------------------------------------------------------')
@@ -919,6 +939,15 @@ def initial_tests():
 
 
 if __name__ == '__main__':
+    """
+    !!!NOTE!!!
+    Trying to call this with 
+        $ python game.py
+    results in an ImportError because I used relative imports for the local
+    modules (pyinstaller is to blame for that).
+    Therefore we have to go one directory up and call it with
+        $ python -m shithead.game
+    """
     test_discard_pile()
 #    initial_tests()
 
