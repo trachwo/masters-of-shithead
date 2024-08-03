@@ -6,7 +6,7 @@
     "default_font_size": 12,
     "font": "Times New Roman",
     "main_title": "SHITHEAD RULES",
-    "intro": "Shithead is played with a deck of 52 cards (2..10, J, Q, K, A in \u2663 (clubs), \u2660 (spades), \u2666 (diamonds), and \u2665 (hearts). With more than 4 players additional decks (whole or partial) are added (for a total of about 17 cards per player).",
+    "intro": "Shithead is played with a deck of 52 cards (2..10, J, Q, K, A in \u2663 (clubs), \u2660 (spades), \u2666 (diamonds), and \u2665 (hearts). With more than 3 players additional decks (whole or partial) are added (for a total of about 17 cards per player).",
     "prep": {
         "title": "Preparation",
         "text": "The SHITHEAD of the last round shuffles the cards and deals 3 cards face down in front of each player (don't pick up).\nOn top of the first 3 cards he then deals another 3 cards face up for each player.\nFinally, he deals another 3 cards face down to each player and puts the remaining cards as draw stack on the table.\nThe last 3 cards are picked up by the players and may be freely exchanged with the open cards lying in front of them (the basic strategy is to have good cards on the table for the end game)."
