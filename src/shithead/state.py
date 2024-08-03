@@ -156,6 +156,9 @@ class State:
             with open(log_info[3], 'w') as log_file:
                 log_file.write('--- Sh*thead Log-File ---\n')
 
+        # game history = list of plays leading up to this state
+        self.history = []
+
     def get_unknown_cards(self):
         '''
         Returns list of unknown cards.
@@ -429,6 +432,7 @@ class State:
         log_dict['shown_starting_card'] = self.shown_starting_card
         log_dict['result'] = self.result
         log_dict['log_info'] = self.log_info
+        log_dict['history'] = self.history
 
         # create the JSON string
         json_str = json.dumps(log_dict)
@@ -485,6 +489,20 @@ class State:
             with open(self.log_info[3], 'a') as log_file:   # open log-file for appending
                 log_file.write(log_msg + '\n')              # add log-message to log-file
 
+    def hash(self):
+        '''
+        Hash key unambiguously identifying this state.
+
+        Each state is unambiguously identified by the play history leading up
+        to this state. We create a hash by concatinating the string
+        representations of the plays in the play history of this state to a
+        single string.
+
+        :return:    hash unambiguously identifying this state.
+        :rtype:     str
+        '''
+        return  ''.join(self.history)
+
     def copy(self):
         '''
         Creates a copy of itself.
@@ -522,8 +540,24 @@ class State:
             new_state.result[key] = self.result[key]
         # copy the log info
         new_state.log_info = self.log_info
+        # copy the play history
+        new_state.history = self.history[:]
         # finally return the copy of the state
         return new_state
+
+    def is_player(self, name):
+        """
+        Check if current player has specified name.
+
+        :param name:        name of player.
+        :type name:         str
+        :return:            True if current player is named player.
+        :rtype:             bool
+        """
+        if self.players[self.player].name == name:
+            return True
+        else:
+            return False
 
     @classmethod
     def simulation_state(cls, state):
