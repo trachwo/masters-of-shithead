@@ -35,7 +35,7 @@ from .gui import CardSprite
 from . import config
 from . import rules
 
-VERSION = '1.0.3'
+VERSION = '1.0.4'
 
 # Screen title and size
 SCREEN_WIDTH = 1024
