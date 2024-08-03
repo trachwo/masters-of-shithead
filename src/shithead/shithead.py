@@ -651,6 +651,284 @@ def open_rules_window(filename):
     # start
     arcade.run()
 
+def play_end_game_generator_round(players, stats=None):
+    '''
+    Play one round until 2 players are left.
+
+    In order to test AIs which are using MCTS for the end game, we let AIs play
+    a round until only 2 players are left and then store the corresponding game
+    state.
+
+    :param players:     list of players => player specific rules.
+    :type players:      list
+    :param stats:       statistic => score, number of turns, number of games.
+    :type stats:        Statistic
+    :return:            end game state as JSON string, None => aborted
+    :rtype:             str
+    '''
+    # number of players
+    n_players = len(players)
+
+    # calculate the number of necessary card decks
+    n_decks = Game.calc_nof_decks(n_players)
+
+    # create the logging info from the configuration
+    log_level = 'No Secrets'
+    log_to_file = False
+    log_debug = False
+    log_file = ''
+    log_info = (log_level, log_to_file, log_debug, log_file)
+
+    # create the initial game state with list of players,
+    # the specified dealer (-1 => random, or shithead of previous round),
+    # and the number of decks necessary for this number of players.
+    state = State(players, -1, n_decks, log_info)
+
+    # shuffle the talon
+    state = Game.next_state(state, Play('SHUFFLE'), None, stats)
+
+    # remove some talon cards to match the player count
+    state = Game.next_state(state, Play('BURN'), None, stats)
+
+    # deal 3 face down, 3 face up, and 3 hand cards to each player
+    state = Game.next_state(state, Play('DEAL'), None, stats)
+    talon_size = len(state.talon)
+
+    while len(state.players) > 2:
+        # let the current player play one action
+        player = state.players[state.player]
+        while(True):
+            play = player.play(state)
+            if play is not None:
+                break
+            # player not ready => wait 100 ms
+            sleep(0.1)
+
+        if play.action == 'ABORT':
+            Game.reset_result(state)    # no winners
+            break
+
+        # apply this  action to the current state to get to the next state
+        state = Game.next_state(state, play, None, stats)
+
+    if len(state.players) == 2:
+        # end game reached => return state info as JSON string
+        return state.log_debugging()
+    else:
+        # aborted game => return empty string
+        return None
+
+def end_game_generator():
+    '''
+    Generates end game states saved as JSON files.
+
+    Let 3 AIs play multiple fully automatic games.
+    Whenever a game reaches the point where only 2 players are left, we store
+    the corresponding state to a JSON file, in order to use it for MTCS tests.
+    '''
+    # create face up table
+    fup_table = FupTable()
+
+    # create statistics
+    stats = Statistics()
+
+    # load face up table from file (in package)
+    fup_table.load(FUP_TABLE_FILE, True)
+
+    print('### END GAME GENERATOR ###')
+
+    # create players with generic names
+    players = []
+    players.append(plr.TakeShit('Player1', fup_table, False))
+    players.append(plr.TakeShit('Player2', fup_table, False))
+    players.append(plr.TakeShit('Player3', fup_table, False))
+    n_players = len(players)
+
+    # get number of games
+    while True:
+        n = input('Enter number of games: ' )
+        try:
+            n_games = int(n)
+        except:
+            print('Please enter an integer >0!')
+            continue
+        if n_games > 0:
+            break
+
+    for i in range(n_games):
+        # play a round, don't update face up table, update player statistics
+        json_str = play_end_game_generator_round(players, stats)
+        if json_str is not None:
+            with open('end_game_state_' + str(i) + '.json', 'w') as f:
+                f.write(json_str)
+
+def end_game_evaluation(state_file):
+    """
+    Load and play end game by selecting plays randomly.
+
+    Loads the end game state info from the state file.
+    Gets 'dealer', 'n_decks', and 'log_info' from the state info.
+    Creates a list of 3 AI players of type 'ShitHappens' (=> plays cards at
+    random).
+    Uses 'dealer', 'n_decks', 'log_info', and the player list to create the
+    initial game state.
+    Change the initial game state to the end game state by loading cards
+    according to the end game state info to central piles (burnt, killed,
+    discard pile) and players.
+
+    :param state_file:      name of file containing end game state.
+    :type state_file:       str
+
+    """
+    try:
+        # load state from json-file
+        with open(state_file, 'r') as json_file:
+            state_info = json.load(json_file)
+    except OSError as exception:
+        print(f"### Error: couldn't load file {state_file}")
+        return
+    # print the loaded game state
+    state_info_str = json.dumps(state_info, indent=4)
+    print(state_info_str)
+
+    print('### END GAME EVALUATION ###')
+
+    # statistic counters
+    n_finished = 0  # number of finished games
+    n_aborted = 0   # number of aborted games
+    n_turns = 0     # number of turns played
+    n_talon = 0     # number of talon cards
+    n_refills = 0   # number of refill turns
+
+    # get index of the dealer from state info
+    dealer = state_info['dealer']
+
+    # get the number of necessary card decks from state info
+    n_decks = state_info['n_decks']
+
+    # create the logging info from the state info
+    # => we can change it by editing the JSON string
+    log_info = state_info['log_info']
+
+    # create face up table
+    fup_table = FupTable()
+
+    # create statistics
+    stats = Statistics()
+
+    # load face up table from file (in package)
+    fup_table.load(FUP_TABLE_FILE, True)
+
+
+    # get number of remaining players from loaded state (should be 2)
+    n_players = len(state_info['players'])
+
+    # create list of remaining players with type='ShitHappens' => random play
+    players = []
+    for j in range(n_players):
+        players.append(plr.ShitHappens('', fup_table))
+
+    # get number of games
+    while True:
+        n = input('Enter number of games: ' )
+        try:
+            n_games = int(n)
+        except:
+            print('Please enter an integer >0!')
+            continue
+        if n_games > 0:
+            break
+
+    for i in range(n_games):
+        refill_turns = -1
+
+        # create the initial game state for these players.
+        # then load it with the end game state info
+        state = State(players, dealer, n_decks, log_info)
+
+        # load the burnt cards pile with burnt cards in state_info
+        state.burnt.load_from_state(state_info['burnt'])
+        state.n_burnt = state_info['n_burnt']
+
+        # load the removed cards pile with killed cards in state_info
+        state.killed.load_from_state(state_info['killed'])
+
+        # load the talon with talon cards in state_info
+        state.talon.load_from_state(state_info['talon'])
+        talon_size = len(state.talon)
+
+        # load the discard pile with cards specified in state_info
+        state.discard.load_from_state(state_info['discard'])
+
+        # load player states
+        for j, player in enumerate(state.players):
+            player.load_from_state(state_info['players'][j])
+
+        # load remaining game state attributes
+        state.turn_count = state_info['turn_count']
+        state.player = state_info['player']
+        state.direction = state_info['direction']
+        state.next_direction = state_info['next_direction']
+        state.next_player = state_info['next_player']
+        state.n_played = state_info['n_played']
+        state.eights = state_info['eights']
+        state.kings = state_info['kings']
+        state.game_phase = state_info['game_phase']
+        state.starting_card = state_info['starting_card']
+        state.auction_members = state_info['auction_members']
+        state.shown_starting_card = state_info['shown_starting_card']
+        state.result = state_info['result']
+        state.history = state_info['history']
+        # reset 'dealing' flag
+        state.dealing = False
+
+        # continue playing from end game state until Shitead has been found
+        while len(state.players) > 1:
+            # let the current player play one action
+            player = state.players[state.player]
+            while(True):
+                play = player.play(state)
+                if play is not None:
+                    break
+                # player not ready => wait 100 ms
+                sleep(0.1)
+
+            if play.action == 'ABORT':
+                Game.reset_result(state)    # no winners
+                n_aborted +=1
+                break
+
+            # apply this  action to the current state to get to the next state
+            state = Game.next_state(state, play, None, stats)
+#            print(f"talon: {len(state.talon)} turn: {state.turn_count}")
+            # count number of turns till talon is empty
+            if len(state.talon) == 0 and refill_turns < 0:
+                refill_turns = state.turn_count - 1
+#                print(f"talon: {talon_size} turns: {refill_turns} refills per turn: {talon_size / refill_turns}")
+
+        if len(state.players) == 1:
+            # shithead found
+            shithead = state.players[0].name
+            turns = state.players[0].turn_count
+            stats.update(shithead, 0, turns)
+            # update the statistic counters
+            n_finished += 1
+            n_turns += turns
+            n_talon += talon_size
+            n_refills += refill_turns
+
+        # report every 10 finished games
+        if n_finished % (10 * n_players) == 0:
+            print(f'finished:{n_finished:<10} aborted:{n_aborted:<3} turns:{n_turns:<12} refills/turn: {n_talon / n_refills}')
+
+    # report remaining games
+    if n_finished % (10 * n_players) != 0:
+        print(f'finished:{n_finished:<10} aborted:{n_aborted:<3} turns:{n_turns:<12} refills/turn: {n_talon / n_refills}')
+    print()
+
+    # print final statistics
+    stats.print()
+
 def main():
     """
     Starts a shithead game according to the specified command line option:
@@ -682,6 +960,22 @@ def main():
         python itself but shithead.exe. I.e. to open a rules window we cannot
         call "Popen(sys.executable, 'rules.py', 'rules_eng.json)", but have to
         call "Popen(sys.executable, '-r', 'rules_eng.json')" instead.
+
+        -e
+        Runs a number of games to generate end game states.
+        Enter a the number of games >0 to be played.
+        A game of 3 players is played for each of these until only 2 players
+        are left. The final (end game) states are stored to the files
+        end_game_state_0.json, end_game_state_1.json, ...
+
+        -v ENDGAME
+        Runs a number of games from the specified end game state.
+        Loads the end game state from the specified json-file.
+        Enter a number of games >0 to be played.
+        Lets the 2 remaining players play randomly until a shithead is found.
+        Updates the game statistics => helps us find an end game state, with
+        equal odds for both players. This way we can decide if an end game
+        strategy (e.g. MCTS) gives its player an advantage.
     """
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=False)
@@ -691,6 +985,8 @@ def main():
     group.add_argument("-c", "--cli-game", help="play game with human player using the command line interface", action="store_true")
     group.add_argument("-d", "--debugging", type=str, help="load a game state from a JSON-file written with log-level 'Debugging'")
     group.add_argument("-r", "--rules", type=str, help="opens a window with shithead rules loaded from the specified JSON-file'")
+    group.add_argument("-e", "--end-game-generator", help="run a number of games to generate end game states", action="store_true")
+    group.add_argument("-v", "--end-game-evaluation", type=str, help="Run multiple games from same end game state")
 
     parser.add_argument("-f", "--filename", type=str, help="config file used when state was written with log-level 'Debugging'")
 
@@ -708,6 +1004,10 @@ def main():
         load_state_from_file(args.filename, args.debugging)
     elif args.rules:
         open_rules_window(args.rules)
+    elif args.end_game_generator:
+        end_game_generator()
+    elif args.end_game_evaluation:
+        end_game_evaluation(args.end_game_evaluation)
 
     else:
         gui_start()
