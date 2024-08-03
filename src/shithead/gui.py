@@ -1730,6 +1730,7 @@ class GameView(arcade.View):
             self.create_single_card_sprite(card, 'discard', 0)
 
         # load player states
+        # TODO if some players are already this will result in an index out of range error
         for i, player in enumerate(self.state.players):
             player.load_from_state(state_info['players'][i])
             # create a sprite for each face down table card
@@ -2241,19 +2242,27 @@ class GameView(arcade.View):
 
     def show_refill_play(self, player):
         """
-        Programs the card mover to move the top talon card to the player's hand.
+        Programs the card mover to move the top talon cards to the player's hand.
+
+        Move cards from the top of the talon to the players hand until either
+        the hand has been refilled to 3 cards or the talon is empty.
 
         :param player:  current player.
         :type player:   Player
         """
-        # get the top talon card
-        card = self.state.talon[-1]
-        # get the sprite belonging to this card
-        sprite = self.card2sprite[card]
+        n_refilled = 3 - len(player.hand)
+        if n_refilled > len(self.state.talon):
+            # not enough cards in talon to refill to 3
+            n_refilled = len(self.state.talon)
         # get delay for human or AI
         delay = self.get_play_delay(player)
-        # add card to mover list with player's hand as target
-        self.mover.add(sprite, player.name, 3, delay, False)
+        # get the list of talon card sprites
+        cards = self.mover.places['talon'].cards[0]
+        for i, sprite in enumerate(cards[::-1]):
+            if i < n_refilled:
+                # add talon cards sprites in reversed order to mover list
+                # with player's hand as target
+                self.mover.add(sprite, player.name, 3, 2 * delay + i * TAKE_DELAY, False )
 
     def show_take_play(self, player):
         """
