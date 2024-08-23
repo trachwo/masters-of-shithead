@@ -33,9 +33,10 @@ class MonteCarloNode():
         '''
         # the action which brought us from the parent node to this node
         self.play = play
+
         # the current state of the game (each node needs its own copy)
         # deepcopy causes problems in case of multithreading,
-        # therefore we use copy method of the State class.
+        # therefore we use the copy method of the State class.
         self.state = state.copy()
 
         # Monte Carlo stuff
@@ -44,6 +45,20 @@ class MonteCarloNode():
 
         # Tree stuff
         self.parent = parent    # the parent node
+        
+
+        # the name of the current player in the parent node
+        # => if the current player in the parent node is the winner of a
+        #    simulation, update the win-counter in this node, because the
+        #    current player in the parent made the decision to select this
+        #    path.
+        if self.parent is not None:
+            current = self.parent.state.player
+            self.parent_player = self.parent.state.players[current].name
+        else:
+            # the root node has no parent
+            self.parent_player = None
+
         # create the list of children nodes
         # as dictionary using the play string '<action>:<index>' as key.
         # each entry is a dictionary with a 'play' and a 'node' (not yet
@@ -174,9 +189,39 @@ class MonteCarloNode():
         :return: Upper Confidence Bound 1.
         :rtype: float.
         '''
+        if self.n_plays == 0:
+            return 0
         # exploitation term: grows the more this node has been involved in wins
         exploitation = self.n_wins / self.n_plays
         # exploration term: grows the less a node has been selected
         exploration = np.sqrt(biasParam * np.log(self.parent.n_plays) / self.n_plays)
         # return the upper confidence bound 1
         return exploitation + exploration
+    
+    def print(self, show_UCB1=True):
+        '''
+        Print information about this node.
+
+        :param show_UCB1:   True => calculate and print UCB1
+        :type show_UCB1:    bool
+        '''
+        self.state.print()
+
+        print(f'Play into this node: {str(self.play)}')
+        print(f'Current player in parent node: {self.parent_player}')
+        print('\nUnexpanded plays:')
+        for play in self.unexpandedPlays():
+            print(f'\t{str(play)}')
+
+        print('\nExpanded plays:')
+        for play in self.children.keys():
+            if self.children[play]['node'] is not None:
+                print(f'\t{str(play)}')
+
+        print(f'\nn_plays: {self.n_plays}')
+        print(f'n_wins: {self.n_wins}')
+        if show_UCB1 and self.parent is not None:
+            # don't print UCB1 during backpropagation !!!
+            # because child is updated before parent (=> wrong or divide by 0)
+            # UCB1 can only be calculated for nodes below the root node
+            print(f'UCB1: {self.getUCB1(np.sqrt(2))}')

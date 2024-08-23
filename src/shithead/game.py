@@ -501,8 +501,7 @@ class Game:
         :rtype:             State
         '''
         # make a copy of the current state
-        # TODO now it's just a reference to the current state => current state gets changed
-        next_state = state
+        next_state = state.copy()
 
         # shortcuts
         players = next_state.players
