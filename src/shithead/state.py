@@ -489,6 +489,11 @@ class State:
             with open(self.log_info[3], 'a') as log_file:   # open log-file for appending
                 log_file.write(log_msg + '\n')              # add log-message to log-file
 
+#        print(f'### n_played: {self.n_played}')
+#        print(f'### get_fup: {self.players[self.player].get_fup}')
+#        print(f'### get_fup_rank: {self.players[self.player].get_fup_rank}')
+
+
     def hash(self):
         '''
         Hash key unambiguously identifying this state.

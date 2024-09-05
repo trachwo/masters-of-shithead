@@ -35,8 +35,16 @@ class MonteCarlo:
         self.game = game
         self.UCB1ExploreParam = UCB1ExploreParam
         # dictionary mapping State.hash() to MonteCarloNode
-        # => a node is unambiguously identified by the play history leading up to its state.
+        # => a node is unambiguously identified by the play history leading up
+        #    to its state.
         self.nodes = {}
+
+        self.simulation_turns = 0       # total number of simulated turns
+        self.simulations = 0            # total number of simulations
+        self.aborts = 0                 # total number of aborted simulations
+        self.max_no_exp_loops = 0       # maximum number of consecutive search
+                                        # loops without expansion
+        self.single_children = 0        # single child nodes
 
     def makeNode(self, state):
         '''
@@ -58,7 +66,7 @@ class MonteCarlo:
             # and add it to the nodes list
             self.nodes[state.hash()] = MonteCarloNode(None, None, state, unexpandedPlays)
 
-    def select(self, state):
+    def select(self, state, verbose=False):
         '''
         Phase 1: Selection.
 
@@ -69,6 +77,8 @@ class MonteCarlo:
 
         :param state: Shithead game state.
         :type state: State.
+        :param verbose:     True => print details of found node.
+        :type verbose:      bool
         '''
         # get the root node belonging to this state (play history)
         node = self.nodes[state.hash()]
@@ -86,6 +96,8 @@ class MonteCarlo:
                     bestUCB1 = childUCB1
             # select the child with the best UCB1 as next node
             node = node.childNode(bestPlay)
+            if verbose:
+                node.print()
         return node
 
     def expand(self, node, verbose=False):
@@ -122,6 +134,10 @@ class MonteCarlo:
         childUnexpandedPlays = player.get_legal_plays(childState)
         # create the child node
         childNode = node.expand(play, childState, childUnexpandedPlays)
+        if verbose:
+            childNode.print()
+#            print(f'### n_played: {childNode.state.n_played}')
+        
         # add the new child node to the list of MTCS nodes
         self.nodes[childState.hash()] = childNode
         # return the new child node
@@ -218,13 +234,13 @@ class MonteCarlo:
                 node.n_wins += 1
             if verbose:
                 # print node with updated stats
-                # but don't print UCB1 it's wrong because parent has not been
-                # updated yet.
-                node.print(False)
+                # parent-plays + 1 for UCB1 calculation,
+                # since child is updated before parent.
+                node.print(True)
             # move up to the parent node.
             node = node.parent
 
-    def runSearch(self, state, timeout=3):
+    def runSearch(self, state, timeout=3, verbose=False):
         '''
         From given state, repeatedly run MCTS to build statistics.
 
@@ -245,54 +261,80 @@ class MonteCarlo:
               Update the statistics of all nodes in the path from the root to
               the found node with the found loser (either loser in a leaf (n.a.)
               or loser found through expansion/simulation).
+
+        :param state:       starting state for tree search.
+        :type state:        State
+        :param timeout:     time interval [s] spent building the search tree.
+        :type timeout:      float
+        :param verbose:     True => print details during search.
+        :type verbose:      bool
         '''
         # create the root node of the search tree for this state
         self.makeNode(state)
 
-        # print the root node
-        print('################### root node #####################')
-        self.nodes[''].print()
-
-        print(f"\n### Number of nodes: {len(self.nodes)}")
+        # counter for consecutive loops without expansion
+        # it should grow larger, if the tree nears completion,
+        # i.e. it gets harder to find an unexpanded play.
+        no_exp_loops = 0
 
         # get the start time
         start = time.time()
-#        while time.time() < end:
-        no_expansion = 0
-        while no_expansion < 1000:
-            # loop until no new node has been added for 100 consecutive loops.
-            print(f"\n### Number of nodes: {len(self.nodes)}")
+        while time.time() < start + timeout:
+            # loop until timeout has expired.
+
             # find node which is not fully expanded moving along a path
             # following the child nodes with the best UCB1 value.
-            node = self.select(state)
-            node.print()    # print selected node
+            selected = self.select(state)
+            # check if this node has only one unexpanded play
+            # and no children yet # e.g. ('END', -1) to end a turn
+            # or ('TaKE', -1) if nothing else is # possible.
+            if verbose:
+                print(f'\n### Select: {selected.state.hash()}  ###')
+                selected.print()
             # check if found node already has a loser
-            loser = self.game.loser(node.state)
-            if not node.isLeaf() and loser is None:
+            loser = self.game.loser(selected.state)
+            if not selected.isLeaf() and loser is None:
                 # not a leaf and no loser found yet
                 # => add one new child node using an unexpanded play  of this
                 #    node.
-                node = self.expand(node)
-                node.print()    # print expanded node
-                # from this new node randomly select plays until a loser has
-                # been found or no legal plays are left.
-                loser = self.simulate(node)
-                no_expansion = 0
-                print(f'\n### Shithead: {loser}')
+                node = self.expand(selected, verbose)
+                if len(selected.children) == 1:
+                    # only 1 play from parent node => no need to simulate
+                    # we just copy n_plays and n_wins from the parent.
+                    node.n_plays = selected.n_plays
+                    node.n_wins = selected.n_wins
+                    self.single_children += 1
+                else:
+                    # from this new node randomly select plays until a loser has
+                    # been found or no legal plays are left.
+                    loser, turns = self.simulate(node)
+                    if loser is not None:
+                        self.simulation_turns += turns
+                        self.simulations += 1
+                        if verbose:
+                            print(f'\n### Shithead: {loser} after {turns} turns')
+                    else:
+                        self.aborts += 1
+                        if verbose:
+                            print(f'\n### No Shithead found, simulation aborted after {turns} turns!')
+                    # backpropagate the loser found by the simulation.
+                    # => update n_plays and n_wins in all nodes on the path to
+                    #    the new node.
+                    self.backpropagate(node, loser)
+                # reset 'no expansion loops' counter
+                no_exp_loops = 0
             else:
                 # Shithead already found => no expansion/simulation
-                no_expansion += 1
-                print(f'\n### Shithead: {loser}')
+                no_exp_loops += 1   # increment counter
+                if no_exp_loops > self.max_no_exp_loops:
+                    self.max_no_exp_loops = no_exp_loops
+                if verbose:
+                    print(f'\n### no expansion: {selected.state.hash()}')
+                    selected.print()
+                    print(f'\n### Shithead: {loser} no_exp_loops: {no_exp_loops} ')
 
-            # backpropagate the loser of the found node or the loser found by
-            # simulation => update n_plays and n_wins counter in all nodes
-            #               on the path to the found node.
-            #               n_wins is only incremented in nodes where the loser
-            #               is the current player.
-            self.backpropagate(node, loser)
-
-        # print the time used
-        print(f'\n### Time used: {time.time() - start} s') 
+            # backpropagate the loser of the selected node
+            self.backpropagate(selected, loser)
 
     def bestPlay(self, state, policy='robust'):
         '''
@@ -379,13 +421,11 @@ class MonteCarlo:
         return stats
 
     def printStats(self, state):
-        print('\n### Statistics')
         stats = self.getStats(state)
         for entry in stats['children']:
             if entry['n_plays']:
-                print('play:{} visits:{:>6} wins:{:>6}'.format(
-                       str(entry['play']), entry['n_plays'], entry['n_wins']))
-        print('total:   visits:{:>6} wins:{:>6}'.format(stats['n_plays'], stats['n_wins']))
+                print(f"play:{str(entry['play']):>8} visits:{entry['n_plays']:>6} wins:{entry['n_wins']:>6}")
+        print(f"total:        visits:{stats['n_plays']:>6} wins:{stats['n_wins']:>6}")
 
 def restore_end_game_state(filename, verbose=False):
     """
@@ -489,7 +529,7 @@ def restore_end_game_state(filename, verbose=False):
 
     return state
 
-def run_single_step(filename):
+def run_first_step(filename):
     '''
     run a single step of the MCTS runSearch() method.
 
@@ -504,6 +544,7 @@ def run_single_step(filename):
     :param filename:    name of json-file containing end game state.
     :type filename:     str
     '''
+    # restore the end game state from json-file 
     state = restore_end_game_state(filename, True)
 
     # print state overview
@@ -531,13 +572,11 @@ def run_single_step(filename):
     # select the next node to expand
     # since the root node still has unexpanded plays, it's the root node
     print('\n### select ###')
-    node = mcts.select(state)
-    node.print()
+    node = mcts.select(state, True)
 
     # expand this node by randomly selecting one of the unexpanded plays and
     # create the corresponding child.
     node = mcts.expand(node, True)
-    node.print()
 
     # simulate the outcome of the game by making random plays
     loser, turns = mcts.simulate(node, True)
@@ -546,6 +585,70 @@ def run_single_step(filename):
     # backpropagate the simulation result
     print(f'\n### Backpropagate simulation result: Shithead={loser}')
     mcts.backpropagate(node, loser, True)
+
+def test_mcts(filename, timeout=3.0):
+    '''
+    Find best play for loaded end game state.
+
+    Creates end game state loaded from specified json-file.
+    Creates an empty MCTS-object for the shithead game.
+    Executes runSearch() method several times to build the search tree.
+    Use the search tree to find the best play in this state.
+
+    :param filename:    name of json-file containing end game state.
+    :type filename:     str
+    :param timeout:     timeout for runSearch().
+    :type timeout:      float
+    '''
+
+    # restore the end game state from json-file 
+    state = restore_end_game_state(filename, True)
+
+    # print state overview
+    print(f'\n### End game state loaded from {filename}')
+    state.print()
+
+    # list the legal plays available in this state
+    legal_plays = state.players[state.player].get_legal_plays(state)
+    print('\n### Legal plays from this state:')
+    for play in legal_plays:
+        print(f'\t{str(play)}')
+
+    # create the shithead game.
+    # this is actually not necessary since all its methods are class methods.
+    # But the MonteCarlo class expets a Game object as input parameter.
+    game = Game()
+
+    # create the MonteCarlo object
+    mcts = MonteCarlo(game)
+
+    # build the search tree with this state as root
+    mcts.runSearch(state, timeout, verbose=True)
+    best_robust = mcts.bestPlay(state, 'robust')
+    best_max = mcts.bestPlay(state, 'max')
+
+    # print state overview
+    print(f'\n### End game state loaded from {filename}')
+    state.print()
+
+    # list the legal plays available in this state
+    legal_plays = state.players[state.player].get_legal_plays(state)
+    print('\n### Legal plays from this state:')
+    for play in legal_plays:
+        print(f'\t{str(play)}')
+
+    # print statistics
+    print('\n### Statistics:')
+    print(f'Nodes: {len(mcts.nodes)}')
+    print(f'Single children: {mcts.single_children}')
+    print(f'Finished simulations: {mcts.simulations}')
+    print(f'Aborted simulations: {mcts.aborts}')
+    print(f'Turns/Simulation: {mcts.simulation_turns / mcts.simulations:.1f}')
+    print(f'Maximum no-expansion loops: {mcts.max_no_exp_loops}')
+    mcts.printStats(state)
+    print(f'\nBest robust play:  {str(best_robust)}')
+    print(f'Best maximum play: {str(best_max)}')
+
 
 def main():
     """
@@ -558,39 +661,25 @@ def main():
     create an initial state from the list of players, the dealer, the number
     of used decks, and the log-info.
     """
-    
-    run_single_step('shithead/end_games/end_game_state_1.json')
+#    filename = 'shithead/end_games/end_game_state_0.json'
+    filename = 'shithead/end_games/end_game_state_1.json'
+#    filename = 'shithead/end_games/end_game_state_2.json'
+#    filename = 'shithead/end_games/end_game_state_3.json'
+#    filename = 'shithead/end_games/end_game_state_4.json'
+#    filename = 'shithead/end_games/end_game_state_5.json'
+#    filename = 'shithead/end_games/end_game_state_6.json'
+#    filename = 'shithead/end_games/end_game_state_7.json'
+#    filename = 'shithead/end_games/end_game_state_8.json'
+#    filename = 'shithead/end_games/end_game_state_9.json'
 
-#    state = restore_end_game_state('shithead/end_games/end_game_state_1.json')
+    # load end game state and expand 1st node showing details of select,
+    # expand, simulate, and backpropagate phases.    
+#    run_first_step(filename)
 
-    # print state overview
-#    print('#################### end game state ###########################')
-#    state.print()
-
-#    legal_plays = state.players[state.player].get_legal_plays(state)
-#    for play in legal_plays:
-#        print(str(play))
-
-    # create the shithead game.
-    # this is actually not necessary since all its methods are class methods.
-    # But the MonteCarlo class expets a Game object as input parameter.
-#    game = Game()
-
-    # create the MonteCarlo object
-#    mcts = MonteCarlo(game)
-
-#    mcts.runSearch(state)
-
-#    state.print()
-
-#    print('\n### Result ###')
-#    mcts.printStats(state)
-#
-#    best_play = mcts.bestPlay(state, 'robust')
-#    print(f'\n### best robust play: {str(best_play)}')
-
-#    best_play = mcts.bestPlay(state, 'max')
-#    print(f'\n### best max play: {str(best_play)}')
+    # load end game state and build the search tree with runSearch() for 0.5 s.
+    # print status and simulation result for each node.
+    # print the final statistics and the the found best play (robust and max). 
+    test_mcts(filename, 0.1)
 
 
 if __name__ == '__main__':

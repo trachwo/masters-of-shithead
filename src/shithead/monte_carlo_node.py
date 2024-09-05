@@ -56,8 +56,10 @@ class MonteCarloNode():
             current = self.parent.state.player
             self.parent_player = self.parent.state.players[current].name
         else:
-            # the root node has no parent
-            self.parent_player = None
+            # the root node has no parent but we set the parent_player attribut
+            # to the name of the current player.
+            current = self.state.player
+            self.parent_player = self.state.players[current].name
 
         # create the list of children nodes
         # as dictionary using the play string '<action>:<index>' as key.
@@ -141,6 +143,19 @@ class MonteCarloNode():
             if child['node'] is None:
                 ret.append(child['play'])
         return ret
+    
+    def hasSingleChild(self):
+        '''
+        Check if this node has only 1 child.
+
+        :return:    True => 1 unexpanded play and no child or
+                            0 unexpanded play. and 1 child.
+        :rtype:     bool
+        '''
+        if len(self.children) + len(self.unexpandedPlays) == 1:
+            return True
+        else:
+            return False
 
     def isFullyExpanded(self):
         '''
@@ -174,7 +189,7 @@ class MonteCarloNode():
         else:
             return True     # not possible !!! TODO Exception ???
 
-    def getUCB1(self, biasParam):
+    def getUCB1(self, biasParam, adjust_UCB1=False):
         '''
         Calculate Upper Confidence Bound 1 for this node.
 
@@ -184,44 +199,51 @@ class MonteCarloNode():
         used in a lot of wins, while the exploration term makes nodes
         preferable which have not been used a lot.
 
-        :param biasParam: usually sqrt(2).
-        :type biasParam: float.
-        :return: Upper Confidence Bound 1.
-        :rtype: float.
+        :param biasParam:   usually sqrt(2).
+        :type biasParam:    float.
+        :param adjust_UCB1: True => parent-plays + 1 for UCB1 calculation.
+        :type adjust_UCB1:  bool
+        :return:            Upper Confidence Bound 1.
+        :rtype:             float.
         '''
         if self.n_plays == 0:
             return 0
         # exploitation term: grows the more this node has been involved in wins
         exploitation = self.n_wins / self.n_plays
         # exploration term: grows the less a node has been selected
-        exploration = np.sqrt(biasParam * np.log(self.parent.n_plays) / self.n_plays)
+        if adjust_UCB1:
+            # during backpropagation the parent node is updated after the child
+            ln_sp = np.log(self.parent.n_plays + 1)
+        else:
+            ln_sp = np.log(self.parent.n_plays)
+        exploration = np.sqrt(biasParam * ln_sp / self.n_plays)
         # return the upper confidence bound 1
         return exploitation + exploration
     
-    def print(self, show_UCB1=True):
+    def print(self, adjust_UCB1=False):
         '''
         Print information about this node.
 
-        :param show_UCB1:   True => calculate and print UCB1
-        :type show_UCB1:    bool
+        :param adjust_UCB1: True => parent-plays + 1 for UCB1 calculation.
+        :type adjust_UCB1:  bool
         '''
         self.state.print()
+        current_player = self.state.players[self.state.player].name
 
-        print(f'Play into this node: {str(self.play)}')
-        print(f'Current player in parent node: {self.parent_player}')
-        print('\nUnexpanded plays:')
+        print(f'Play into this node: {self.parent_player} - {str(self.play)}')
+        print(f'\n{current_player} unexpanded plays:')
         for play in self.unexpandedPlays():
             print(f'\t{str(play)}')
 
-        print('\nExpanded plays:')
+        print(f'\n{current_player} expanded plays:')
         for play in self.children.keys():
             if self.children[play]['node'] is not None:
                 print(f'\t{str(play)}')
 
         print(f'\nn_plays: {self.n_plays}')
         print(f'n_wins: {self.n_wins}')
-        if show_UCB1 and self.parent is not None:
-            # don't print UCB1 during backpropagation !!!
-            # because child is updated before parent (=> wrong or divide by 0)
+        if self.parent is not None:
             # UCB1 can only be calculated for nodes below the root node
-            print(f'UCB1: {self.getUCB1(np.sqrt(2))}')
+            # parent-plays + 1 if UCB1 is calculated during backpropagation
+            # since child is updated before parent.
+            print(f'UCB1: {self.getUCB1(np.sqrt(2), adjust_UCB1)}')

@@ -476,7 +476,7 @@ class Game:
                             => end turn:
                                 - current player = next player.
                                 - number of cards played = 0.
-            - TAKE          => add discard pile cards to face up hand cards.
+            - TAKE          => add discard pile cards to hand cards.
                             => end turn:
                                 - current player = next player.
                                 - number of cards played = 0.
@@ -580,7 +580,7 @@ class Game:
                 player.get_fup_rank = None
                 # Turn is not over yet, player has to pick 1, 2, or 3 face up
                 # table cards on the same turn
-                state.n_played +=1
+                next_state.n_played +=1
 
             # current player takes discard pile
             for i in range(len(next_state.discard)):
