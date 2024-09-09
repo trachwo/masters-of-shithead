@@ -53,6 +53,12 @@ class MonteCarlo:
         If the specified state does not exist (i.e. there's no key
         corresponding to its play history in the nodes dictionary yet),
         We create a new root node (no parent) and add it to nodes.
+        !!!Note!!!
+        Each state uses its whole play history as hash key, i.e. that usually
+        only the very 1st node is a dangling node. If runSearch() is called
+        again at a later time, there should already be a node with this hash
+        in the existing tree and runSearch() just adds more nodes to this tree
+        below the specified node.
 
         :param state:   Shithead game state.
         :type state:    State
@@ -80,7 +86,7 @@ class MonteCarlo:
         :param verbose:     True => print details of found node.
         :type verbose:      bool
         '''
-        # get the root node belonging to this state (play history)
+        # get the node belonging to this state (play history)
         node = self.nodes[state.hash()]
         # search through tree to find a not fully expanded or leaf node.
         while node.isFullyExpanded() and not node.isLeaf():
@@ -269,8 +275,30 @@ class MonteCarlo:
         :param verbose:     True => print details during search.
         :type verbose:      bool
         '''
-        # create the root node of the search tree for this state
+        # If this is the the 1st call of runSearch() we create the root node of
+        # the search tree for the initial state.
+        # Later calls will use the hash (play history) of the state to find the
+        # corresponding node in the existing tree and expand the existing tree
+        # below the found node.
         self.makeNode(state)
+
+        # get the start node of the search
+        start_node = self.nodes[state.hash()]
+
+        # if there's only one legal play in the start state, there's no need to
+        #  run a search, since the only play is always the best play.
+        if len(start_node.children) == 1:
+            if not start_node.isFullyExpanded():
+                # create the only child of the start node and add it to the
+                # tree, but skip simulate() and backpropagate()
+                print('### add single child to start node')
+                node = self.expand(start_node, verbose)
+                # increment n_plays in child and parent
+                node.n_plays += 1
+                start_node.n_plays += 1
+                self.single_children += 1
+                self.simulations +=1 # just to avoid division by zero
+            return
 
         # counter for consecutive loops without expansion
         # it should grow larger, if the tree nears completion,
@@ -649,6 +677,61 @@ def test_mcts(filename, timeout=3.0):
     print(f'\nBest robust play:  {str(best_robust)}')
     print(f'Best maximum play: {str(best_max)}')
 
+def play_end_game(filename, timeout=3.0, policy='robust'):
+    '''
+    Play end game using MCTS.
+
+    Creates end game state loaded from specified json-file.
+    Uses MCTS to select best plays for both players.
+    Executes these plays until shithead is found.
+    Note, that to simplify things all cards of both players are known
+    (i.e. also the face down table cards). This allows us to use a single
+    search tree for the whole end game.
+    We start with the root node (dangling node with no parent).
+    From there each following game state should already have a node in the
+    search tree identified by the play history. Therefore, the search tree
+    grows with every turn unless, the selected node cannont be expanded,
+    because in its state the shithread has already been found.
+
+    :param filename:    name of json-file containing end game state.
+    :type filename:     str
+    :param timeout:     timeout for runSearch().
+    :type timeout:      float
+    :param policy:      'robust' => find robust child, 'max' => find max child.
+    :type policy:       str
+    '''
+
+    # restore the end game state from json-file 
+    state = restore_end_game_state(filename, False)
+
+    # print state overview
+    print(f'\n### End game state loaded from {filename}')
+    state.print()
+
+    # create the shithead game.
+    # this is actually not necessary since all its methods are class methods.
+    # But the MonteCarlo class expets a Game object as input parameter.
+    game = Game()
+
+    # create the MonteCarlo object
+    mcts = MonteCarlo(game)
+
+    while len(state.players) > 1:
+        # build the search tree with this state as root
+        mcts.runSearch(state, timeout)
+
+        # print statistics
+        mcts.printStats(state)
+
+        # select best play according to specified policy
+        best_play = mcts.bestPlay(state, policy)
+
+        # apply best_play to state
+        state = mcts.game.next_state(state, best_play)
+
+        # print new state
+        state.print()
+
 
 def main():
     """
@@ -662,9 +745,9 @@ def main():
     of used decks, and the log-info.
     """
 #    filename = 'shithead/end_games/end_game_state_0.json'
-    filename = 'shithead/end_games/end_game_state_1.json'
+#    filename = 'shithead/end_games/end_game_state_1.json'
 #    filename = 'shithead/end_games/end_game_state_2.json'
-#    filename = 'shithead/end_games/end_game_state_3.json'
+    filename = 'shithead/end_games/end_game_state_3.json'
 #    filename = 'shithead/end_games/end_game_state_4.json'
 #    filename = 'shithead/end_games/end_game_state_5.json'
 #    filename = 'shithead/end_games/end_game_state_6.json'
@@ -679,7 +762,9 @@ def main():
     # load end game state and build the search tree with runSearch() for 0.5 s.
     # print status and simulation result for each node.
     # print the final statistics and the the found best play (robust and max). 
-    test_mcts(filename, 0.1)
+#    test_mcts(filename, 0.1)
+
+    play_end_game(filename, timeout=1.0, policy='max')
 
 
 if __name__ == '__main__':
