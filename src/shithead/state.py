@@ -170,6 +170,7 @@ class State:
         :return:    unknown cards.
         :rtype:         Deck
         '''
+
         unknown = Deck(empty=True)
         # talon and burnt cards are unknown
         unknown += self.talon
@@ -565,7 +566,7 @@ class State:
             return False
 
     @classmethod
-    def simulation_state(cls, state):
+    def simulation_state(cls, state, sim_player=None):
         '''
         Create a game state for simulation.
 
@@ -582,10 +583,12 @@ class State:
         remove the same amount of burnt cards from the talon. This way we get
         an equivalent game state without copying the actual game state.
 
-        :param state:   original shithead game state.
-        :type state:    State
-        :return:        simulation game state with redistributed unknown cards.
-        :rtype:         State
+        :param state:       original shithead game state.
+        :type state:        State
+        :param sim_player:  name of simulated player.
+        :type sim_player:   str
+        :return:            game state with redistributed unknown cards.
+        :rtype:             State
         '''
         # simulation states starts out as copy of the original state
         sim = state.copy()
@@ -596,13 +599,15 @@ class State:
         for i in range(n_burnt):
             sim.talon.add_card(sim.burnt.pop_card())
 
-        # the current player is different, he knows all his hand cards.
-        current_player = sim.players[sim.player]
+        # the simulated player is different, he knows all his hand cards.
+        if sim_player is None:
+            # current player is simulated player by default
+            sim_player = sim.players[sim.player].name
         n_players = {}
         for player in sim.players:
             # put unknown cards from player's hand back to talon
             n_hand = 0
-            if player != current_player:
+            if player.name != sim_player:   # not the simulated player
                 # make a list of unkown cards in this player's hand
                 unknown = [card for card in player.hand if not card.seen]
                 n_hand = len(unknown)

@@ -144,19 +144,6 @@ class MonteCarloNode():
                 ret.append(child['play'])
         return ret
     
-    def hasSingleChild(self):
-        '''
-        Check if this node has only 1 child.
-
-        :return:    True => 1 unexpanded play and no child or
-                            0 unexpanded play. and 1 child.
-        :rtype:     bool
-        '''
-        if len(self.children) + len(self.unexpandedPlays) == 1:
-            return True
-        else:
-            return False
-
     def isFullyExpanded(self):
         '''
         Check if this node has been fully expanded.

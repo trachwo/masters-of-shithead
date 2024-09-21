@@ -247,6 +247,26 @@ class Deck:
         :rtype:         int
         '''
         return self.deck.index(card)
+    
+    def find(self, searched):
+        '''
+        Find card specified by id, suit, and rank.
+
+        Compares id, suit, and rank of the specified card to the cards in this
+        deck and returns the index of the 1st matching card.
+
+        :param searched:    searched for card.
+        :type searched:     Card
+        :return:            index of searched card in deck, -1 => not found.
+        :rtype:             int
+        '''
+        for idx, card in enumerate(self.deck):
+            if (card.id == searched.id and 
+                card.suit == searched.suit and
+                card.rank == searched.rank):
+                return idx
+        else:
+            return -1
 
     def add_card(self, card):
         '''
