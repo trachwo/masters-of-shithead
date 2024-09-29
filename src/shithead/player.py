@@ -52,6 +52,7 @@ from .cards import Card, Deck
 from .state import State
 from .play import Play
 from .game import Game
+from .monte_carlo import MonteCarlo
 from . import analyzer
 
 
@@ -1294,7 +1295,7 @@ class AiPlayer(Player):
     def select_play(self, plays, state):
         '''
         Select one play from the list of legal plays.
-        Abstract function implemented in the subclass (e.g. DeepShit).
+        Abstract function implemented in the subclass (e.g. DecepShit).
 
         :param plays:   plays legal for this player in this game state.
         :type plays:    list
@@ -2338,6 +2339,307 @@ class DeepShit(AiPlayer):
         new_player.hand = self.hand.copy()              # player's hand cards.
         new_player.get_fup = self.get_fup               # True => must take face up table card as 2nd play
         new_player.get_fup_rank = self.get_fup_rank     # rank of face up table card taken on 2nd play
+
+        return new_player
+
+#-----------------------------------------------------------------------------
+class SelectMctsThread(Thread):
+    """
+    Thread for running Monte Carlo Tree Search for game state.
+
+    Building a search tree to find the best possible play may take some time.
+    Therefore, we start it in a seperate thread.
+    """
+    def __init__(self, state, timeout=3.0, policy='max', verbose=False):
+        '''
+        Initializer.
+
+        :param state:   original state from which we start the simulation.
+        :type state:    State
+        :param plays:   list of possible plays for which we run the simulation.
+        :type plays:    List
+        :param verbose:     True => print MCTS statistics.
+        :type verbose:      bool
+        '''
+        Thread.__init__(self)   # call super class initializer
+        self.state = state.copy()   # copy of the original game state
+        self.timeout = timeout
+        self.policy = policy
+        self.verbose = verbose
+        self.mcts = MonteCarlo(Game)    # create search tree
+        self.selected_play = None   # attribute to return the the found best play
+
+    def run(self):
+        '''
+        Thread function to run Monte Carlo Tree Search (MCTS).
+
+        Copies the specified state and randomly redistribute all unknown cards
+        (except for the unknown cards in the current player's hand).
+        Builds based on this new state a search tree to find the best play.
+        '''
+
+        # build the search tree with this state as root
+        self.mcts.runSearch(self.state, self.timeout)
+
+        # check statistics
+        self.mcts.checkStats(self.state)
+
+        if self.verbose:
+            # print statistics
+            print('\n### MCTS Statistics:')
+            print(f'Nodes: {len(self.mcts.nodes)}')
+            self.mcts.printStats(self.state)
+
+        # select best play according to specified policy
+        best_play = self.mcts.bestPlay(self.state, self.policy)
+
+        # set selected play as found best plays
+        self.selected_play = best_play
+
+#-----------------------------------------------------------------------------
+class DeeperShit(AiPlayer):
+    '''
+    Class representing an AI player which uses Monte Carlo Tree Search (MCTS).
+    '''
+    _count = 0   # counts number of DeeperShit instances.
+
+    def __init__(self, name, fup_table=None, fdown_random=True, timeout=1.0, policy='max', verbose=False):
+        '''
+        Initialize DeeperShit.
+
+        Sets the player's name.
+        Creates empty Deck objects for face down table cards, face up table
+        cards, and hand cards.
+
+        :param name:        player's name.
+        :type name:         str
+        :param fup_table:   face up table (None => don't swap).
+        :type fup_table:    FupTable
+        :param timeout:     timeout of tree search [s].
+        :type timeout:      float
+        :param policy:      MCTS best play policy ('robust', 'max')
+        :type policy:       str
+        :param verbose:     True => print MCTS statistics.
+        :type verbose:      bool
+        '''
+        DeeperShit._count += 1
+        super().__init__(name, fup_table, fdown_random)
+        self.timeout = timeout
+        self.policy = policy
+        self.verbose = verbose
+        self.thread = None          # thread for play selection by MCTS
+        self.thead_started = False  # flag indicating, that thread has already
+                                    # been started.
+
+    def select_play(self, plays, state):
+        '''
+        Select one play from the list of legal plays.
+
+        Uses the same initial strategy as TakeShit:
+            - swaps cards if fup_table has been specified.
+            - always shows the starting card, if it's on hand.
+            - if possible, plays a card of same rank as the top discard pile
+              card as 1st card, if there are 3 cards of same rank at the top
+              of the discard pile.
+            - voluntarily takes the discard pile:
+                -- if he has more than 3 cards on hand and taking the discard
+                   pile decrements the number of turns to get rid of these
+                   cards.
+                -- if the discard pile contains only ranks he already has on
+                   hand plus good cards ('2', '3', 'Q', 'K', 'A') and if it
+                   should be possible to get back to 3 hand cards before the
+                   talon runs out.
+            - only plays again if it's a low card (4, 5, 6, 7, 8, 9, J) or if
+              the talon is empty.
+            - when playing from hand:
+                -- selects the cheapest playable card,
+                   but '3' over '2' on '7', 'K', 'A' (Druck mache!)
+            - when playing from face up table cards:
+                -- selects the cheapest playable card.
+                   but '3' over '2' on '7', 'K', 'A' (Druck mache!)
+                -- after taking the discard pile,
+                   get the cheapest face up table card.
+            - when playing from face down table cards:
+                -- selects any card at random.
+            - doesn't play another '8' if only 2 players are left.
+              => plays '8', ends turn, other player skipped, plays '8', ...
+            - always refills on 'Q' or empty discard pile.
+            - plays as many bad cards (4, 5, 6, 7) as possible before refilling,
+              but refills before playing another good (2, 3, 10, Q, K, A)
+              or medium card (8, 9, J).
+
+        But during the end game (i.e. talon is empty and  only 2 player's left)
+        he uses MCTS to find the best play. A random distribution for unknown
+        cards is assumed and a new search tree is started as soon as new
+        information is available (i.e. another unknown card was disclosed).
+        Since building the search tree takes some time, we do this in a
+        seperate thread. We 1st check if a thread has already been started by
+        checking the 'thread_started' flag:
+            - yes => if thread is still running return None (thinking...)
+                  => if thread has finished reset the 'thread_started' flag
+                     and return the play selected by the thread.
+            - no => 1st handle the simple cases (only one play in list, etc.)
+                    2nd create a new thread, start it,
+                    and set the 'thread_started' flag.
+                    Then return None, so the caller can continue.
+
+        :param plays:   plays legal for this player in this game state.
+        :type plays:    list
+        :param state:   shithead game state
+        :type state:    State
+        :return:        selected play.
+        :rtype:         Play
+        '''
+        # check if the SelectMctsThread has been started before
+        if self.thread and self.thread_started:
+            # check if the SelectMctsThread has finished
+            if self.thread.is_alive():
+                # not finished yet
+                return None     # => tell caller that AI player is still thinking
+            else:
+                # thread has finished => return selected play
+                self.thread_started = False     # reset flag
+                return self.thread.selected_play
+
+        # no pending thread and we are not in the end game
+        # i.e. the talon is not empty and there are more than 2 players
+        # => we use the usual strategies
+        if len(state.talon) > 0 or len(state.players) > 2:
+
+            # handle all case where there is only one option:
+            if len(plays) == 1:
+                # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT') => do it.
+                return plays[0]
+
+            # swap face up table cards with hand cards.
+            if state.game_phase == SWAPPING_CARDS:
+                if self.fup_table is None:
+                    return Play('END')  # don't swap cards.
+                return self.select_swap(plays)
+
+            # handle starting player auction:
+            if state.game_phase == FIND_STARTER:
+                # we only get here, if there's a card to show .
+                # otherwise 'END' would be the only possible play.
+                return plays[0]
+
+            # if we can play face down table cards always select one at random
+            # (never take the discard pile).
+            fdown_plays = [play for play in plays if play.action == 'FDOWN']
+            if len(fdown_plays) > 0:
+                if self.fdown_random:
+                    return random.choice(fdown_plays)
+                else:
+                    # eliminate randomness by playing face down table cards
+                    # from left to right for AI evaluation.
+                    return fdown_plays[0]
+
+            # shortcut to discard pile
+            discard = state.discard
+
+            # always try to kill the discard pile with the 1st play
+            if state.n_played == 0 and state.discard.get_ntop() == 3:
+                # find the 'HAND' or 'FUP' play with the same rank as the card at
+                # the top of the discard pile
+                play = self.rank_to_play(state.discard.get_top_rank(), plays)
+                if play is not None:
+                    return play
+
+            _plays = [play for play in plays if play.action == 'TAKE']
+            if len(_plays) > 0:
+            # 'TAKE' is one of several legal plays => check if we should do it
+                if self.take_discard_or_not(state):
+                    return Play('TAKE')
+
+            # play another card of same rank or end turn?
+            if self.play_again_or_end(plays):
+                # play card if its value is < 7 ('Q')
+                if RANK_TO_VALUE[state.discard.get_top_rank()] < 7:
+                    # remove 'END' play => play card
+                    plays = [play for play in plays if play.action != 'END']
+                else:
+                    return Play('END')  # => end turn
+
+            # play another card of same rank or refill first
+            if self.refill_or_play_again(plays):
+                # alway refill 1st on 'Q' or empty discard pile.
+                top_rank = discard.get_top_rank() # None => empty
+                if top_rank is None or top_rank == 'Q':
+                    return Play('REFILL')
+                if (top_rank == '4' or top_rank == '5' or top_rank == '6' or
+                    top_rank == '7'):
+                    # play bad cards before refilling => kill pile first
+                    # remove 'REFILL' => play card
+                    # if 'REFILL' was the only play it would have been returned
+                    # above.
+                    plays = [play for play in plays if play.action != 'REFILL']
+                else:
+                    # refill before playing another good or medium card.
+                    return Play('REFILL')
+
+            # play another card of same rank or kill the discard pile?
+            if self.kill_or_play_again(plays):
+                # prefere playing as many cards as possible before killing
+                # the discard pile => remove 'KILL' from possible plays
+                plays = [play for play in plays if play.action != 'KILL']
+
+            # use the 'index >= 0' to make sure, that there are only card plays left.
+            card_plays = [play for play in plays if play.index >= 0]
+            if len(card_plays) == 0:
+                raise Exception("Left with empty list of plays!")
+
+            # only 'HAND', 'FUP', or 'GET' plays left ('FDOWN' plays were
+            # already handled).
+            if card_plays[0] == 'GET':
+                # take the cheapest face up table card on hand.
+                return self.find_cheapest_play(card_plays, RANK_TO_VALUE)
+            else:
+                # when playing matching hand or face up table cards we use the
+                # 'Druck mache!' strategie, i.e. if there's a '7', 'K', or 'A'
+                # on the discard pile, we play a '3' before the '2' to turn on
+                # the heat for the next player.
+                top_non3 = discard.get_top_non3_rank()
+                if top_non3 == '7' or top_non3 == 'K' or top_non3 == 'A':
+                    # 7, K, or A => play 3 before 2
+                    map = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
+                else:
+                    map = RANK_TO_VALUE         # '2' cheaper than '3'
+                # select the cheapest 'HAND' or 'FUP' play
+                return self.find_cheapest_play(card_plays, map)
+        else:
+            # if the talon is empty and there are only 2 players left,
+            # we use Monte Carlo Tree Search to find the best play
+            self.thread = SelectMctsThread(state, self.timeout, self.policy,
+                                           self.verbose)
+            self.thread.start()
+            self.thread_started = True
+            return None     # tell caller that AI player is thinking
+
+    def copy(self):
+        '''
+        Creates a copy of itself.
+
+        :return:        copy of this player (not just reference).
+        :rtype:         Player
+        '''
+        new_player = DeeperShit(self.name, self.fup_table, self.fdown_random,
+                                self.timeout, self.policy, self.verbose)
+         # number of times this player was the shithead.
+        new_player.shit_count = self.shit_count
+         # number of games played
+        new_player.game_count = self.game_count
+         # number of turns played
+        new_player.turn_count = self.turn_count
+        # player's face down table cards
+        new_player.face_down = self.face_down.copy()
+        # player's face up table cards
+        new_player.face_up = self.face_up.copy()
+        # player's hand cards.
+        new_player.hand = self.hand.copy()
+        # True => must take face up table card as 2nd play
+        new_player.get_fup = self.get_fup
+        # rank of face up table card taken on 2nd play
+        new_player.get_fup_rank = self.get_fup_rank
 
         return new_player
 

@@ -11,6 +11,7 @@ import time
 import json
 from random import randrange
 from collections import defaultdict
+from time import sleep
 
 from .game import Game
 from .state import State
@@ -542,7 +543,7 @@ class MonteCarlo:
               f"wins:{stats['total']['n_wins']:>6}")
 
 
-def restore_end_game_state(filename, verbose=False):
+def restore_end_game_state(filename, verbose=False, first='ShitHappens', second='ShitHappens', timeout=1.0, policy='max'):
     """
     Restores end game state from json-file.
 
@@ -556,10 +557,27 @@ def restore_end_game_state(filename, verbose=False):
     :type filename:     str
     :param verbose:     True => print loaded json-string
     :type verbose:      bool
+    :param first:       AI type of 1st player in player list.
+    :type first:        str
+    :param second:      AI type of 2nd player in player list.
+    :type second:       str
+    :param timeout:     timeout of tree search [s].
+    :type timeout:      float
+    :param policy:      MCTS best play policy ('robust', 'max').
+    :type policy:       str
     :return:            end game state.
     :rtype:             State
     """
     state_file = filename
+
+    # map name of AI to class
+    ai_map = {'ShitHappens': plr.ShitHappens,
+                  'CheapShit': plr.CheapShit,
+                  'TakeShit': plr.TakeShit,
+                  'BullShit': plr.BullShit,
+                  'DeepShit': plr.DeepShit,
+                   'DeeperShit': plr.DeeperShit}
+
     try:
         # load end game state from json-file
         with open(state_file, 'r') as json_file:
@@ -591,10 +609,16 @@ def restore_end_game_state(filename, verbose=False):
 
     # create list of remaining player
     # Note, that the AI type is not in the status (but in the config).
-    # We just use ShitHappens, since it doesn't matter for the MCTS test.
+    # We use DeeperShit although this is not relevant for most of the tests.
     players = []
-    for j in range(n_players):
-        players.append(plr.ShitHappens('', fup_table))
+    if first == 'DeeperShit':
+        players.append(ai_map[first]('', fup_table, True, timeout, policy, verbose))
+    else:
+        players.append(ai_map[first]('', fup_table))
+    if second == 'DeeperShit':
+        players.append(ai_map[second]('', fup_table, True, timeout, policy, verbose))
+    else:
+        players.append(ai_map[second]('', fup_table))
 
     # get the number of necessary card decks from state info
     n_decks = state_info['n_decks']
@@ -975,6 +999,127 @@ def play_end_game(filename, timeout=3.0, policy='robust'):
             print(f'### assumed state of {other}')
             sim_state.print()
 
+def deeper_shit_test(filename, opponent='DeepShit', timeout=1.0, policy='max'):
+    '''
+    Play end game using DeeperShit player.
+
+    :param filename:    name of json-file containing end game state.
+    :type filename:     str
+    :param opponent:    AI type of DeeperShit's opponent.
+    :type opponent:     str
+    :param timeout:     timeout of tree search [s].
+    :type timeout:      float
+    :param policy:      MCTS best play policy ('robust', 'max').
+    :type policy:       str
+    '''
+    # restore the end game state from json-file 
+    state = restore_end_game_state(filename, True, 'DeeperShit', opponent,
+                                   timeout, policy)
+
+    # print state overview
+    print(f'\n### End game state loaded from {filename}')
+    state.print()
+
+    # loop until the shithead has been found
+    while len(state.players) > 1:
+        print('\n==============================================================================\n')
+        # let the current player play one action
+        player = state.players[state.player]
+        while(True):
+            play = player.play(state)
+            if play is not None:
+                break
+            # player not ready => wait 100 ms
+            sleep(0.1)
+
+        # apply this  action to the current state to get to the next state
+        state = Game.next_state(state, play, None, None)
+        state.print()
+
+def deeper_shit_performance_test(filename, opponent='DeepShit', timeout=1.0,
+                                 policy='max', n_games=10):
+    '''
+    Check win ratio of DeeperShit player.
+
+    Restore the specified end game state and finish the game n_games times with
+    DeeperShit as 1st player and also as 2nd player against the specified
+    opponent AI.
+    Calculate the win ratio of DeeperShit against this opponent.
+
+    :param filename:    name of json-file containing end game state.
+    :type filename:     str
+    :param opponent:    AI type of DeeperShit's opponent.
+    :type opponent:     str
+    :param timeout:     timeout of tree search [s].
+    :type timeout:      float
+    :param policy:      MCTS best play policy ('robust', 'max').
+    :type policy:       str
+    :param n_games:     number of games played (2x).
+    :type n_games:      int  
+    '''
+
+    
+    n_wins = 0      # number of games won by DeeperShit
+    ratio = 0
+    n_aborted = 0   # number of aborted games
+    name = ''       # name of player using DeeperShit
+
+
+    # finish this game 2x for the specified number of times 
+    for i in range(2 * n_games):
+        # calculate win ratio [%]
+        if i > 0:
+            ratio = int(n_wins / (i - n_aborted) * 100)
+
+        if i % 2 > 0:
+            # odd games =>  2nd player uses DeeperShit AI
+            state = restore_end_game_state(filename, False, opponent,
+                                           'DeeperShit', timeout, policy)
+            name = state.players[1].name    # name of DeeperShit player
+        else:
+            # even games => 1st player uses DeeperShit AI
+            state = restore_end_game_state(filename, False, 'DeeperShit',
+                                           opponent, timeout, policy)
+            name = state.players[0].name    # name of DeeperShit player
+            if i == 0:
+                # very 1st game => print end game state overview
+                print(f'\n### End game state loaded from {filename}')
+                state.print()
+        
+        # play until Shithead has been found
+        while len(state.players) > 1:
+            # update statistics line
+            print(f"Turn:{state.turn_count:>3} Games:{i:>3} Aborted:{n_aborted:>3} Wins:{n_wins:>3} ({ratio}%)", end='\r')
+            # let the current player play one action
+            player = state.players[state.player]
+            while(True):
+                play = player.play(state)
+                if play is not None:
+                    break
+                # player not ready => wait 100 ms
+                sleep(0.1)
+            
+            # check if player has aborted game
+            # => max number of turns has been exceeded.
+            if play.action == 'ABORT':
+                break   # exit game
+
+            # apply this  action to the current state to get to the next state
+            state = Game.next_state(state, play, None, None)
+
+        # check if game has been aborted
+        if len(state.players) > 1:
+            n_aborted += 1
+        else:
+            print()
+            # check if DeeperShit player is not Shithead
+            if state.players[0].name != name:
+                n_wins += 1
+
+    ratio = int(n_wins / (i + 1 - n_aborted) * 100)
+    print(f"\n         Games:{i+1:>3} Aborted:{n_aborted:>3} Wins:{n_wins:>3} ({ratio}%)")
+
+
 def main():
     """
     Test for Monte Carlo Tree Search (MCTS).
@@ -1017,8 +1162,13 @@ def main():
     # once during the game and all cards in his hand.
     # Each time a previously unknown card is played, players have to make a new
     # assumption about the remaining unknown cards and start a new search tree.
-    play_end_game(filename, timeout=1.0, policy='max')
+#    play_end_game(filename, timeout=1.0, policy='max')
 
+    # load end game state and finish the game from this state using MCTS for
+    # the 1st player and the specified AI type for the 2nd player.
+    # print MCTS stats and game state in each turn.
+#    deeper_shit_test(filename, 'DeepShit', 1.0 , 'max')
+    deeper_shit_performance_test(filename, 'DeepShit', 1.0 , 'max', 100)
 
 if __name__ == '__main__':
     """
