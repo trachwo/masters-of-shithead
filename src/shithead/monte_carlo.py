@@ -149,7 +149,6 @@ class MonteCarlo:
         childNode = node.expand(play, childState, childUnexpandedPlays)
         if verbose:
             childNode.print()
-#            print(f'### n_played: {childNode.state.n_played}')
         
         # add the new child node to the list of MTCS nodes
         self.nodes[childState.hash()] = childNode
@@ -258,9 +257,6 @@ class MonteCarlo:
                 # since child is updated before parent.
                 node.print(True)
 
-#            if node == top:
-#                print(f"### node: {node.state.hash()} parent_player: {node.parent_player} plays: {node.n_plays} wins: {node.n_wins}")
-
             # move up to the parent node.
             node = node.parent
 
@@ -309,7 +305,6 @@ class MonteCarlo:
             if not start_node.isFullyExpanded():
                 # create the only child of the start node and add it to the
                 # tree, but skip simulate() and backpropagate()
-#                print('### add single child to start node')
                 node = self.expand(start_node, verbose)
                 # increment n_plays in child and parent
                 node.n_plays += 1
@@ -350,7 +345,6 @@ class MonteCarlo:
                     node.n_plays = selected.n_plays
                     node.n_wins = selected.n_wins
                     self.single_children += 1
-#                    print(f"### only child =>  plays: {node.n_plays} wins: {node.n_wins}")
                 else:
                     # from this new node randomly select plays until a loser has
                     # been found or no legal plays are left.
@@ -1131,8 +1125,8 @@ def main():
     create an initial state from the list of players, the dealer, the number
     of used decks, and the log-info.
     """
-    filename = 'shithead/end_games/end_game_state_0.json'
-#    filename = 'shithead/end_games/end_game_state_1.json'
+#    filename = 'shithead/end_games/end_game_state_0.json'
+    filename = 'shithead/end_games/end_game_state_1.json'
 #    filename = 'shithead/end_games/end_game_state_2.json'
 #    filename = 'shithead/end_games/end_game_state_3.json'
 #    filename = 'shithead/end_games/end_game_state_4.json'
@@ -1144,17 +1138,17 @@ def main():
 
     # load end game state and expand 1st node showing details of select,
     # expand, simulate, and backpropagate phases.    
-#    run_first_step(filename)
+    run_first_step(filename)
 
     # load end game state and build the search tree with runSearch() for 0.5 s.
     # print status and simulation result for each node.
     # print the final statistics and the the found best play (robust and max). 
-#    test_mcts(filename, 0.1)
+    test_mcts(filename, 0.1)
 
     # load end game state and finish the game from this state using a single
     # search tree to find the best plays for both players.
     # All cards in the game are open, i.e. known to both players.
-#    play_end_game_with_open_cards(filename, timeout=1.0, policy='max')
+    play_end_game_with_open_cards(filename, timeout=1.0, policy='max')
 
     # load end game state and finish the game from this state using individual
     # search trees for both players to find the best plays.
@@ -1162,12 +1156,17 @@ def main():
     # once during the game and all cards in his hand.
     # Each time a previously unknown card is played, players have to make a new
     # assumption about the remaining unknown cards and start a new search tree.
-#    play_end_game(filename, timeout=1.0, policy='max')
+    play_end_game(filename, timeout=1.0, policy='max')
 
     # load end game state and finish the game from this state using MCTS for
     # the 1st player and the specified AI type for the 2nd player.
     # print MCTS stats and game state in each turn.
-#    deeper_shit_test(filename, 'DeepShit', 1.0 , 'max')
+    deeper_shit_test(filename, 'DeepShit', 1.0 , 'max')
+
+    # load end game state and finish the game with DeeperShit for the 1st
+    # player and the specified opponent AI for the 2nd player. Do the same with
+    # switched roles and repeat the whole cycle for the specified number of
+    # times. Print statistics with win ratio of DeeperShit.
     deeper_shit_performance_test(filename, 'DeepShit', 1.0 , 'max', 100)
 
 if __name__ == '__main__':
