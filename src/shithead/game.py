@@ -18,6 +18,8 @@ from random import randint
 from .cards import Card
 from .state import State
 from .discard import Discard
+# TODO cannot import Player because of circular import
+# from .player import Player as plr
 
 # uncomment this import if you want to run initial_tests()
 # but you'll get a cirular init error when running other stuff !!!
@@ -500,8 +502,8 @@ class Game:
         :return:            game state after specified play has been applied.
         :rtype:             State
         '''
-        # make a copy of the current state
-        next_state = state.copy()
+        # start with the current state
+        next_state = state
 
         # shortcuts
         players = next_state.players
@@ -758,8 +760,8 @@ def test_discard_pile():
 def initial_tests():
     print('\nTest creating a new game:')
     players = []
-    players.append(player.CheapShit('Player1', None, False))
-    players.append(player.CheapShit('Player2', None, False))
+    players.append(plr.CheapShit('Player1', None, False))
+    players.append(plr.CheapShit('Player2', None, False))
     dealer = 0
     n_decks = 1
     log_level = 'No Secrets'
@@ -878,8 +880,8 @@ def initial_tests():
     print(discard.check(False, Card(0,'Diamonds', 'K')))
 
     players = []
-    players.append(player.CheapShit('Player1', None, False))
-    players.append(player.CheapShit('Player2', None, False))
+    players.append(plr.CheapShit('Player1', None, False))
+    players.append(plr.CheapShit('Player2', None, False))
     dealer = 0
     n_decks = 1
     log_level = 'No Secrets'

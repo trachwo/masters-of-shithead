@@ -140,7 +140,11 @@ class MonteCarlo:
             print(f'\n### expand: {node.state.hash()}+{str(play)}')
         # create the child's game state by applying this play to state of this
         # node (= parent).
-        childState = self.game.next_state(node.state, play)
+#        childState = self.game.next_state(node.state, play)
+        # make a copy of this nodes state
+        childState = node.state.copy()
+        # apply selected play to change into the state of the child node
+        childState = self.game.next_state(childState, play)
         # get the current player in child's state
         player = childState.players[childState.player]
         # get list of legal plays for this player in child's state

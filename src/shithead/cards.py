@@ -310,7 +310,7 @@ class Deck:
                 self.deck[i].id == card.id):
                 return self.deck.pop(i)
         else:
-            raise Exception(f'No card {Card.ranks[rank]}{Card.suits[suit]} in this deck!')
+            raise Exception(f'No card {Card.ranks[card.rank]}{Card.suits[card.suit]} in this deck!')
 
     def shuffle(self):
         '''

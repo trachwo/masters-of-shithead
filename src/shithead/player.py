@@ -1161,7 +1161,7 @@ class HumanPlayer(Player):
         :return:        copy of this player (not just reference).
         :rtype:         Player
         '''
-        new_player = HumanPlayer(self.name, self.gui)
+        new_player = HumanPlayer(self.name, self.gui, self.auto_end)
         new_player.shit_count = self.shit_count         # number of times this player was the shithead.
         new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
@@ -1273,10 +1273,13 @@ class AiPlayer(Player):
             if self.swap_count == 3:
                 # 6 cards on hand => get best face up combination
                 self.best_fup = self.fup_table.find_best([card for card in self.hand])
+
             # filter out 'PUT' plays
             _plays = [play for play in plays if play.action == 'PUT']
+
             # find 'PUT' play for 1st card in best_fup
-            _plays = [play for play in _plays if self.hand[play.index] == self.best_fup[0]]
+            _plays = [play for play in _plays
+                      if Card.cmp(self.hand[play.index],self.best_fup[0]) == 0]
             if len(_plays) > 0:
                 self.swap_count += 1
                 self.best_fup.pop(0)    # remove 1st (put) card from best_fup
@@ -1379,7 +1382,7 @@ class ShitHappens(AiPlayer):
     '''
     _count = 0   # counts number of ShitHappens instances.
 
-    def __init__(self, name, fup_table=None):
+    def __init__(self, name, fup_table=None, fdown_random=True):
         '''
         Initialize ShitHappens.
 
@@ -1387,13 +1390,15 @@ class ShitHappens(AiPlayer):
         Creates empty Deck objects for face down table cards, face up table
         cards, and hand cards.
 
-        :param name:        player's name.
-        :type name:         str
-        :param fup_table:   face up table (None => don't swap).
-        :type fup_table:    FupTable
+        :param name:            player's name.
+        :type name:             str
+        :param fup_table:       face up table (None => don't swap).
+        :type fup_table:        FupTable
+        :param fdown_random:    True => select face down table cards at random.
+        :type fdown_random:     bool
         '''
         ShitHappens._count += 1   # count number of ShitHappens instances
-        super().__init__(name, fup_table)   # set name and fup lookup table.
+        super().__init__(name, fup_table, fdown_random)   # set name and fup lookup table.
 
     def select_play(self, plays, state):
         '''
@@ -1481,7 +1486,9 @@ class ShitHappens(AiPlayer):
         :return:        copy of this player (not just reference).
         :rtype:         Player
         '''
-        new_player = ShitHappens(self.name, self.fup_table)
+        new_player = ShitHappens(self.name, self.fup_table, self.fdown_random)
+        new_player.swap_count = self.swap_count         # swap phase state
+        new_player.best_fup = self.best_fup[:]          # best face up table cards
         new_player.shit_count = self.shit_count         # number of times this player was the shithead.
         new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
@@ -1624,6 +1631,8 @@ class CheapShit(AiPlayer):
         :rtype:         Player
         '''
         new_player = CheapShit(self.name, self.fup_table, self.fdown_random)
+        new_player.swap_count = self.swap_count         # swap phase state
+        new_player.best_fup = self.best_fup[:]          # best face up table cards
         new_player.shit_count = self.shit_count         # number of times this player was the shithead.
         new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
@@ -1824,7 +1833,9 @@ class TakeShit(AiPlayer):
         :return:        copy of this player (not just reference).
         :rtype:         Player
         '''
-        new_player = TakeShit(self.name, self.fup_table)
+        new_player = TakeShit(self.name, self.fup_table, self.fdown_random)
+        new_player.swap_count = self.swap_count         # swap phase state
+        new_player.best_fup = self.best_fup[:]          # best face up table cards
         new_player.shit_count = self.shit_count         # number of times this player was the shithead.
         new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
@@ -1990,7 +2001,9 @@ class BullShit(AiPlayer):
         :return:        copy of this player (not just reference).
         :rtype:         Player
         '''
-        new_player = BullShit(self.name, self.fup_table)
+        new_player = BullShit(self.name, self.fup_table, self.fdown_random)
+        new_player.swap_count = self.swap_count         # swap phase state
+        new_player.best_fup = self.best_fup[:]          # best face up table cards
         new_player.shit_count = self.shit_count         # number of times this player was the shithead.
         new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
@@ -2330,7 +2343,9 @@ class DeepShit(AiPlayer):
         :return:        copy of this player (not just reference).
         :rtype:         Player
         '''
-        new_player = DeepShit(self.name, self.fup_table)
+        new_player = DeepShit(self.name, self.fup_table, self.fdown_random)
+        new_player.swap_count = self.swap_count         # swap phase state
+        new_player.best_fup = self.best_fup[:]          # best face up table cards
         new_player.shit_count = self.shit_count         # number of times this player was the shithead.
         new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
@@ -2624,11 +2639,15 @@ class DeeperShit(AiPlayer):
         '''
         new_player = DeeperShit(self.name, self.fup_table, self.fdown_random,
                                 self.timeout, self.policy, self.verbose)
-         # number of times this player was the shithead.
+        # swap phase state
+        new_player.swap_count = self.swap_count
+        # best face up table cards
+        new_player.best_fup = self.best_fup[:]
+        # number of times this player was the shithead.
         new_player.shit_count = self.shit_count
-         # number of games played
+        # number of games played
         new_player.game_count = self.game_count
-         # number of turns played
+        # number of turns played
         new_player.turn_count = self.turn_count
         # player's face down table cards
         new_player.face_down = self.face_down.copy()
