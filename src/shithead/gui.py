@@ -1169,6 +1169,11 @@ class GameView(arcade.View):
         AI players are create to use the provided lookup table for card
         swapping. Their type can directly be looked up in the player module
         (imported as plr) to get the class which has to be instantiated.
+        !!! NOTE !!!
+        'DeeperShit' is an improved version of 'DeepShit' using MTCS in the end
+        game. Instead of adding it as new AI type, we replace 'DeepShit' with
+        'DeeperShit', i.e. the user still selects 'DeepSheet' but an AI player
+        using 'DeeperShit' is created.
 
         :return:                list of player objects for this game.
         :rtype:                 list
@@ -1180,6 +1185,9 @@ class GameView(arcade.View):
         players = []
         for player in self.config['players']:
             name, type, counters = player
+            # change 'DeepShit' to 'DeeperShit'
+            if type == 'DeepShit':
+                type = 'DeeperShit'
             if type == 'Human':
                 # create a human player with specified name, who's using the
                 # gui and automatically ends his turn if there's no other option.
@@ -1730,7 +1738,8 @@ class GameView(arcade.View):
             self.create_single_card_sprite(card, 'discard', 0)
 
         # load player states
-        # TODO if some players are already this will result in an index out of range error
+        # TODO if some players are already out this will result in an index out
+        #      of range error
         for i, player in enumerate(self.state.players):
             player.load_from_state(state_info['players'][i])
             # create a sprite for each face down table card
@@ -2925,7 +2934,13 @@ class GameView(arcade.View):
             self.window.show_view(result_view)
 
         # get player's next play and apply it to the game state
-        self.apply_play(self.get_play())
+        # !!! NOTE !!!
+        # We have to make sure that it's not called on a single player, since
+        # in case of 'DeeperShit' this will result in an MCTS thread started at
+        # the end of the round. This thread will not be terminated and cause
+        # the GUI to slow down to a grinding halt.
+        if len(self.state.players) > 1:
+            self.apply_play(self.get_play())
 
 
 def main():

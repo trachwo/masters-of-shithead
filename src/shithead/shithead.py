@@ -479,18 +479,20 @@ def ai_test():
 
     # create players with generic names
     players = []
+#    players.append(plr.ShitHappens('Player1', fup_table, False))
+#    players.append(plr.ShitHappens('Player2', fup_table, False))
 #    players.append(plr.CheapShit('Player1', fup_table, False))
 #    players.append(plr.CheapShit('Player2', fup_table, False))
 #    players.append(plr.CheapShit('Player3', fup_table, False))
-#    players.append(plr.TakeShit('Player1', fup_table, False))
-#    players.append(plr.TakeShit('Player2', fup_table, False))
+    players.append(plr.TakeShit('Player1', fup_table, False))
+    players.append(plr.TakeShit('Player2', fup_table, False))
 #    players.append(plr.TakeShit('Player3', fup_table, False))
 #    players.append(plr.TakeShit('Player4', fup_table, False))
 #    players.append(plr.TakeShit('Player5', fup_table, False))
 #    players.append(plr.TakeShit('Player6', fup_table, False))
 #    players.append(plr.BullShit('Player3', fup_table, False))
-    players.append(plr.DeepShit('Player1', fup_table, False))
-    players.append(plr.DeepShit('Player2', fup_table, False))
+#    players.append(plr.DeepShit('Player1', fup_table, False))
+#    players.append(plr.DeepShit('Player2', fup_table, False))
     players.append(plr.DeeperShit('Player3', fup_table, False))
     n_players = len(players)
 
