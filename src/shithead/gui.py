@@ -807,6 +807,15 @@ class CardMover:
         else:
             self.started = True
 
+    def is_started(self):
+        """
+        Get 'started' flag.
+
+        :return:    'started' flag.
+        :rtype:     bool
+        """
+        return self.started
+
     def hide_hand_cards(self, name):
         """
         Turn all hand cards of specified player face down.
@@ -1974,7 +1983,9 @@ class GameView(arcade.View):
         self.mover.draw_player_names(self.state)
 
         # mark human player's legal plays with bright green frames
-        self.mark_human_legal_plays(self.state, self.dealing)
+        # after card moving has finished and as long as Shithead wasn't found.
+        if (not self.mover.is_started() and len(self.state.players) > 1):
+            self.mark_human_legal_plays(self.state, self.dealing)
 
         # draw message in instruction window
         self.message.draw_text()
