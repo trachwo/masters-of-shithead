@@ -45,7 +45,8 @@ SCREEN_TITLE = "Sh*thead"
 CONFIG_FILE_MAGIC = 47908652    # random number to identify config files
 MAX_NOF_PLAYERS = 6
 DEFAULT_FONT_SIZE = 14
-TOP_MARGIN = 100
+#TOP_MARGIN = 100
+TOP_MARGIN = 60
 
 HSPACING = 20   # horizontal distance between labels/fields
 HMARGIN = 20    # left and right margin (from background edges)
@@ -80,6 +81,12 @@ FAST_PLAY_LABEL = 80
 FAST_PLAY =  50
 FAST_PLAY_HEIGHT =  30
 
+# card speed selection dimensions
+CARD_SPEED_LABEL = 100
+CARD_SPEED = 45
+CARD_SPEED_HEIGHT = 30
+CARD_SPEEDS = ['20', '30', '40', '50', '10']
+
 # log level selection dimensions
 LOG_LEVEL_LABEL = 80
 LOG_LEVEL = 170
@@ -96,7 +103,8 @@ LOG_FILE_NAME_HEIGHT = 30
 
 # dimensions of miscellanous configs background
 MISC_BG_WIDTH = PLAYERS_WIDTH
-MISC_BG_HEIGHT = VMARGIN + FAST_PLAY_HEIGHT + VSPACING + VMARGIN
+#MISC_BG_HEIGHT = VMARGIN + FAST_PLAY_HEIGHT + VSPACING + VMARGIN
+MISC_BG_HEIGHT = VMARGIN + FAST_PLAY_HEIGHT + 2 * VSPACING + VMARGIN
 
 # calculate the left/right screen margin if we have the 'LOAD' button next to
 # the config file entry
@@ -605,6 +613,85 @@ class FastPlayConfig():
             self.is_fast_play.sel = 1
             self.is_fast_play.add_content('No')
 
+class CardSpeedConfig():
+    '''
+    Class for card animation speed selection.
+    '''
+
+    def __init__(self, coords):
+        """
+        Card speed selection initializer.
+
+        Creates the card speed selection field.
+
+        :param coords:  X/Y-coors of log level config (left/center)
+        :type coords:   tuple of float
+        """
+        x,y = coords
+
+        # create the card speed label
+        self.label = arcade.Text(
+            'CardSpeed:',
+            x,
+            y,
+            arcade.color.WHITE,
+            DEFAULT_FONT_SIZE,
+            anchor_x='left',
+            anchor_y='center')
+
+        # create the card speed input field
+        x += CARD_SPEED_LABEL + HSPACING + CARD_SPEED / 2
+        self.speed = OptionField((x,y), CARD_SPEED,
+                CARD_SPEED_HEIGHT, CARD_SPEEDS)
+
+    def draw(self):
+        """
+        Draw the label and the card speed selection field with its content to
+        the screen.
+        This function is called approximately 60 times per second by the game
+        loop (-> arcade.run()) to redraw the screen.
+        """
+        self.label.draw()
+        self.speed.draw()
+
+    def get_config(self):
+        """
+        Gets the selected card speed from the input field.
+
+        :return:    card speed.
+        :rtype:     str
+        """
+        return self.speed.options[self.speed.sel]
+
+    def set_config(self, card_speed):
+        '''
+        Sets card speed selection in input field.
+
+        Used to set the card speed read from the config-file. Since the
+        config-file can be edited, we have to check if the read value is valid.
+        If the card speed is not valid, we issue a warning and keep the default
+        value.
+
+        :param card_speed:  '10', '20', '30', '40', or '50'.
+        :type log_level:    str
+        '''
+        # card speed must be a non-empty string
+        if not isinstance(card_speed, str) or len(card_speed) == 0:
+            # print warning, keep previous value
+            print('### Warning: card speed must be a non-empty string!')
+            return
+
+        # card speed must be one of the strings in the options list.
+        try:
+            sel = self.speed.options.index(card_speed)
+        except:
+            print(f'### Warning: {card_speed} is not a valid card speed string!')
+            return
+
+        # set index of specified card speed in card speed list as selection
+        self.speed.sel = sel
+        self.speed.add_content(card_speed)
+
 
 class LogLevelConfig():
     '''
@@ -1033,7 +1120,6 @@ class ConfigView(arcade.View):
                 MISC_BG_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
         # we place it (center/center) below the player configuration
         x = LEFT_MARGIN + MISC_BG_WIDTH / 2
-        y = SCREEN_HEIGHT - TOP_MARGIN - FILE_BG_HEIGHT / 2
         y = (SCREEN_HEIGHT - TOP_MARGIN - FILE_BG_HEIGHT - VSPACING / 2
                 - PLAYERS_HEIGHT - VSPACING / 2 - MISC_BG_HEIGHT / 2)
         self.misc_bg.position = (x,y)
@@ -1045,14 +1131,23 @@ class ConfigView(arcade.View):
         self.fast_play = FastPlayConfig((x,y))
         self.fields.append(self.fast_play.is_fast_play)
 
-        # coords of LogLevelConfig (left/center)
+        # coords of CardSpeedConfig (left/center)
         x += FAST_PLAY_LABEL + HSPACING + FAST_PLAY + HSPACING
+        # create the card speed selection field
+        self.card_speed = CardSpeedConfig((x,y))
+        self.fields.append(self.card_speed.speed)
+
+        # coords of LogLevelConfig (left/center)
+#        x += FAST_PLAY_LABEL + HSPACING + FAST_PLAY + HSPACING
+        x = LEFT_MARGIN + HMARGIN
+        y -= VSPACING
         # create the log level selection field
         self.log_level = LogLevelConfig((x,y))
         self.fields.append(self.log_level.level)
 
         # coords of LogFileConfig (left/center)
-        x = LEFT_MARGIN + HMARGIN
+#        x = LEFT_MARGIN + HMARGIN
+#        y -= VSPACING
         y -= VSPACING
         # create the log file fields
         self.log_file = LogFileConfig((x,y))
@@ -1099,6 +1194,7 @@ class ConfigView(arcade.View):
             players.append(player.get_config())
         config['players'] = players
         config['fast_play'] = self.fast_play.get_config()
+        config['card_speed'] = self.card_speed.get_config()
         config['log_level'] = self.log_level.get_config()
         config['log_file'] = self.log_file.get_config()
         return config
@@ -1133,6 +1229,8 @@ class ConfigView(arcade.View):
             player.set_config(config['players'][i])
         # set the fast play selection
         self.fast_play.set_config(config['fast_play'])
+        # set the card speed selection
+        self.card_speed.set_config(config['card_speed'])
         # set log-level selection
         self.log_level.set_config(config['log_level'])
         # set log_to_file selection and log-file-name.
@@ -1297,6 +1395,7 @@ class ConfigView(arcade.View):
         self.load_text.draw()
         self.misc_bg.draw()
         self.fast_play.draw()
+        self.card_speed.draw()
         self.log_level.draw()
         self.log_file.draw()
         self.draw_focus_frame()

@@ -304,7 +304,6 @@ OPPONENTS = [
 MESSAGE_X = TALON_X
 MESSAGE_Y = OPP_LOWER_Y + CARD_HEIGHT / 2
 
-CARD_SPEED = 20 # speed of moved cards.
 MIN_DIST   = 10 # minimum distance recognized as arrived at target
 BURN_DELAY = 0.05
 DEAL_DELAY = 0.5
@@ -597,7 +596,7 @@ class CardMover:
     i.e. the move job is complete.
     """
 
-    def __init__(self, mat_list, sprite_list, card2sprite):
+    def __init__(self, mat_list, sprite_list, card2sprite, card_speed=20):
         """
         Initializer.
 
@@ -614,6 +613,8 @@ class CardMover:
         :type sprite_list:  SpriteList.
         :param card2sprite: card-to-sprite map
         :type card2sprite:  dict
+        :param card_speed:  card animation speed (10, 20, 30, 40, 50)
+        :type card_speed:   int
         """
         # reference to sprite list for fixed card mat sprites
         self.mat_list = mat_list
@@ -621,6 +622,8 @@ class CardMover:
         self.sprite_list = sprite_list
         # dictionary to find the sprite belonging to a card
         self.card2sprite = card2sprite
+        # set card animation speed
+        self.card_speed = card_speed
         self.started = False    # True => increment time
         self.time = 0 # incrementing after mover has been started
         self.move_list = [] # list of cards to be moved
@@ -960,7 +963,7 @@ class CardMover:
         self.sprite_list.remove(card)
         self.sprite_list.append(card)
         # card starts moving => set speed > 0
-        card.speed = CARD_SPEED
+        card.speed = self.card_speed
         # find where this card starts from
         name, src_idx = self.find_source(card)
         # and remove it from the source's card list
@@ -1260,6 +1263,9 @@ class GameView(arcade.View):
         # no need to click to continue the game
         self.fast_play = config['fast_play']
 
+        # set the card animation speed from config
+        self.card_speed = int(self.config['card_speed'])
+
         # initialize game state
         self.state = None
 
@@ -1548,7 +1554,8 @@ class GameView(arcade.View):
         self.card2sprite = {}
 
         # create the card mover
-        self.mover = CardMover(self.mat_list, self.card_list, self.card2sprite)
+        self.mover = CardMover(self.mat_list, self.card_list, self.card2sprite,
+                               self.card_speed)
 
         # create mats for talon, discard pile, and removed cards
         self.mover.setup_core_mats()
@@ -1681,7 +1688,8 @@ class GameView(arcade.View):
         self.card2sprite = {}
 
         # create the card mover
-        self.mover = CardMover(self.mat_list, self.card_list, self.card2sprite)
+        self.mover = CardMover(self.mat_list, self.card_list, self.card2sprite,
+                               self.card_speed)
 
         # create mats for talon, discard pile, and removed cards
         self.mover.setup_core_mats()
