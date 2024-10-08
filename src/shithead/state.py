@@ -150,12 +150,6 @@ class State:
         # log info
         self.log_info = log_info
 
-        # if log-to-file has been selected, open the specified file for writing
-        #  (=> reset file) and close it again.
-        if log_info[1]:
-            with open(log_info[3], 'w') as log_file:
-                log_file.write('--- Sh*thead Log-File ---\n')
-
         # game history = list of plays leading up to this state
         self.history = []
 

@@ -1593,6 +1593,12 @@ class GameView(arcade.View):
         log_to_file, log_debug, log_file = self.config['log_file']
         log_info = (log_level, log_to_file, log_debug, log_file)
 
+        # if log-to-file has been selected, open the specified file for writing
+        #  (=> reset file) and close it again.
+        if log_info[1]:
+            with open(log_info[3], 'w') as log_file:
+                log_file.write('--- Sh*thead Log-File ---\n')
+
         # create the initial game state with the original list of players,
         # the specified dealer (-1 => random, or shithead of previous round),
         # and the number of decks necessary for this number of players.
