@@ -36,6 +36,7 @@ SWAPPING_CARDS = 0      # players may swap face up vs. hand cards.
 FIND_STARTER = 1        # player with lowest card on hand starts
 PLAY_GAME = 2           # play till only one player is left
 SHITHEAD_FOUND = 3      # only 1 player left => he's the SHITHEAD
+ABORTED = 4             # too many turns (AI deadlock) => game aborted.
 
 # TODO only used for hand evaluation, should be removed when hand evaluation
 # is moved to Player class (it's not used anyhow)
@@ -392,11 +393,11 @@ class Game:
             # update statistics
             score = len(state.players)  # score = number of remaining players
             # enter score for this player in state
-            state.result[name] = score
+            state.result[name] = [score, turn_count]
             # check if game is over => only shithead left
             if score == 1:
                 shithead = state.players[next_player]
-                state.result[shithead.name] = 0
+                state.result[shithead.name] = [0, turn_count]
                 state.game_phase = SHITHEAD_FOUND
             if stats:
                 # if a statistic has been specified update it
@@ -624,8 +625,8 @@ class Game:
             next_state.dealer = index
 
         elif action == 'ABORT':
-            # TODO don't know where this comes from
-            pass
+            # too many turns (AI deadlock) => abort game
+            next_state.game_phase = ABORTED
 
         else:
             raise Exception(f'Unknown action {action}!')
@@ -644,7 +645,7 @@ class Game:
     @classmethod
     def reset_result(cls, state):
         '''
-        Reset the scores of all players to 0.
+        Reset the scores and turn counts of all players to 0.
 
         If we quit or have to abort the game (AI deadlock), there are no
         winners.
@@ -653,27 +654,26 @@ class Game:
         :type state:        State
         '''
         for player in state.players:
-            state.result[player.name] = 0
+            state.result[player.name] = [0, 0]
 
     @classmethod
     def get_result(cls, state):
         '''
-        Get result of game.
+        Get scores and turn counts for this round of the game.
 
-        The game if over if only one player is left or if the game is aborted
-        due to a AI deadlock (too many turns played).
+        The game is over if only one player is left or if the game is aborted
+        due to an AI deadlock (too many turns played).
         In the 1st case the score 0 for the shithead has been entered in the
-        result. In the 2nd case all scores in the result have been reset to 0.
+        result. In the 2nd case all scores and turn counts have to be reset to
+        0, i.e. we use the result to correct the scores and turn counts in the
+        statistics for the players which are already out.
 
         :param state:       current shithead state
         :type state:        State
-        :return:            result, None => game not over yet.
-        :rtype:             bool
+        :return:            current scores of players.
+        :rtype:             dict
         '''
-        if 0 in state.result.values():
-            return state.result
-        else:
-            return None
+        return state.result
 
     @classmethod
     def loser(cls, state):
