@@ -138,9 +138,6 @@ class MonteCarlo:
         play = plays[randrange(len(plays))]
         if verbose:
             print(f'\n### expand: {node.state.hash()}+{str(play)}')
-        # create the child's game state by applying this play to state of this
-        # node (= parent).
-#        childState = self.game.next_state(node.state, play)
         # make a copy of this nodes state
         childState = node.state.copy()
         # apply selected play to change into the state of the child node

@@ -192,7 +192,7 @@ from .discard import Discard
 from .fup_table import FupTable, FUP_TABLE_FILE, TEXT_FILE
 from . import player as plr # to avoid confusion with 'player' used as variable name
 from .stats import Statistics
-from .game import Game, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME, SHITHEAD_FOUND
+from .game import Game, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME, SHITHEAD_FOUND, ABORTED
 from .state import State
 from .play import Play
 from . import result
@@ -331,7 +331,8 @@ MESSAGES_EN = {
     'TURN_NAME':            [ "''", "f'Turn {turn} {dir}: {name} {thinking}'", "f'{tips[0]}'", "f'{tips[1]}'", "f'{tips[2]}'"],
     'IS_SHITHEAD':          [ "''", "f'{name}'", "'is the SHITHEAD'", "''", "''"],
     'SHOW_OR_SKIP':         [ "f'Show {card} to start the game!'", "''", "f'{name}'", "f'click on {card} to show it'", "'or <DONE> to skip'"],
-    'IS_STARTER':           [ "''", "f'{name}'", "'is the starting player!!!'", "''", "''"]
+    'IS_STARTER':           [ "''", "f'{name}'", "'is the starting player!!!'", "''", "''"],
+    'GAME_ABORTED':         [ "''", "'!!! TOO MANY TURNS USED !!!'", "f'GAME ABORTED AFTER {turn} TURNS'", "''", "''"]
 }
 
 # English tool tips
@@ -1278,6 +1279,9 @@ class GameView(arcade.View):
         # name of this round's shithead
         self.shithead = None
 
+        # 'aborted' flag set in case of an AI deadlock
+        self.aborted = False
+
         # sprite list with all cards, no matter where they are
         self.card_list = None
 
@@ -1584,6 +1588,7 @@ class GameView(arcade.View):
             # very first round => select dealer randomly
             dealer = -1
         self.shithead = None    # shithead of this round not found yet
+        self.aborted = False    # reset 'aborted' flag
 
         # calculate the number of necessary card decks
         n_decks = Game.calc_nof_decks(self.n_players)
@@ -1626,7 +1631,6 @@ class GameView(arcade.View):
 
         # deal 3 face down, 3 face up, and 3 hand cards to each player
         self.state = Game.next_state(self.state, Play('DEAL'), None, self.stats)
-        ###Game.print_state(self.state)
         self.state.print()
 
         # start the card mover => animation of burning cards and dealing cards.
@@ -1716,6 +1720,7 @@ class GameView(arcade.View):
         dealer = state_info['dealer']
 
         self.shithead = None    # shithead of this round not found yet
+        self.aborted = False    # reset 'aborted' flag 
 
         # get the number of necessary card decks from state info
         n_decks = state_info['n_decks']
@@ -1788,7 +1793,7 @@ class GameView(arcade.View):
         self.state.starting_card = state_info['starting_card']
         self.state.auction_members = state_info['auction_members']
         self.state.shown_starting_card = state_info['shown_starting_card']
-        self.state.result = state_info['result']
+        self.state.result = state_info['result']    # TODO still needed
         # reset 'dealing' flag
         self.state.dealing = False
 
@@ -2466,8 +2471,8 @@ class GameView(arcade.View):
             self.set_message('IS_OUT', 0, player.name)
 
         elif action == 'ABORT':
-            # TODO find out where it comes from
-            # should not happen, nothing to show
+            # Too many turns (AI deadlock) => abort game.
+            # nothing to show.
             pass
 
         else:
@@ -2780,6 +2785,20 @@ class GameView(arcade.View):
             self.shithead = player.name
             self.wait_for_human = True
 
+        elif phase == ABORTED and not self.aborted:
+            self.set_message('GAME_ABORTED', turn_count)
+            # update statistics
+            # revert statistics of all players which are already out.
+            result = Game.get_result(self.state)
+            for name in result.keys():
+                if result[name][0] != 0:  # player has already scored
+                    score = result[name][0]
+                    turn_count = result[name][1]
+                    self.stats.revert(name, score, turn_count)
+            self.stats.print()
+            self.aborted = True
+            self.wait_for_human = True
+
     def get_play(self):
         """
         Get play from player.
@@ -2845,8 +2864,8 @@ class GameView(arcade.View):
         # get game phase
         phase = self.state.game_phase
 
-        # shithead found => nothing to do
-        if phase == SHITHEAD_FOUND:
+        # shithead found or game aborted => nothing to do
+        if phase == SHITHEAD_FOUND or phase == 'ABORTED':
             return
 
         if play:
@@ -2927,15 +2946,18 @@ class GameView(arcade.View):
             return # wait for card mover to move the discard pile
 
         # wait for human player to click anywhere
-        if self.wait_for_human and self.shithead is None:
+        # but game is neither finished nor aborted
+        if self.wait_for_human and self.shithead is None and not self.aborted:
             self.message.set_line(4, 'click anywhere to continue')
             return
 
         # update message window according to game phase
+        # Shithead found => update stats of Shithead, set the 'shithead' flag
+        # Game aborted => revert stats and set the 'aborted' flag 
         self.update_message_window()
 
-        # shithead found show result
-        if self.shithead:
+        # shithead found or game aborted => show result
+        if self.shithead or self.aborted:
             if self.wait_for_human:
                 self.message.set_line(4, 'click anywhere to continue')
                 return
@@ -2957,16 +2979,17 @@ class GameView(arcade.View):
             result_view.setup(self.stats, self.shithead, self.config)
             # and switch to the result view
             self.window.show_view(result_view)
+            # !!! NOTE !!!
+            # on_update() will be completed before we change to the result
+            # view, i.e. without the return another play will be applied
+            # although the game is already over. If DeeperShit is the Shithead
+            # this would start a new MCTS thread, which will never be properly
+            # terminated and will cause the GUI to slow down and come to a
+            # grinding halt.
+            return
 
         # get player's next play and apply it to the game state
-        # !!! NOTE !!!
-        # We have to make sure that it's not called on a single player, since
-        # in case of 'DeeperShit' this will result in an MCTS thread started at
-        # the end of the round. This thread will not be terminated and cause
-        # the GUI to slow down to a grinding halt.
-        if len(self.state.players) > 1:
-            self.apply_play(self.get_play())
-
+        self.apply_play(self.get_play())
 
 def main():
     pass
