@@ -156,7 +156,7 @@ class ResultTable:
         self.lines = []                 # list of result table lines
         self.upper_left = upper_left    # set coords of upper left corner
         self.stats = stats              # set game statistics
-        self.shithead = shithead        # we need it to setup the next round
+        self.shithead = shithead        # we need it to mark Shithead in red
 
         x, y = upper_left
         # get list of table entries
@@ -185,7 +185,8 @@ class ResultTable:
             if entry == tab[-1]:
                 border = 3
             else: border = 1
-            if entry[0] == shithead:
+            # if a Shithead has been found (no abort) mark it in red
+            if shithead is not None and entry[0] == shithead:
                 color = (arcade.color.WHITE, arcade.color.CINNABAR)
             else:
                 color = (arcade.color.WHITE, arcade.color.WHITE)
@@ -213,7 +214,7 @@ class ResultView(arcade.View):
 
         self.config = None          # game configuration
         self.stats = None           # game statistics
-        self.shithead = None        # shithead of last game
+        self.dealer = None          # last known shithead
         self.table = None           # result table
         self.next = None            # next game button
         self.exit = None            # exit game button
@@ -285,8 +286,10 @@ class ResultView(arcade.View):
         self.config = config
         # set statistics => result table
         self.stats = stats
-        # set shithead of last game => result table and dealer of next game
-        self.shithead = shithead
+        # set last known shithead as dealer of the next game
+        # NOTE: shithead parameter could be None => game aborted
+        #       therfore we use the last known Shithead from the statistics.
+        self.dealer = stats.shithead
         # get number of players
         # to calculate the Y-coord of the upper left corner.
         n_players = stats.get_nof_players()
@@ -361,7 +364,7 @@ class ResultView(arcade.View):
         if self.state == NEXT_STATE:
             # create, setup a game view with the current configuration,
             # and activate it (via config to avoid circular init)
-            config.start_game(self.config, self.window, self.shithead)
+            config.start_game(self.config, self.window, self.dealer)
         elif self.state == EXIT_STATE:
             sys.exit()
         else:
