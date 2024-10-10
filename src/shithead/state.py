@@ -139,8 +139,11 @@ class State:
         # list of players (index into players) which have shown the requested card.
         self.shown_starting_card = []
 
-        # score per player for this round of the game
+        # score and turn count per player for this round of the game
+        # this is used to revert scores in case of an abort
         self.result = {}
+        for player in self.players:
+            self.result[player.name] = [0, 0]
 
         # player, action, and card causing this state
         self.log_player = None
@@ -152,6 +155,7 @@ class State:
 
         # game history = list of plays leading up to this state
         self.history = []
+
 
     def get_unknown_cards(self):
         '''
@@ -534,7 +538,7 @@ class State:
         new_state.starting_card = self.starting_card
         new_state.auction_members = self.auction_members[:]
         new_state.shown_starting_card = self.shown_starting_card[:]
-        # score per player for this round of the game
+        # score and turn count per player for this round of the game
         new_state.result = {}
         for key in self.result.keys():
             new_state.result[key] = self.result[key]
