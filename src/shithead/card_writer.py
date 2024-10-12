@@ -1,9 +1,10 @@
 """
 Making Big Letters with Cards.
 """
-import arcade
 import json
 import argparse
+
+import arcade
 
 # Screen title and size
 SCREEN_WIDTH = 1024
@@ -37,11 +38,13 @@ START_X = MAT_WIDTH / 2 + MAT_WIDTH * HORIZONTAL_MARGIN_PERCENT
 TITLE_Y = 535
 
 # Card constants
-CARD_VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+CARD_VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q",
+               "K"]
 CARD_SUITS = ["Clubs", "Hearts", "Spades", "Diamonds"]
 
 DEFAULT_LINE_HEIGHT = 18
 DEFAULT_FONT_SIZE = 12
+
 
 class Card(arcade.Sprite):
     """ Card sprite """
@@ -54,10 +57,12 @@ class Card(arcade.Sprite):
         self.value = value
 
         # Image to use for the sprite when face up
-        self.image_file_name = f":resources:images/cards/card{self.suit}{self.value}.png"
+        self.image_file_name = (f":resources:images/cards/card{self.suit}"
+                                f"{self.value}.png")
 
         # Call the parent
         super().__init__(self.image_file_name, scale, hit_box_algorithm="None")
+
 
 class CardWriter(arcade.Window):
     """ Main application class. """
@@ -65,7 +70,7 @@ class CardWriter(arcade.Window):
     def __init__(self, letter, title, size):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
 
-      	# Sprite list with all the cards already in the title.
+        # Sprite list with all the cards already in the title.
         self.card_list = arcade.SpriteList()
         # Sprite list with all cards of one letter
         self.letter_cards = arcade.SpriteList()
@@ -90,6 +95,8 @@ class CardWriter(arcade.Window):
         self.held_cards = []
         # scale down cards in letter by this ratio
         self.ratio = 0.5
+        # symbol read from keyboard
+        self.key_buffer = None
 
         # set the background color
         arcade.set_background_color(arcade.color.AMAZON)
@@ -98,58 +105,72 @@ class CardWriter(arcade.Window):
         start_x = 10
         start_y = SCREEN_HEIGHT - DEFAULT_LINE_HEIGHT * 40
         text = arcade.Text(self.letter, start_x, start_y,
-                arcade.color.CINNABAR, DEFAULT_FONT_SIZE * 48,
-                width=SCREEN_WIDTH, align='center')
+                           arcade.color.CINNABAR, DEFAULT_FONT_SIZE * 48,
+                           width=SCREEN_WIDTH, align='center')
         self.text_list.append(text)
 
         # create the main title text object
         start_x = 0
         start_y = TITLE_Y
         text = arcade.Text(self.title, start_x, start_y,
-                arcade.color.CINNABAR, DEFAULT_FONT_SIZE * self.title_size,
-                width=SCREEN_WIDTH, align='center')
+                           arcade.color.CINNABAR,
+                           DEFAULT_FONT_SIZE * self.title_size,
+                           width=SCREEN_WIDTH, align='center')
         self.text_list.append(text)
 
     def pull_to_top(self, card: arcade.Sprite):
-        """ Pull card to top of rendering order (last to render, looks on-top) """
-
+        """
+        Pull card to top of rendering order (last to render, looks on-top)
+        """
         # Remove, and append to the end
         self.letter_cards.remove(card)
         self.letter_cards.append(card)
 
     def store_letter(self):
+        """
+        Store card coords to file.
+        """
         for card in self.letter_cards:
-            self.letter_coords.append((card.position[0], card.position[1], card.angle))
+            self.letter_coords.append((card.position[0], card.position[1],
+                                       card.angle))
         x_min = min([c[0] for c in self.letter_coords])
         y_min = min([c[1] for c in self.letter_coords])
 
         # normalize the coordinates
-        self.letter_coords = [(c[0] - x_min, c[1] - y_min, c[2])
-                    for c in self.letter_coords]
+        self.letter_coords = [(c[0] - x_min, c[1] - y_min,
+                               c[2]) for c in self.letter_coords]
         print(self.letter_coords)
         # store normalized coords to file
-        with open(f'letter_{self.letter}.json', 'w') as json_file:
+        with open(f'letter_{self.letter}.json',
+                  'w', encoding='utf-8') as json_file:
             json.dump(self.letter_coords, json_file, indent=4)
         self.letter_coords = []
 
     def load_letter(self, filename, x, y):
+        """
+        Load card coords from file.
+        """
         try:
-            with open(filename, 'r') as json_file:
+            with open(filename, 'r', encoding='utf-8') as json_file:
                 self.letter_coords = json.load(json_file)
                 print(self.letter_coords)
-        except OSError as exception:
-            print(f"### Warning couldn't load file {filename}")
+        except IOError as exception:
+            print(f"### Warning couldn't load file: {exception}")
             return
 
         for coord in self.letter_coords:
             card = Card('Diamonds', '3', CARD_SCALE * self.ratio)
-            card.position = (coord[0] * self.ratio + x, coord[1] * self.ratio + y)
+            card.position = (coord[0] * self.ratio + x,
+                             coord[1] * self.ratio + y)
             card.angle = coord[2]
             self.letter_cards.append(card)
 
         self.letter_loaded = True
 
     def change_letter_size(self, change):
+        """
+        Change the letter size.
+        """
         # find x_min and y_min for the current letter cards coordinates
         x_min = min([card.position[0] for card in self.letter_cards])
         y_min = min([card.position[1] for card in self.letter_cards])
@@ -160,7 +181,8 @@ class CardWriter(arcade.Window):
         print(f'### ratio: {self.ratio}')
         for coord in self.letter_coords:
             card = Card('Diamonds', '3', CARD_SCALE * self.ratio)
-            card.position = (coord[0] * self.ratio + x_min, coord[1] * self.ratio + y_min)
+            card.position = (coord[0] * self.ratio + x_min,
+                             coord[1] * self.ratio + y_min)
             card.angle = coord[2]
             self.letter_cards.append(card)
 
@@ -177,8 +199,7 @@ class CardWriter(arcade.Window):
         self.letter_cards.draw()
         self.card_list.draw()
 
-
-    def on_mouse_press(self, x, y, button, key_modifiers):
+    def on_mouse_press(self, x, y, button, modifiers):
         """ Called when the user presses a mouse button. """
 
         # Get list of cards we've clicked on
@@ -191,7 +212,8 @@ class CardWriter(arcade.Window):
             primary_card = cards[-1]
 
             if self.letter_loaded:
-                # after a letter has been loaded all cards are moved simultaneously
+                # after a letter has been loaded all cards are moved
+                # simultaneously
                 self.held_cards = [card for card in self.letter_cards]
 
             else:
@@ -222,52 +244,57 @@ class CardWriter(arcade.Window):
             card.center_x += dx
             card.center_y += dy
 
-    def on_key_press(self, key, modifiers):
-        self.key_buffer = key
-        if key == arcade.key.UP:
+    def on_key_press(self, symbol, modifiers):
+        """
+        Apply pressed key.
+        """
+        self.key_buffer = symbol
+        if symbol == arcade.key.UP:
             if len(self.held_cards) > 0:
                 self.held_cards[0].angle += 5
-        elif key == arcade.key.DOWN:
+        elif symbol == arcade.key.DOWN:
             if len(self.held_cards) > 0:
                 self.held_cards[0].angle -= 5
-        if key == arcade.key.LEFT:
+        if symbol == arcade.key.LEFT:
             if len(self.held_cards) > 0:
                 self.held_cards[0].angle += 45
-        elif key == arcade.key.RIGHT:
+        elif symbol == arcade.key.RIGHT:
             if len(self.held_cards) > 0:
                 self.held_cards[0].angle -= 45
-        elif key == arcade.key.ENTER:
+        elif symbol == arcade.key.ENTER:
             self.store_letter()
-        elif key == arcade.key.INSERT:
+        elif symbol == arcade.key.INSERT:
             card = Card('Diamonds', '3', CARD_SCALE)
             card.position = START_X, BOTTOM_Y
             self.letter_cards.append(card)
             self.pull_to_top(card)
-        elif key == arcade.key.DELETE:
+        elif symbol == arcade.key.DELETE:
             # Get list of cards under mouse pointer
-            cards = arcade.get_sprites_at_point(self.mouse_coords, self.letter_cards)
+            cards = arcade.get_sprites_at_point(self.mouse_coords,
+                                                self.letter_cards)
             # are there any cards under the mouse pointer?
             if len(cards) > 0:
                 # Might be a stack of cards, get the top one
                 primary_card = cards[-1]
                 # and remove it from the card list
                 self.letter_cards.remove(primary_card)
-        elif key >= arcade.key.A and key <= arcade.key.Z:
-            self.load_letter(f'letter_{chr(key-32)}.json', 367, 95.2)
-        elif key == arcade.key.PAGEUP:
+        elif symbol >= arcade.key.A and symbol <= arcade.key.Z:
+            self.load_letter(f'letter_{chr(symbol-32)}.json', 367, 95.2)
+        elif symbol == arcade.key.PAGEUP:
             self.change_letter_size(1.1)
-        elif key == arcade.key.PAGEDOWN:
+        elif symbol == arcade.key.PAGEDOWN:
             self.change_letter_size(0.9)
-        elif key == arcade.key.NUM_ENTER:
+        elif symbol == arcade.key.NUM_ENTER:
             # copy current letter to card list and reset the letter card list.
             for card in self.letter_cards:
                 self.card_list.append(card)
                 self.letter_cards = arcade.SpriteList()
-        elif key == arcade.key.END:
+        elif symbol == arcade.key.END:
             # save coords of cards in card list to file
-            title_coords = [(card.position[0], card.position[1], card.angle) for card in self.card_list]
+            title_coords = [(card.position[0], card.position[1], card.angle)
+                            for card in self.card_list]
             print(title_coords)
-            with open('title.json', 'w') as json_file:
+            with open('title.json', 'w', encoding='utf-8') as json_file:
                 json.dump(title_coords, json_file, indent=4)
 
 
@@ -275,11 +302,12 @@ def main():
     """ Main function """
     parser = argparse.ArgumentParser(prog='card_writer')
     parser.add_argument('-l', '--letter', default=' ', action='store')
-    parser.add_argument('-t', '--title', default=' ',action='store')
+    parser.add_argument('-t', '--title', default=' ', action='store')
     parser.add_argument('-s', '--size', type=int, default=1, action='store')
     args = parser.parse_args()
 
-    window = CardWriter(args.letter, args.title, args.size)
+#    window = CardWriter(args.letter, args.title, args.size)
+    CardWriter(args.letter, args.title, args.size)
     arcade.run()
 
 
