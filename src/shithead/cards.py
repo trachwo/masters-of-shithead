@@ -11,13 +11,14 @@ from functools import cmp_to_key
 CARD_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 CARD_SUITS = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
 
-#------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
 class Card():
     """
     Playing card sprite.
     """
 
-    def __init__(self, id, suit, rank):
+    def __init__(self, did, suit, rank):
         '''
         Initialize a Card.
 
@@ -26,19 +27,19 @@ class Card():
         could remember for each card which was face up once during the game,
         where it is right now (e.g. taken by a player with the discard pile)
 
-        :param id:      deck id => unique cards in multi-deck games.
-        :type id:       int
+        :param did:     deck id => unique cards in multi-deck games.
+        :type did:      int
         :param suit:    card suit
         :type suit:     str
         :param rank:    card rank
         :type rank:     str
         '''
-        self.id = id
+        self.did = did
         self.suit = suit
         self.rank = rank
-        self.seen = False       # True => card has been seen face up during game.
-        self.shown = False      # True => shown during starting player auction
-        self.is_face_up = False # True => card is face up right now
+        self.seen = False   # True => card has been seen face up during game.
+        self.shown = False  # True => shown during starting player auction
+        self.is_face_up = False  # True => card is face up right now
 
     def __str__(self):
         '''
@@ -102,8 +103,8 @@ class Card():
         :return:            copy of original card (not just reference)
         :rtype:             Card
         '''
-        # create a new card with same id, suit, and rank
-        new_card = Card(self.id, self.suit, self.rank)
+        # create a new card with same deck id, suit, and rank
+        new_card = Card(self.did, self.suit, self.rank)
         # copy the attributes
         new_card.seen = self.seen
         new_card.shown = self.shown
@@ -121,7 +122,7 @@ class Card():
         # create the state dictionary
         state = {}
         # add attributes to dictionary
-        state['id'] = self.id
+        state['did'] = self.did
         state['suit'] = self.suit
         state['rank'] = self.rank
         state['seen'] = self.seen
@@ -154,7 +155,7 @@ class Card():
         return not self.is_face_up
 
 
-#------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 class Deck:
     '''
     Class representing a deck of cards.
@@ -162,15 +163,15 @@ class Deck:
     In the Shithead game one or more decks are used as face down talon to
     refill the player's hands from.
     '''
-    def __init__(self, id=0, empty=False):
+    def __init__(self, did=0, empty=False):
         '''
         Create a deck of 52 cards.
 
         Decks are always created as single decks of 52 cards (TODO Jokers).
         Bigger decks are created by adding single decks together.
 
-        :param id:      deck ID => unique cards over multiple decks.
-        :type id:       int
+        :param did:     deck ID => unique cards over multiple decks.
+        :type did:      int
         :param empty:   True => create deck without cards.
         :type empty:    bool
         '''
@@ -179,7 +180,7 @@ class Deck:
             # create deck of 52 cards
             for suit in CARD_SUITS:
                 for rank in CARD_RANKS:
-                    card = Card(id, suit, rank)
+                    card = Card(did, suit, rank)
                     self.deck.append(card)
 
     def __str__(self):
@@ -247,13 +248,13 @@ class Deck:
         :rtype:         int
         '''
         return self.deck.index(card)
-    
+
     def find(self, searched):
         '''
-        Find card specified by id, suit, and rank.
+        Find card specified by deck id, suit, and rank.
 
-        Compares id, suit, and rank of the specified card to the cards in this
-        deck and returns the index of the 1st matching card.
+        Compares deck id, suit, and rank of the specified card to the cards in
+        this deck and returns the index of the 1st matching card.
 
         :param searched:    searched for card.
         :type searched:     Card
@@ -261,12 +262,11 @@ class Deck:
         :rtype:             int
         '''
         for idx, card in enumerate(self.deck):
-            if (card.id == searched.id and 
-                card.suit == searched.suit and
-                card.rank == searched.rank):
+            if (card.did == searched.did
+                    and card.suit == searched.suit
+                    and card.rank == searched.rank):
                 return idx
-        else:
-            return -1
+        return -1   # card wasn't found if we get here
 
     def add_card(self, card):
         '''
@@ -301,16 +301,17 @@ class Deck:
 
         :param card:    selected card.
         :type card:     Card
-        :return:        the 1st card in deck which matches suit/rank/id,
-                        or Exception.
+        :return:        the 1st card in deck which matches suit/rank/did,
+                        or None.
         :rtype:         Card
         '''
-        for i in range(len(self.deck)):
-            if (self.deck[i].suit == card.suit and self.deck[i].rank == card.rank and
-                self.deck[i].id == card.id):
-                return self.deck.pop(i)
-        else:
-            raise Exception(f'No card {Card.ranks[card.rank]}{Card.suits[card.suit]} in this deck!')
+        for idx, crd in enumerate(self.deck):
+            if (crd.suit == card.suit
+                    and crd.rank == card.rank
+                    and crd.did == card.did):
+                return self.deck.pop(idx)
+        # if we get here, the specified is not in the deck
+        return None
 
     def shuffle(self):
         '''
@@ -383,7 +384,6 @@ class Deck:
         :type face_up:      bool
         '''
         print(self.get_string(face_up), end=end)
-        deck_str = ''       # empty deck string
 
     def copy(self):
         '''
@@ -395,7 +395,7 @@ class Deck:
         :return:            copy of original deck (not just reference)
         :rtype:             Deck
         '''
-        new_deck = Deck(empty=True)     # id is doesn't matter for empty Deck
+        new_deck = Deck(empty=True)     # did is doesn't matter for empty Deck
         for card in self.deck:
             new_deck.add_card(card.copy())
 
@@ -431,35 +431,38 @@ class Deck:
             self.deck = []
         # create cards from list of card states
         for cst in state:
-            card = Card(cst['id'], cst['suit'], cst['rank'])
+            card = Card(cst['did'], cst['suit'], cst['rank'])
             card.seen = cst['seen']
             card.shown = cst['shown']
             card.is_face_up = cst['is_face_up']
             # add this card to the deck
             self.deck.append(card)
 
-if __name__ == '__main__':
 
-    print('------------------------------------------------------------------------------')
+def main():
+    """
+    Test for Card and Deck methods.
+    """
+    print('------------------------------------------------------------------')
     print('Test creation of a card deck!')
     deck = Deck()
     print(str(deck))
     print(f'length of deck: {len(deck)}')
 
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print('Test adding a 2nd deck')
-    deck2 = Deck(id=1)
+    deck2 = Deck(did=1)
     deck += deck2
     print(str(deck))
     print(f'length of deck: {len(deck)}')
 
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print('Test the shuffle() method')
     deck = Deck()
     deck.shuffle()
     print(f'shuffled deck: {deck}')
 
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print("Test '[]' and 'in' operators and the index() method")
     card = deck[15]
     if card in deck:
@@ -473,7 +476,7 @@ if __name__ == '__main__':
         print(f'{card} is in the deck')
     print(f'{card} is at index={deck.index(card)} in the deck')
 
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print('Test the copy() and sort() methods')
     deck = Deck()
     deck3 = deck.copy()
@@ -483,7 +486,7 @@ if __name__ == '__main__':
     print(f'deck sorted: {deck}')
     print(f'deck3: {deck3}')
 
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print('Test pop_card() and add_card() methods')
     deck = Deck()
     deck.shuffle()
@@ -493,7 +496,7 @@ if __name__ == '__main__':
     print(f'card: {card}')
     deck.add_card(card)
     print(f'deck: {deck}')
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print('Test removing a card from the deck')
     deck = Deck()
     deck.shuffle()
@@ -502,8 +505,8 @@ if __name__ == '__main__':
     print(f'card: {card}')
     card2 = deck.remove_card(card)
     print(f'deck: {deck}')
-    print(f'card2: {card}')
-    print('------------------------------------------------------------------------------')
+    print(f'card2: {card2}')
+    print('------------------------------------------------------------------')
     print('Get number of different ranks in deck')
     deck = Deck()
     deck.sort()
@@ -520,7 +523,7 @@ if __name__ == '__main__':
     print(f"A's: {deck.get_nof_cards('A')}")
     print(f"K's: {deck.get_nof_cards('K')}")
     print(f"Q's: {deck.get_nof_cards('Q')}")
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print("Test Deck's print method")
     deck = Deck()
     deck.shuffle()
@@ -533,7 +536,7 @@ if __name__ == '__main__':
     deck[16].face_up()
     deck[17].face_up()
     deck.print(False)
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print('Test adding cards to hand')
     deck = Deck()
     deck.shuffle()
@@ -544,10 +547,14 @@ if __name__ == '__main__':
     hand.add_card(deck.pop_card())
     deck.print()
     hand.print()
-    print('------------------------------------------------------------------------------')
+    print('------------------------------------------------------------------')
     print('Test copying a deck')
     deck = Deck()
     deck.shuffle()
     deck.print()
     new_deck = deck.copy()
     new_deck.print()
+
+
+if __name__ == '__main__':
+    main()
