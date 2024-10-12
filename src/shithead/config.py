@@ -29,10 +29,11 @@ written to the log file.
 12.02.2023 Wolfgang Trachsler
 """
 
-import arcade
 import json
 import glob
 import os
+
+import arcade
 
 # local imports (modules in same package)
 from . import gui
@@ -45,7 +46,6 @@ SCREEN_TITLE = "Sh*thead"
 CONFIG_FILE_MAGIC = 47908652    # random number to identify config files
 MAX_NOF_PLAYERS = 6
 DEFAULT_FONT_SIZE = 14
-#TOP_MARGIN = 100
 TOP_MARGIN = 60
 
 HSPACING = 20   # horizontal distance between labels/fields
@@ -60,7 +60,8 @@ PLAYER_TYPE = 150   # width of type field
 PLAYER_NAME = 200   # width of name field
 
 # dimensions of configuration background for 6 players + column headers
-PLAYERS_WIDTH = HMARGIN + PLAYER_LABEL + HSPACING + PLAYER_TYPE + HSPACING + PLAYER_NAME + HMARGIN
+PLAYERS_WIDTH = (HMARGIN + PLAYER_LABEL + HSPACING + PLAYER_TYPE + HSPACING
+                 + PLAYER_NAME + HMARGIN)
 PLAYERS_HEIGHT = VMARGIN + PLAYER_HEIGHT + 6 * VSPACING + VMARGIN
 
 # dimensions of configuration file entry
@@ -78,8 +79,8 @@ BUTTON_WIDTH = 133      # with BUTTON_SCALE
 
 # fast play selection dimensions
 FAST_PLAY_LABEL = 80
-FAST_PLAY =  50
-FAST_PLAY_HEIGHT =  30
+FAST_PLAY = 50
+FAST_PLAY_HEIGHT = 30
 
 # card speed selection dimensions
 CARD_SPEED_LABEL = 100
@@ -91,7 +92,8 @@ CARD_SPEEDS = ['20', '30', '40', '50', '10']
 LOG_LEVEL_LABEL = 80
 LOG_LEVEL = 170
 LOG_LEVEL_HEIGHT = 30
-LOG_LEVELS = ['One Line', 'Game Display', 'Perfect Memory', 'No Secrets', 'Debugging']
+LOG_LEVELS = ['One Line', 'Game Display', 'Perfect Memory', 'No Secrets',
+              'Debugging']
 
 # log file selection/name dimensions
 LOG_TO_FILE_LABEL = 80
@@ -103,7 +105,6 @@ LOG_FILE_NAME_HEIGHT = 30
 
 # dimensions of miscellanous configs background
 MISC_BG_WIDTH = PLAYERS_WIDTH
-#MISC_BG_HEIGHT = VMARGIN + FAST_PLAY_HEIGHT + VSPACING + VMARGIN
 MISC_BG_HEIGHT = VMARGIN + FAST_PLAY_HEIGHT + 2 * VSPACING + VMARGIN
 
 # calculate the left/right screen margin if we have the 'LOAD' button next to
@@ -111,7 +112,7 @@ MISC_BG_HEIGHT = VMARGIN + FAST_PLAY_HEIGHT + 2 * VSPACING + VMARGIN
 LEFT_MARGIN = (SCREEN_WIDTH - (PLAYERS_WIDTH + HSPACING + BUTTON_WIDTH)) / 2
 
 MAX_NAME_LENGTH = 15
-MAX_FILE_NAME_LENGTH =18
+MAX_FILE_NAME_LENGTH = 18
 MAX_LOG_FILE_NAME_LENGTH = 10
 
 # default filename of configuration file
@@ -122,7 +123,7 @@ BUTTON_RELEASED = ":resources:gui_basic_assets/red_button_normal.png"
 BUTTON_PRESSED = ":resources:gui_basic_assets/red_button_press.png"
 
 # coords of START button
-START_X= 100
+START_X = 100
 START_Y = 100
 
 # coords of LOAD button
@@ -175,6 +176,7 @@ class InputField(arcade.SpriteSolidColor):
         """
         super().__init__(width, height, arcade.csscolor.WHITE)
         self.position = pos     # place field at specified position
+        self.txt = None
 
     def add_content(self, content, align='left'):
         """
@@ -189,13 +191,13 @@ class InputField(arcade.SpriteSolidColor):
         if align == 'left':
             self.txt = arcade.Text(
                 content,
-                x - self.width / 2 + 10 , y,
+                x - self.width / 2 + 10, y,
                 arcade.color.BLACK, DEFAULT_FONT_SIZE,
                 anchor_x='left', anchor_y='center')
         elif align == 'right':
             self.txt = arcade.Text(
                 content,
-                x + self.width / 2 - 10 , y,
+                x + self.width / 2 - 10, y,
                 arcade.color.BLACK, DEFAULT_FONT_SIZE,
                 anchor_x='right', anchor_y='center')
         else:
@@ -205,13 +207,14 @@ class InputField(arcade.SpriteSolidColor):
                 arcade.color.BLACK, DEFAULT_FONT_SIZE,
                 anchor_x='center', anchor_y='center')
 
-    def execute_field_action(self):
+    def execute_field_action(self, key, modifiers):
         """
         Action executed when field is in focus.
         """
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the"
+                                  " subclass")
 
-    def draw(self):
+    def draw_field(self):
         """
         Render input field and its content on the screen.
         """
@@ -245,7 +248,7 @@ class OptionField(InputField):
         self.sel = 0   # 1st option in list is the default option
         self.add_content(options[0])  # create field content
 
-    def execute_field_action(self):
+    def execute_field_action(self, key, modifiers):
         """
         Option field action.
 
@@ -288,6 +291,7 @@ class TextField(InputField):
         self.max_len = max_len
         self.align = align
         self.focus = False              # True => started entering name
+        self.previous = None            # backup of previous text
         self.add_content(text, align)   # create field content text object
 
     def execute_field_action(self, key, modifiers):
@@ -298,10 +302,10 @@ class TextField(InputField):
         empty string. Printable characters will be added to the text, with the
         SHIFT modifier used to dicern between lowercase and uppercase.
         The BACKSPACE will remove the last char from the text.
-        RETURN terminates text entry. If the text is empty when pressing return,
-        the previous text will be restored. The focus flag will be reset,
-        i.e. the next time we press a key with the focus on this field, text
-        entry starts with resetting the text.
+        RETURN terminates text entry. If the text is empty when pressing
+        return, the previous text will be restored. The focus flag will be
+        reset, i.e. the next time we press a key with the focus on this field,
+        text entry starts with resetting the text.
 
         :param key:             key pressed.
         :type key:              int
@@ -322,18 +326,21 @@ class TextField(InputField):
             # add char to text
             if len(self.text) < self.max_len:
                 self.text += chr(key)
-                self.add_content(self.text, self.align) # create new content text object
+                # create new content text object
+                self.add_content(self.text, self.align)
         elif key == arcade.key.BACKSPACE:
             if len(self.text) > 0:
                 # remove the last character
                 self.text = self.text[:-1]
-                self.add_content(self.text, self.align) # create new content text object
+                # create new content text object
+                self.add_content(self.text, self.align)
         elif key == arcade.key.RETURN:
             # terminate text entry
             if len(self.text) == 0:
                 # empty text field => restore previous text
                 self.text = self.previous
-                self.add_content(self.text, self.align) # create new content text object
+                # create new content text object
+                self.add_content(self.text, self.align)
             # reset focus flag
             self.focus = False
 
@@ -356,7 +363,7 @@ class PlayerConfig():
         :return:        label text object.
         :rtype:         arcade.Text.
         """
-        x,y = pos   # get coords of left/center of label
+        x, y = pos   # get coords of left/center of label
         # create the config label (Player0, Player1, ...)
         label = arcade.Text(
             f'Player{index}:',
@@ -382,20 +389,21 @@ class PlayerConfig():
         :param types:   player types available for this player.
         :type types:    list
         """
-        x,y = coords
+        x, y = coords
 
         # create the config label (Player0, Player1, ...)
         self.label = self.create_label(coords, index)
 
         # create the player type input field
         x += PLAYER_LABEL + HSPACING + PLAYER_TYPE / 2
-        self.type_field = OptionField((x,y), PLAYER_TYPE,
-                PLAYER_HEIGHT, types)
+        self.type_field = OptionField((x, y), PLAYER_TYPE,
+                                      PLAYER_HEIGHT, types)
 
         # create the player name input field
         x += PLAYER_TYPE / 2 + HSPACING + PLAYER_NAME / 2
-        self.name_field = TextField((x,y), PLAYER_NAME,
-                PLAYER_HEIGHT, MAX_NAME_LENGTH, f'Player{index}')
+        self.name_field = TextField((x, y), PLAYER_NAME,
+                                    PLAYER_HEIGHT, MAX_NAME_LENGTH,
+                                    f'Player{index}')
 
         # init statistic counters (shitheads, score, games, turns)
         # Note: the player statistics are stored in the config file
@@ -408,7 +416,7 @@ class PlayerConfig():
         loop (-> arcade.run()) to redraw the screen.
         """
         self.label.draw()
-        self.type_field.draw()
+        self.type_field.draw_field()
         self.name_field.draw()
 
     def get_config(self):
@@ -422,8 +430,8 @@ class PlayerConfig():
         :rtype:         tuple
         """
         name = self.name_field.text
-        type = self.type_field.options[self.type_field.sel]
-        return (name, type, self.counters)
+        ptype = self.type_field.options[self.type_field.sel]
+        return (name, ptype, self.counters)
 
     def set_config(self, config):
         """
@@ -440,11 +448,12 @@ class PlayerConfig():
         :type config:   tuple
         """
         # unpack list of player attributs
-        name, type, counters = config
+        name, ptype, counters = config
 
         # player name must be a non-empty string
         if not isinstance(name, str) or len(name) == 0:
-            print(f'### Warning: player name must be a string, {self.name_field.text} not changed!')
+            print(f"### Warning: player name must be a string,"
+                  f" {self.name_field.text} not changed!")
             return
 
         if len(name) > MAX_NAME_LENGTH:
@@ -453,18 +462,22 @@ class PlayerConfig():
 
         # player statistic counters must be a list of 4 integers
         if not isinstance(counters, list) or len(counters) != 4:
-            print(f'### Warning: player counters must be a list of 4 integers, {self.name_field.text} not changed!')
+            print(f"### Warning: player counters must be a list of 4 integers,"
+                  f" {self.name_field.text} not changed!")
             return
         for counter in counters:
             if not isinstance(counter, int):
-                print(f'### Warning: player counters must be a list of 4 integers, {self.name_field.text} not changed!')
+                print(f"### Warning: player counters must be a list of 4"
+                      f" integers, {self.name_field.text} not changed!")
                 return
 
         # type must be one of the types in the options list.
         try:
-            sel = self.type_field.options.index(type)
-        except:
-            print(f'### Warning: player type must be one of the available types, {self.name_field.text} not changed!')
+            sel = self.type_field.options.index(ptype)
+        except ValueError as err:
+            print(err)
+            print(f"### Warning: player type must be one of the available"
+                  f" types, {self.name_field.text} not changed!")
             return
 
         # everything ok => change this players configuration
@@ -473,8 +486,8 @@ class PlayerConfig():
         self.type_field.sel = sel
         self.type_field.add_content(type)
         self.counters = counters
-#        print(f'### name: {self.name_field.text} sel: {self.type_field.sel} counters: {self.counters}')
         return
+
 
 class ConfigFile():
     '''
@@ -491,8 +504,8 @@ class ConfigFile():
         :type coords:       tuple of float
         :param filename:    name of config file (incl. '.json')
         """
-        x,y = coords
-        filename = filename[:-5] # remove '.json' from end of string
+        x, y = coords
+        filename = filename[:-5]  # remove '.json' from end of string
 
         # create the config file label.
         self.label = arcade.Text(
@@ -506,8 +519,9 @@ class ConfigFile():
 
         # create the config file input field
         x += FILE_LABEL + HSPACING + FILE_NAME / 2
-        self.name_field = TextField((x,y), FILE_NAME,
-                FILE_HEIGHT, MAX_FILE_NAME_LENGTH, filename, 'right')
+        self.name_field = TextField((x, y), FILE_NAME,
+                                    FILE_HEIGHT, MAX_FILE_NAME_LENGTH,
+                                    filename, 'right')
 
         # create the extension
         self.extension = arcade.Text(
@@ -521,12 +535,12 @@ class ConfigFile():
 
     def draw(self):
         """
-        Draw the label and the filename input field with its content to the screen.
+        Draw label and filename input field with its content to the screen.
         This function is called approximately 60 times per second by the game
         loop (-> arcade.run()) to redraw the screen.
         """
         self.label.draw()
-        self.name_field.draw()
+        self.name_field.draw_field()
         self.extension.draw()
 
     def get_config(self):
@@ -538,6 +552,7 @@ class ConfigFile():
         """
         # add extension 'json' to name in input field
         return self.name_field.text + '.json'
+
 
 class FastPlayConfig():
     '''
@@ -553,7 +568,7 @@ class FastPlayConfig():
         :param coords:  X/Y-coors of fast play config (left/center)
         :type coords:   tuple of float
         """
-        x,y = coords
+        x, y = coords
 
         # create the FastPlay label
         self.label = arcade.Text(
@@ -567,8 +582,8 @@ class FastPlayConfig():
 
         # create the fast play input field (with default 'Yes')
         x += FAST_PLAY_LABEL + HSPACING + FAST_PLAY / 2
-        self.is_fast_play = OptionField((x,y), FAST_PLAY,
-                FAST_PLAY_HEIGHT, ['Yes', 'No'])
+        self.is_fast_play = OptionField((x, y), FAST_PLAY, FAST_PLAY_HEIGHT,
+                                        ['Yes', 'No'])
 
     def draw(self):
         """
@@ -578,7 +593,7 @@ class FastPlayConfig():
         loop (-> arcade.run()) to redraw the screen.
         """
         self.label.draw()
-        self.is_fast_play.draw()
+        self.is_fast_play.draw_field()
 
     def get_config(self):
         """
@@ -613,6 +628,7 @@ class FastPlayConfig():
             self.is_fast_play.sel = 1
             self.is_fast_play.add_content('No')
 
+
 class CardSpeedConfig():
     '''
     Class for card animation speed selection.
@@ -627,7 +643,7 @@ class CardSpeedConfig():
         :param coords:  X/Y-coors of log level config (left/center)
         :type coords:   tuple of float
         """
-        x,y = coords
+        x, y = coords
 
         # create the card speed label
         self.label = arcade.Text(
@@ -641,8 +657,8 @@ class CardSpeedConfig():
 
         # create the card speed input field
         x += CARD_SPEED_LABEL + HSPACING + CARD_SPEED / 2
-        self.speed = OptionField((x,y), CARD_SPEED,
-                CARD_SPEED_HEIGHT, CARD_SPEEDS)
+        self.speed = OptionField((x, y), CARD_SPEED, CARD_SPEED_HEIGHT,
+                                 CARD_SPEEDS)
 
     def draw(self):
         """
@@ -652,7 +668,7 @@ class CardSpeedConfig():
         loop (-> arcade.run()) to redraw the screen.
         """
         self.label.draw()
-        self.speed.draw()
+        self.speed.draw_field()
 
     def get_config(self):
         """
@@ -684,8 +700,10 @@ class CardSpeedConfig():
         # card speed must be one of the strings in the options list.
         try:
             sel = self.speed.options.index(card_speed)
-        except:
-            print(f'### Warning: {card_speed} is not a valid card speed string!')
+        except ValueError as err:
+            print(err)
+            print(f"### Warning: {card_speed} is not a valid"
+                  f" card speed string!")
             return
 
         # set index of specified card speed in card speed list as selection
@@ -707,7 +725,7 @@ class LogLevelConfig():
         :param coords:  X/Y-coors of log level config (left/center)
         :type coords:   tuple of float
         """
-        x,y = coords
+        x, y = coords
 
         # create the Log level label
         self.label = arcade.Text(
@@ -721,8 +739,8 @@ class LogLevelConfig():
 
         # create the log level input field
         x += LOG_LEVEL_LABEL + HSPACING + LOG_LEVEL / 2
-        self.level = OptionField((x,y), LOG_LEVEL,
-                LOG_LEVEL_HEIGHT, LOG_LEVELS)
+        self.level = OptionField((x, y), LOG_LEVEL, LOG_LEVEL_HEIGHT,
+                                 LOG_LEVELS)
 
     def draw(self):
         """
@@ -732,7 +750,7 @@ class LogLevelConfig():
         loop (-> arcade.run()) to redraw the screen.
         """
         self.label.draw()
-        self.level.draw()
+        self.level.draw_field()
 
     def get_config(self):
         """
@@ -765,8 +783,9 @@ class LogLevelConfig():
         # log_level must be one of the strings in the options list.
         try:
             sel = self.level.options.index(log_level)
-        except:
-            print(f'### Warning: {log_level} is not a valid log-level string!')
+        except ValueError as err:
+            print(err)
+            print(f"### Warning: {log_level} is not a valid log-level string!")
             return
 
         # set index of specified log_level in log-level list as selection
@@ -788,7 +807,7 @@ class LogFileConfig():
         :param coords:  X/Y-coors of log level selection (left/center)
         :type coords:   tuple of float
         """
-        x,y = coords
+        x, y = coords
 
         # create the Log file selection label
         self.to_file_label = arcade.Text(
@@ -802,15 +821,14 @@ class LogFileConfig():
 
         # create the log to file selection field (with default 'Dbg')
         x += LOG_TO_FILE_LABEL + HSPACING + LOG_TO_FILE / 2
-        self.log_to_file = OptionField((x,y), LOG_TO_FILE,
-                LOG_TO_FILE_HEIGHT, ['Dbg', 'No', 'Yes'])
+        self.log_to_file = OptionField((x, y), LOG_TO_FILE, LOG_TO_FILE_HEIGHT,
+                                       ['Dbg', 'No', 'Yes'])
 
         # create the log file label.
         x += LOG_TO_FILE / 2 + HSPACING
         self.log_file_label = arcade.Text(
             'FileName:',
-            x ,
-            y,
+            x, y,
             arcade.color.WHITE,
             DEFAULT_FONT_SIZE,
             anchor_x='left',
@@ -818,15 +836,15 @@ class LogFileConfig():
 
         # create the log file input field
         x += LOG_FILE_LABEL + HSPACING + LOG_FILE_NAME / 2
-        self.name_field = TextField((x,y), LOG_FILE_NAME,
-
-                LOG_FILE_NAME_HEIGHT, MAX_LOG_FILE_NAME_LENGTH, 'shitlog', 'right')
+        self.name_field = TextField((x, y), LOG_FILE_NAME,
+                                    LOG_FILE_NAME_HEIGHT,
+                                    MAX_LOG_FILE_NAME_LENGTH,
+                                    'shitlog', 'right')
 
         # create the extension
         self.extension = arcade.Text(
             '.log',
-            x + LOG_FILE_NAME / 2,
-            y,
+            x + LOG_FILE_NAME / 2, y,
             arcade.color.WHITE,
             DEFAULT_FONT_SIZE,
             anchor_x='left',
@@ -840,9 +858,9 @@ class LogFileConfig():
         loop (-> arcade.run()) to redraw the screen.
         """
         self.to_file_label.draw()
-        self.log_to_file.draw()
+        self.log_to_file.draw_field()
         self.log_file_label.draw()
-        self.name_field.draw()
+        self.name_field.draw_field()
         self.extension.draw()
 
     def get_config(self):
@@ -875,8 +893,8 @@ class LogFileConfig():
         the read information is valid. If it's not valid, we issue a warning
         and keep the defaults.
 
-        :param log_file:    'log-to-file' flag, 'debugging' flag, log-file-name.
-        :type log_level:    tuple of bool, bool, and str.
+        :param log_file:  'log-to-file' flag, 'debugging' flag, log-file-name.
+        :type log_level:  tuple of bool, bool, and str.
         '''
         # the 'log-to-file' flag must be a boolean
         if not isinstance(log_file[0], bool):
@@ -891,12 +909,14 @@ class LogFileConfig():
             return
 
         # the log-file-name must be a string ending with the extension '.log'
-        if log_file[0] and (not isinstance(log_file[2], str) or
-                log_file[2][-4:] != '.log'):
-            print("### Warning: log-file-name must be a string ending on '.log'!")
+        if (log_file[0] and (not isinstance(log_file[2], str)
+                             or log_file[2][-4:] != '.log')):
+            print("### Warning: log-file-name must be a string ending on"
+                  " '.log'!")
             return
         if log_file[0] and len(log_file[2]) > MAX_LOG_FILE_NAME_LENGTH + 4:
-            print(f"### Warning: log-file-name length must be < {MAX_LOG_FILE_NAME_LENGTH + 4}!")
+            print(f"### Warning: log-file-name length"
+                  f" must be < {MAX_LOG_FILE_NAME_LENGTH + 4}!")
             log_file[2] = log_file[2][:MAX_LOG_FILE_NAME_LENGTH] + '.log'
             return
 
@@ -926,7 +946,7 @@ class ConfigView(arcade.View):
 
     def __init__(self):
         """
-        Result view initializer.
+        Configuration view initializer.
         """
         # Initializes the super class
         super().__init__()
@@ -938,7 +958,18 @@ class ConfigView(arcade.View):
         self.buttons = None         # sprite list of buttons
         self.focus = None           # input field we last clicked on
         self.start = None           # start button
+        self.start_text = None      # start button text
         self.load = None            # load button
+        self.file_config_bg = None  # file config background color
+        self.load_text = None       # load button text
+        self.players_config_bg = None   # player config background color
+        self.type_header = None     # player config type column header
+        self.name_header = None     # player config name column header
+        self.misc_bg = None         # miscelaneous config background color
+        self.fast_play = None       # fast play config
+        self.card_speed = None      # card speed config
+        self.log_level = None       # log level config
+        self.log_file = None        # log file config
 
         # set the background color to amazon green.
         arcade.set_background_color(arcade.color.AMAZON)
@@ -974,7 +1005,7 @@ class ConfigView(arcade.View):
         Creates the label text object.
         """
         button = arcade.Sprite(BUTTON_RELEASED, BUTTON_SCALE,
-                hit_box_algorithm='None')
+                               hit_box_algorithm='None')
         button.position = (x, y)
         # add button to the buttons sprite list (=> on_mouse_press)
         self.buttons.append(button)
@@ -997,22 +1028,24 @@ class ConfigView(arcade.View):
 
         We first make a list of files with extension 'json' and sort it
         ascending by modification time. Then we go through the list and try to
-        load each of the files as json file and check if it contains the magic number.
-        The first such file found is returned.
+        load each of the files as json file and check if it contains the magic
+        number. The first such file found is returned.
         TODO only if json file is not empty
 
-        :return:    name of newest config file or default if no config file found.
+        :return:    name of newest config file
+                    or default if no config file found.
         :rtype:     str
         """
         files = glob.glob('*.json')
         sorted_asc = sorted(files, key=lambda t: -os.stat(t).st_mtime)
         for filename in sorted_asc:
             try:
-                with open(filename, 'r') as json_file:
+                with open(filename, 'r', encoding='utf-8') as json_file:
                     config = json.load(json_file)
-            except OSError as exception:
+            except IOError as err:
+                print(err)
                 continue
-            if (type(config) is dict and 'magic' in config.keys() and
+            if (isinstance(config, dict) and 'magic' in config.keys() and
                     config['magic'] == CONFIG_FILE_MAGIC):
                 return filename
         # no config file found => return default filename
@@ -1027,20 +1060,20 @@ class ConfigView(arcade.View):
         the specified file.
         """
         # create a dark green background for the config file input field
-        self.file_config_bg = arcade.SpriteSolidColor(FILE_BG_WIDTH,
-                FILE_BG_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+        self.file_config_bg = arcade.SpriteSolidColor(
+            FILE_BG_WIDTH, FILE_BG_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
 
         # we place it (center/center) at the top of the configuration view
         x = LEFT_MARGIN + FILE_BG_WIDTH / 2
         y = SCREEN_HEIGHT - TOP_MARGIN - FILE_BG_HEIGHT / 2
-        self.file_config_bg.position = (x,y)
+        self.file_config_bg.position = (x, y)
 
         # search newest config file
         filename = self.find_newest_config()
         # coords of ConfigFile (left/center)
         x = LEFT_MARGIN + HMARGIN
         # create the config filename input field.
-        self.file_config = ConfigFile((x,y), filename)
+        self.file_config = ConfigFile((x, y), filename)
         # add the filename input field to the sprite list
         self.fields.append(self.file_config.name_field)
 
@@ -1060,19 +1093,19 @@ class ConfigView(arcade.View):
         The 'START' button is setup next to the player configuration.
         """
         # create a dark green background for the players configuration
-        self.players_config_bg = arcade.SpriteSolidColor(PLAYERS_WIDTH,
-                PLAYERS_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+        self.players_config_bg = arcade.SpriteSolidColor(
+            PLAYERS_WIDTH, PLAYERS_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
 
         # we place it (center, center) below ConfigFile
         x = LEFT_MARGIN + PLAYERS_WIDTH / 2
         y = (SCREEN_HEIGHT - TOP_MARGIN - FILE_BG_HEIGHT - VSPACING / 2
-                - PLAYERS_HEIGHT / 2)
+             - PLAYERS_HEIGHT / 2)
         self.players_config_bg.position = (x, y)
 
         # coords of Player0 (left/center)
         x = LEFT_MARGIN + HMARGIN
         y = (SCREEN_HEIGHT - TOP_MARGIN - FILE_BG_HEIGHT - VSPACING / 2
-                - 1.5 * VSPACING)   # leave room for column headers
+             - 1.5 * VSPACING)   # leave room for column headers
 
         # create the player config fields
         self.players = []
@@ -1082,11 +1115,13 @@ class ConfigView(arcade.View):
                 types = ['Human']
             elif i == 1:
                 # Player1 must be one of the AI players
-                types = ['ShitHappens', 'CheapShit', 'TakeShit', 'DeepShit', 'BullShit']
+                types = ['ShitHappens', 'CheapShit', 'TakeShit', 'DeepShit',
+                         'BullShit']
             else:
                 # Player2..Player5 are AI players or empty
-                types = ['---', 'ShitHappens', 'CheapShit', 'TakeShit', 'DeepShit', 'BullShit']
-            player = PlayerConfig((x,y), i, types)
+                types = ['---', 'ShitHappens', 'CheapShit', 'TakeShit',
+                         'DeepShit', 'BullShit']
+            player = PlayerConfig((x, y), i, types)
             # add to player config list
             self.players.append(player)
             # and player's entry fields to the sprite list
@@ -1102,10 +1137,11 @@ class ConfigView(arcade.View):
         pos = self.players[0].name_field.position
         self.name_header = self.create_header(pos, 'Name')
 
-        # create the start button next to the players configuration (center, center)
+        # create the start button next to the players configuration
+        # (center, center)
         x = LEFT_MARGIN + PLAYERS_WIDTH + HSPACING + BUTTON_WIDTH / 2
         y = (SCREEN_HEIGHT - TOP_MARGIN - FILE_BG_HEIGHT - VSPACING / 2
-                - PLAYERS_HEIGHT / 2)
+             - PLAYERS_HEIGHT / 2)
         self.start, self.start_text = self.setup_button(x, y, 'START')
 
     def setup_misc_config(self):
@@ -1116,41 +1152,38 @@ class ConfigView(arcade.View):
         the log-to-file selector, and the log-file-name.
         """
         # create a dark green background for miscellanious configurations
-        self.misc_bg = arcade.SpriteSolidColor(MISC_BG_WIDTH,
-                MISC_BG_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+        self.misc_bg = arcade.SpriteSolidColor(
+            MISC_BG_WIDTH, MISC_BG_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
         # we place it (center/center) below the player configuration
         x = LEFT_MARGIN + MISC_BG_WIDTH / 2
         y = (SCREEN_HEIGHT - TOP_MARGIN - FILE_BG_HEIGHT - VSPACING / 2
-                - PLAYERS_HEIGHT - VSPACING / 2 - MISC_BG_HEIGHT / 2)
-        self.misc_bg.position = (x,y)
+             - PLAYERS_HEIGHT - VSPACING / 2 - MISC_BG_HEIGHT / 2)
+        self.misc_bg.position = (x, y)
 
         # coords of FastPlayConfig (left/center)
         x = LEFT_MARGIN + HMARGIN
         y += MISC_BG_HEIGHT / 2 - VMARGIN - FAST_PLAY_HEIGHT / 2
         # create the fast play selection field
-        self.fast_play = FastPlayConfig((x,y))
+        self.fast_play = FastPlayConfig((x, y))
         self.fields.append(self.fast_play.is_fast_play)
 
         # coords of CardSpeedConfig (left/center)
         x += FAST_PLAY_LABEL + HSPACING + FAST_PLAY + HSPACING
         # create the card speed selection field
-        self.card_speed = CardSpeedConfig((x,y))
+        self.card_speed = CardSpeedConfig((x, y))
         self.fields.append(self.card_speed.speed)
 
         # coords of LogLevelConfig (left/center)
-#        x += FAST_PLAY_LABEL + HSPACING + FAST_PLAY + HSPACING
         x = LEFT_MARGIN + HMARGIN
         y -= VSPACING
         # create the log level selection field
-        self.log_level = LogLevelConfig((x,y))
+        self.log_level = LogLevelConfig((x, y))
         self.fields.append(self.log_level.level)
 
         # coords of LogFileConfig (left/center)
-#        x = LEFT_MARGIN + HMARGIN
-#        y -= VSPACING
         y -= VSPACING
         # create the log file fields
-        self.log_file = LogFileConfig((x,y))
+        self.log_file = LogFileConfig((x, y))
         self.fields.append(self.log_file.log_to_file)
         self.fields.append(self.log_file.name_field)
 
@@ -1204,9 +1237,8 @@ class ConfigView(arcade.View):
         Write configuration to json file.
         '''
         config = self.get_config()
-#        print(f'### saved config: {config}')
         filename = config['config_file']
-        with open(filename, 'w') as json_file:
+        with open(filename, 'w', encoding='utf-8') as json_file:
             json.dump(config, json_file, indent=4)
 
     def set_config(self, config):
@@ -1220,8 +1252,10 @@ class ConfigView(arcade.View):
         :type config:   dict
         """
         # the players config must be a list of 6 players.
-        if not isinstance(config['players'], list) or len(config['players']) != 6:
-            print('### Warning: players must be a list of 6 player configs, config not changed!')
+        if (not isinstance(config['players'], list)
+                or len(config['players']) != 6):
+            print("### Warning: players must be a list of 6 player configs,"
+                  " config not changed!")
             return
         # set for each player the name, type, and counters according to
         # the specified config
@@ -1240,23 +1274,25 @@ class ConfigView(arcade.View):
         '''
         Loads configuration from json file.
 
-        If file is not present, issues a warning and continues with default configuration.
+        If file is not present, issues a warning and continues with default
+        configuration.
         Updates the input fields with the data read from the json-file.
         '''
         # get filename from the ConfigFile input field.
         filename = self.file_config.get_config()
         try:
-            with open(filename, 'r') as json_file:
+            with open(filename, 'r', encoding='utf-8') as json_file:
                 config = json.load(json_file)
-        except OSError as exception:
-            print(f"### Warning: couldn't load file {filename}, continue with current configuration")
+        except IOError as err:
+            print(err)
+            print(f"### Warning: couldn't load file {filename},"
+                  " continue with current configuration")
             return
 
-#        print(f'### loaded config: {config}')
         # set the loaded configuration in the input fields
         self.set_config(config)
 
-    def on_mouse_press(self, x, y, button, key_modifiers):
+    def on_mouse_press(self, x, y, button, modifiers):
         """
         Mouse button pressed event callback function.
 
@@ -1264,7 +1300,8 @@ class ConfigView(arcade.View):
         If the mouse was pressed over one of the input fields and this field
         was not in focus before, we put it in focus, i.e. we draw a bright
         green frame around it. If it was already in focus we execute the
-        corresponding field action, i.e. step through the options or enter text.
+        corresponding field action, i.e. step through the options or enter
+        text.
         If the mouse was pressed over the 'LOAD' button the specified
         configuration file is loaded.
         If the mouse was pressed over the 'START' button, the configuration is
@@ -1277,12 +1314,12 @@ class ConfigView(arcade.View):
         :type y:                float
         :param button:          the mouse button which was pressed.
         :type button:           int
-        :param key_modifiers:   TODO
-        :type key_modifiers:    int
+        :param modifiers:       Keyboard modifiers e.g. SHIFT, ALT, etc.
+        :type modifiers:        int
         """
 
         # get list of field sprites we clicked on
-        fields = arcade.get_sprites_at_point((x,y), self.fields)
+        fields = arcade.get_sprites_at_point((x, y), self.fields)
 
         # have we clicked on an input field?
         if len(fields) > 0:
@@ -1290,7 +1327,7 @@ class ConfigView(arcade.View):
                 # the field we clicked on is already in focus
                 if isinstance(self.focus, OptionField):
                     # option selection input field => execute its action
-                    self.focus.execute_field_action()
+                    self.focus.execute_field_action(None, None)
             else:
                 # put the clicked on field in focus
                 self.focus = fields[0]
@@ -1299,7 +1336,7 @@ class ConfigView(arcade.View):
             self.focus = None
 
         # check if we have pressed one of the buttons
-        button = arcade.get_sprites_at_point((x,y), self.buttons)
+        button = arcade.get_sprites_at_point((x, y), self.buttons)
         if len(button) > 0:
             # mouse clicked on the buttons
             if button[0] == self.start:
@@ -1318,7 +1355,7 @@ class ConfigView(arcade.View):
                 # input field.
                 self.load_config()
 
-    def on_mouse_release(self, x, y, button, key_modifiers):
+    def on_mouse_release(self, x, y, button, modifiers):
         """
         Mouse button released event callback function.
 
@@ -1330,30 +1367,30 @@ class ConfigView(arcade.View):
         :type y:                float
         :param button:          the mouse button which was released.
         :type button:           int
-        :param key_modifiers:   TODO
-        :type key_modifiers:    int
+        :param modifiers:       key modifiers e.g. SHIFT, ALT, etc.
+        :type modifiers:        int
         """
         # load the released button image into the button sprites
         self.start.texture = arcade.load_texture(BUTTON_RELEASED)
         self.load.texture = arcade.load_texture(BUTTON_RELEASED)
 
-    def on_key_press(self, key, key_modifiers):
+    def on_key_press(self, symbol, modifiers):
         """
         Method called when keyboard key is pressed.
 
         Enters text into a text input field which is in focus.
 
-        :param key:             code of key pressed.
-        :type key:              int
-        :param key_modifiers:   SHIFT, CTRL, etc. pressed.
-        :type key_modifiers:    int
+        :param symbol:          code of key pressed.
+        :type symbol:           int
+        :param modifiers:       SHIFT, CTRL, etc. pressed.
+        :type modifiers:        int
         """
         if self.focus and isinstance(self.focus, TextField):
             # the focus is on a text input field
             # => execute the text input field action.
-            self.focus.execute_field_action(key, key_modifiers)
+            self.focus.execute_field_action(symbol, modifiers)
 
-            if key == arcade.key.RETURN:
+            if symbol == arcade.key.RETURN:
                 # text entry complete => go out of focus
                 self.focus = None
 
@@ -1402,6 +1439,9 @@ class ConfigView(arcade.View):
 
 
 def main():
+    """
+    Test for configuration window.
+    """
 
     # testing the config view
     # open a window with predefined size and title
@@ -1416,6 +1456,7 @@ def main():
 
     # start
     arcade.run()
+
 
 if __name__ == "__main__":
     main()
