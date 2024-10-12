@@ -2,15 +2,15 @@
 Functions for statistical hand analysis during a shithead game.
 
 This was originally implemented to have a tool to decide whether to voluntarily
-take the discard pile or not. The idea is to use the knowledge about the unknown
-cards still in the game (burnt cards, talon, and player hand and face down table
-cards) and the known cards still in the game (own hand cards, opponent hand
-cards taken from discard, face up table cards) to calculate the probability
-that a player is able to play a card. And from this we should be able to
-calculate the probability to get rid of a specific hand of cards.
-If do this calculation for a hand after voluntarily taking the discard pile, or
-after randomly refilling our hand from the talon, we should be able to decide
-if taking the discard pile is a good play.
+take the discard pile or not. The idea is to use the knowledge about the
+unknown cards still in the game (burnt cards, talon, and player hand and face
+down table cards) and the known cards still in the game (own hand cards,
+opponent hand cards taken from discard, face up table cards) to calculate the
+probability that a player is able to play a card. And from this we should be
+able to calculate the probability to get rid of a specific hand of cards.
+If we do this calculation for a hand after voluntarily taking the discard pile,
+or after randomly refilling our hand from the talon, we should be able to
+decide if taking the discard pile is a good play.
 With the same method it should be possible to chose the best card to play in a
 certain situation. The AI using this method is called 'BullShit' since it lost
 most of the time against the other AIs.
@@ -18,13 +18,13 @@ most of the time against the other AIs.
 06.05.2023 Wolfgang Trachsler
 """
 
-from random import randint, shuffle
+from random import shuffle
 from itertools import permutations
 from collections import Counter
 
 # local imports (modules in same package)
 from .cards import Card, Deck, CARD_RANKS
-from . import player as plr # to avoid confusion with 'player' used as variable name
+from . import player as plr  # to avoid confusion with variable 'player'
 from .game import Game
 from .discard import Discard
 from .state import State
@@ -42,7 +42,6 @@ CAN_BE_PLAYED_ON = {
     '7': ['2', '4', '5', '6', '7'],
     '8': ['2', '4', '5', '6', '8'],
     '9': ['2', '4', '5', '6', '8', '9'],
-    '9': ['2', '4', '5', '6', '8', '9'],
     '10': ['2', '3', '4', '5', '6', '8', '9', '10', 'J', 'Q', 'K', 'A'],
     'J': ['2', '4', '5', '6', '8', '9', 'J'],
     'Q': ['2', '4', '5', '6', '8', '9', 'J', 'Q'],
@@ -53,13 +52,15 @@ CAN_BE_PLAYED_ON = {
 # to get a good average we take 'SAMPLE_RATE * len(unknown_cards)' samples
 SAMPLE_RATE = 2
 
+
 def calc_rank_probabilities(cards):
     """
     Calculates the probability per rank to be on top of the discard pile.
 
-    We asume that one of the cards in play but not in our hand, will be on top of
-    the discard pile then it's our next turn. By counting the number of cards of
-    each rank we can calculate the probability for each rank to be on top.
+    We asume that one of the cards in play but not in our hand, will be on top
+    of the discard pile then it's our next turn. By counting the number of
+    cards of each rank we can calculate the probability for each rank to be on
+    top.
 
     :param cards:   list of unknown cards and
                     seen opponent hand cards (ranks only).
@@ -77,18 +78,20 @@ def calc_rank_probabilities(cards):
             probs[rank] = 0
     return probs
 
+
 def calc_rank_playabilities(probs):
     """
     Calculate the probability that a card can be played as 1st play.
 
-    We assume that from all the cards still in the game and not in our hand, one
-    will randomly appear on the top of the discard pile. Now we can calculate for
-    each of the card ranks the probability to be played on this top card.
-    At the start of a players turn a card can only be played if her rank satisfies
-    the rank of the top discard pile card (e.g. a '4' can only be played on '2',
-     '4', or '7'). I.e. we can now calculate for each of our hand cards the
-     probability, that a card will be at the top of the discard pile, which
-     lets us play this hand card.
+    We assume that from all the cards still in the game and not in our hand,
+    one will randomly appear on the top of the discard pile. Now we can
+    calculate for each of the card ranks the probability to be played on this
+    top card.
+    At the start of a players turn a card can only be played if her rank
+    satisfies the rank of the top discard pile card (e.g. a '4' can only be
+    played on '2', '4', or '7'). I.e. we can now calculate for each of our hand
+    cards the probability, that a card will be at the top of the discard pile,
+    which lets us play this hand card.
 
     :param probs:    probabilities per rank to be on top of the discard pile.
     :type _probs:    dict
@@ -102,6 +105,7 @@ def calc_rank_playabilities(probs):
             prob += probs[r]
         playabilities[rank] = prob
     return playabilities
+
 
 def sort_ranks_by_playability(playabilities):
     """
@@ -121,28 +125,31 @@ def sort_ranks_by_playability(playabilities):
         return playabilities[rank]
 
     # get a rank order sorted by playability
-    rank_order = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+    rank_order = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K',
+                  'A']
     rank_order.sort(key=get_rank_playability, reverse=True)
     return rank_order
+
 
 def find_play_sequence(rank_order, hand):
     """
     Find the best play sequence to play a hand of cards.
 
-    We sort a hand of cards in a way, that playing it in sequence from 1st to last
-    card yields the best probability to get rid of all cards.
-    We first sort all cards according to the playability of their rank, with the
-    highest playability first and the rank with the worst playability last.
-    Starting with the highest playability we play as many cards of the same rank
-    as possible. If we can play 4 or more cards of the same rank, this will kill
-    the discard pile, i.e. in this case we now play the cards with the worst
-    playability. Otherwise we play the cards which now have the best playability,
-    from the beginning of the list.
-    The '10' is treated specially, since each played '10' kills the discard pile,
-    we always play the rank with worst playability before playing anonter '10'.
-    The 'Q' is also treated specially, since we can play immediately another card.
-    Usually this will be the card with the worst playability, but with the
-    possibility to play 4 'Q's in a row and only 1 other rank left, it is
+    We sort a hand of cards in a way, that playing it in sequence from 1st to
+    last card yields the best probability to get rid of all cards.
+    We first sort all cards according to the playability of their rank, with
+    the highest playability first and the rank with the worst playability last.
+    Starting with the highest playability we play as many cards of the same
+    rank as possible. If we can play 4 or more cards of the same rank, this
+    will kill the discard pile, i.e. in this case we now play the cards with
+    the worst playability. Otherwise we play the cards which now have the best
+    playability, from the beginning of the list.
+    The '10' is treated specially, since each played '10' kills the discard
+    pile, we always play the rank with worst playability before playing anonter
+    '10'.
+    The 'Q' is also treated specially, since we can play immediately another
+    card. Usually this will be the card with the worst playability, but with
+    the possibility to play 4 'Q's in a row and only 1 other rank left, it is
     preferable to play the 'Q's first.
 
     :param rank_order:  list of all ranks sorted by playability
@@ -169,19 +176,21 @@ def find_play_sequence(rank_order, hand):
     same_rank_count = 1
     play_best = True
 
-    while(len(hand) > 0):
+    while len(hand) > 0:
         if play_seq[-1] == '10':
             # we played a '10' and killed the discard pile
-            # => we can play the any card, i.e. the one with the worst playability
+            # => we can play the any card,
+            # i.e. the one with the worst playability
             play_seq.append(hand.pop(-1))
             play_best = False    # => play from end of list
             same_rank_count = 1    # reset same rank counter
 
         elif play_seq[-1] == 'Q':
             if play_best:
-                # played 'Q' from start of list, i.e. we could now play any card with worse
-                # playability on the 'Q' or maybe play 4 'Q's to kill the discard pile
-                # count number of 'Q's still in the Hand
+                # played 'Q' from start of list, i.e. we could now play any
+                # card with worse playability on the 'Q' or maybe play 4 'Q's
+                # to kill the discard pile count number of 'Q's still in the
+                # Hand
                 count = Counter(hand)
                 if count['Q'] > 0 and count['Q'] + same_rank_count >= 4:
                     # we could play all 'Q's to kill the discard pile
@@ -198,9 +207,9 @@ def find_play_sequence(rank_order, hand):
                 else:
                     # no more 'Q's or less than 4 'Q's in total
                     # => play card with worser playability first
-                        play_seq.append(hand.pop(-1))
-                        play_best = False    # => play from end of list
-                        same_rank_count = 1    # reset same rank counter
+                    play_seq.append(hand.pop(-1))
+                    play_best = False    # => play from end of list
+                    same_rank_count = 1    # reset same rank counter
             else:
                 # 'Q' has been played from end of list
                 # => keep playing from end of list 'Q' or next worse rank
@@ -212,7 +221,7 @@ def find_play_sequence(rank_order, hand):
 
         elif play_seq[-1] in hand:
             # more cards with same rank as previous card in hand
-            same_rank_count +=1
+            same_rank_count += 1
             if play_best:
                 # play from begin of list
                 play_seq.append(hand.pop(0))
@@ -235,6 +244,7 @@ def find_play_sequence(rank_order, hand):
             same_rank_count = 1
 
     return play_seq
+
 
 def calc_playability(rank_playabilities, play_seq):
     """
@@ -286,12 +296,13 @@ def calc_playability(rank_playabilities, play_seq):
 
     return (playability, turn_count)
 
+
 def check_permutations(rank_playabilities, hand):
     """
     Find best play sequence by checking all permutations of hand.
 
-    Calculate the playability for all permutations of the specified hand in order
-    to find the best play sequence.
+    Calculate the playability for all permutations of the specified hand in
+    order to find the best play sequence.
     DON'T USE this for hands > 10 cards, it takes forever.
 
     :param playable_probs:    playability per rank
@@ -301,6 +312,7 @@ def check_permutations(rank_playabilities, hand):
     """
     playability_max = 0
     turns_max = len(hand) + 1
+    seq_max = tuple()
     for play_seq in permutations(hand):
         playability, turns = calc_playability(rank_playabilities, play_seq)
         if (playability > playability_max or playability == playability_max and
@@ -308,7 +320,9 @@ def check_permutations(rank_playabilities, hand):
             playability_max = playability
             turns_max = turns
             seq_max = play_seq
-    print(f"### check_permutations: {seq_max} playability: {playability_max} turns: {turns_max}")
+    print(f"### check_permutations: {seq_max} playability: {playability_max}"
+          f" turns: {turns_max}")
+
 
 class Combi():
     """
@@ -432,7 +446,7 @@ class Combi():
         :return:    list of expansions (Combi)
         :rtype:     list
         """
-        expansions = [] # list of expanded combinations based on this combi
+        expansions = []  # list of expanded combinations based on this combi
 
         if len(self.hand) == 0:
             # combination has reached its maximum length
@@ -459,7 +473,7 @@ class Combi():
             seq.append(rank)
             hand.remove(rank)
             expansions.append(Combi(self.unknown, self.seen, seq, hand,
-                    self.n_top + 1))
+                                    self.n_top + 1))
 
         if self.n_top >= 4 or rank == '10' or rank == 'Q':
             # killed the discard pile or last card is 'Q'
@@ -492,10 +506,9 @@ class Combi():
 
         :param size:        size to which we refill our hand after play.
         :type size:         int
-        :param max_draws:   number of cards we could draw before talon is empty.
+        :param max_draws:   nbr of cards we could draw before talon is empty.
         :type max_draws:    int
         """
-#        print(f"### seq: {self.seq}   hand: {self.hand}")
         total_playability = 0
         total_turns = 0
         n_samples = 1   # no refill => just calculate playability of hand
@@ -504,7 +517,7 @@ class Combi():
             # playability over all samples
             n_samples = len(self.unknown) * SAMPLE_RATE
 
-        for i in range(n_samples):
+        for _ in range(n_samples):
             # make a copy of the unknown cards and shuffle it
             _unknown = self.unknown[:]
             shuffle(_unknown)
@@ -520,9 +533,8 @@ class Combi():
             rank_playabilities = calc_rank_playabilities(probs)
             rank_order = sort_ranks_by_playability(rank_playabilities)
             play_seq = find_play_sequence(rank_order, hand)
-            playability, turn_count = calc_playability(rank_playabilities, play_seq)
-#            if size > 3:
-#                print(f"play_seq: {play_seq}   playability: {playability}   turns: {turn_count}")
+            playability, turn_count = calc_playability(
+                rank_playabilities, play_seq)
             total_playability += playability
             total_turns += turn_count
         self.playability = total_playability / n_samples
@@ -566,7 +578,7 @@ def find_all_play_combis(state):
         # => no need for anlysis, return empty list
         return []
 
-    first = (state.n_played == 0)               # 1st card played this turn
+    first = state.n_played == 0                 # 1st card played this turn
     top_rank = discard.get_top_rank()           # rank at top of discard pile
 
     # get ranks of cards from which we don't known where they are
@@ -577,17 +589,19 @@ def find_all_play_combis(state):
     if len(discard) > 0:
         # there's a discard pile
         if first:
-            # at the begin of a turn we can always decide to take the discard pile.
+            # at the begin of a turn we can always decide to take the discard
+            # pile.
             # => add combi with empty sequence and discard pile added to hand.
             in_progress.append(Combi(unknown, seen, [],
-                    [c.rank for c in hand] + [c.rank for c in discard], 0, None))
+                                     [c.rank for c in hand] +
+                                     [c.rank for c in discard], 0, None))
         else:
             # if this is not the 1st card played this turn, it is possible that
             # we can end the turn without playing a further card.
             # => add combi with empty sequence to list
             n_top = discard.get_ntop()  # number of cards with same rank at top
-            in_progress.append(Combi(unknown, seen, [], [c.rank for c in hand],
-                    n_top, top_rank))
+            in_progress.append(Combi(unknown, seen, [],
+                                     [c.rank for c in hand], n_top, top_rank))
 
     for card in hand:
         # loop through all cards in this hand
@@ -605,15 +619,12 @@ def find_all_play_combis(state):
             # Note: we don't need top_rank because from now on we look at the
             #       last rank in the play sequence
             combi = Combi(unknown, seen, [card.rank],
-                    [c.rank for c in hand if c != card], n_top)
+                          [c.rank for c in hand if c != card], n_top)
             # add it to the list of combinations in progress
             in_progress.append(combi)
 
-    while(len(in_progress) > 0):
+    while len(in_progress) > 0:
         # there are still unfinished combinations to be handled
-#        print(f"seq: {[combi.seq for combi in in_progress]}")
-#        print(f"hand: {[combi.hand for combi in in_progress]}")
-#        print(f"n_top: {[combi.n_top for combi in in_progress]}")
         combi = in_progress[0]  # get 1st combination in list
         if combi.is_endable():
             # valid sequence of play => add it to the completed combis list
@@ -624,6 +635,7 @@ def find_all_play_combis(state):
         in_progress.remove(combi)
 
     return completed
+
 
 def evaluate_plays(state):
     """
@@ -644,7 +656,8 @@ def evaluate_plays(state):
     # get size of current player's hand
     n_hand = len(state.players[state.player].hand)
     # estimate the remaining draws for the current player
-    n_turns, n_draws, n_hand_after = state.estimate_remaining_draws(n_hand)
+    # note that we don't need  n_turns and hands returned by function.
+    _, n_draws, _ = state.estimate_remaining_draws(n_hand)
 
     # find all possible play combinations for the current player
     combis = find_all_play_combis(state)
@@ -654,6 +667,7 @@ def evaluate_plays(state):
         combi.evaluate(3, n_draws)
 
     return combis
+
 
 def find_best_play(state):
     """
@@ -688,8 +702,6 @@ def find_best_play(state):
     # find the combi with the highest playability
     playabilities = [combi.playability for combi in combis]
     best = combis[playabilities.index(max(playabilities))]
-
-
     n_hand = len(state.players[state.player].hand)
     if n_hand == 0:
         # never voluntarily take the discard pile then playing face up table
@@ -703,39 +715,37 @@ def find_best_play(state):
             # => calculate its playability after refilling to 3 and drawing a
             #    card for each turn we need to get rid of the cards after
             #    taking the discard pile.
-            n_turns, n_draws, n_hand_after = state.estimate_remaining_draws(n_hand)
+            _, n_draws, _ = state.estimate_remaining_draws(n_hand)
             bup = best.playability  # backup the playability value
             best.evaluate(3 + int(combis[0].turns), n_draws)
             if best.playability + 0.2 < combis[0].playability:
-#                print('### take the discard pile ###')
-#                print(f"take discard pile: hand: {combis[0].hand} playability: {combis[0].playability} turn count: {combis[0].turns}/{int(combis[0].turns)}")
-#                print(f"not taking discard pile: seq: {best.seq} hand: {best.hand} playability: {best.playability}")
                 best = combis[0]
             else:
                 # restore the original playablility
                 best.playability = bup
 
-    # check if the best combination has a play sequence containing a single '2',
-    # and  a '3' on hand. Depending on the top card of the discard
-    # pile swap the '2' with the '3' (Druck mache!)
+    # check if the best combination has a play sequence containing
+    # a single '2', and  a '3' on hand. Depending on the top card of the
+    # discard pile swap the '2' with the '3' (Druck mache!)
     if len(best.seq) == 1 and best.seq[0] == '2' and '3' in best.hand:
         if state.discard.get_top_rank() in ['7', 'K', 'A']:
-            best.seq[0] == '3'
+            best.seq[0] = '3'
             idx = best.hand.index('3')
             best.hand[idx] = '2'
 
     return best
+
 
 def find_best_fup_pick(state, get_fup_rank):
     """
     Find best face up table card to pick up after taking the discard pile.
 
     When taking the discard pile while playing from the face up table cards,
-    the play may also take one card or several cards of same rank from his face
-    up table cards on hand. I.e. each rank in the face up table cards results
-    at least in a play sequence, where we pick up 1 card of this rank. If there
-    are multiple cards with the same rank, it's also possible to pick up 2 or
-    even 3 cards.
+    the player may also take one card or several cards of same rank from his
+    face up table cards on hand. I.e. each rank in the face up table cards
+    results at least in a play sequence, where we pick up 1 card of this rank.
+    If there are multiple cards with the same rank, it's also possible to pick
+    up 2 or even 3 cards.
 
     :param state:           game state.
     :type state:            State
@@ -765,14 +775,14 @@ def find_best_fup_pick(state, get_fup_rank):
                 # create combination
                 combi = Combi(unknown, seen, seq, hand, 0, None)
                 # calculate playability of remaining cards (no refill)
-                combi.evaluate(0,0)
+                combi.evaluate(0, 0)
                 combis.append(combi)
     else:   # 2nd or 3rd pick
         # we can always stop after the 1st pick
         # => empty play sequence
         combi = Combi(unknown, seen, seq, hand, 0, None)
         # calculate playability of remaining cards (no refill)
-        combi.evaluate(0,0)
+        combi.evaluate(0, 0)
         combis.append(combi)
         if get_fup_rank in count.keys():
             # more cards with same rank as 1st pick
@@ -782,7 +792,7 @@ def find_best_fup_pick(state, get_fup_rank):
                 # create combination
                 combi = Combi(unknown, seen, seq, hand, 0, None)
                 # calculate playability of remaining cards (no refill)
-                combi.evaluate(0,0)
+                combi.evaluate(0, 0)
                 combis.append(combi)
 
     # find the combi with the highest playability
@@ -790,7 +800,11 @@ def find_best_fup_pick(state, get_fup_rank):
     best = combis[playabilities.index(max(playabilities))]
     return best
 
+
 def main():
+    """
+    Test for functions in this module.
+    """
 
     # testing find_all_play_combis
     print('\n### Test: find_all_play_combis() ###')
@@ -1040,11 +1054,13 @@ def main():
 
     # with the previously calculated statistics, find the best play order after
     # taking the discard pile
-    hand = [card.rank for card in players[0].hand] + [card.rank for card in discard]
+    hand = ([card.rank for card in players[0].hand]
+            + [card.rank for card in discard])
     print(f"player's hand after taking the discard pile: {hand}")
     play_seq = find_play_sequence(rank_order, hand)
     playability, turn_count = calc_playability(rank_playabilities, play_seq)
-    print(f"play sequence: {play_seq}   playability: {playability}   turns: {turn_count}")
+    print(f"play sequence: {play_seq}   playability: {playability}"
+          f"   turns: {turn_count}")
 
     # testing find all play combinations
     print('\n### Test: find all play combinations ###')
@@ -1060,17 +1076,12 @@ def main():
         state.player = i
         combis = evaluate_plays(state)
         for combi in combis:
-            print(f"seq: {combi.seq}, hand: {combi.hand}: playability: {combi.playability}")
+            print(f"seq: {combi.seq}, hand: {combi.hand}: playability:"
+                  " {combi.playability}")
         best = find_best_play(state)
-        print(f"best combi: seq: {best.seq} hand: {best.hand} playability: {best.playability}")
+        print(f"best combi: seq: {best.seq} hand: {best.hand} playability:"
+              f" {best.playability}")
+
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
