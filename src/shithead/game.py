@@ -18,12 +18,9 @@ from random import randint
 from .cards import Card
 from .state import State
 from .discard import Discard
-# TODO cannot import Player because of circular import
-# from .player import Player as plr
 
 # uncomment this import if you want to run initial_tests()
 # but you'll get a cirular init error when running other stuff !!!
-#import player
 
 CLOCKWISE = True            # game is played in clockwise direction (default)
 COUNTERCLOCKWISE = False    # game is played in counterclockwise direction
@@ -38,7 +35,7 @@ PLAY_GAME = 2           # play till only one player is left
 SHITHEAD_FOUND = 3      # only 1 player left => he's the SHITHEAD
 ABORTED = 4             # too many turns (AI deadlock) => game aborted.
 
-# TODO only used for hand evaluation, should be removed when hand evaluation
+# only used for hand evaluation, should be removed when hand evaluation
 # is moved to Player class (it's not used anyhow)
 # rank to value mapping.
 # value of a card according to it's rank.
@@ -46,10 +43,11 @@ ABORTED = 4             # too many turns (AI deadlock) => game aborted.
 # 10 => can be played on every card except 7.
 # 2 => can be played on every card, but next player can also play every card.
 # 3 => can be played on every card, but next player must match last non-3 card.
-RANK_TO_VALUE = {'4':0, '5':1, '6':2, '7':3, '8':4, '9':5, 'J':6, 'Q':7, 'K':8, 'A':9, '10':10, '2':11, '3':12}
+RANK_TO_VALUE = {'4': 0, '5': 1, '6': 2, '7': 3, '8': 4, '9': 5, 'J': 6,
+                 'Q': 7, 'K': 8, 'A': 9, '10': 10, '2': 11, '3': 12}
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class Game:
     '''
     Class representing a Shithead game.
@@ -73,9 +71,9 @@ class Game:
         :rtype:             int
         '''
         # calculate the minimum number of cards necessary
-        min = n_players * CARDS_PER_PLAYER
+        cmin = n_players * CARDS_PER_PLAYER
         # calculate then necessary number of decks
-        return ceil(min/CARDS_PER_DECK)
+        return ceil(cmin/CARDS_PER_DECK)
 
     @classmethod
     def calc_burnt_cards(cls, n_players):
@@ -102,10 +100,10 @@ class Game:
         :rtype:             int
         '''
         # calculate the minimum number of cards necessary
-        min = n_players * CARDS_PER_PLAYER
-        n_decks = ceil(min/CARDS_PER_DECK)
+        cmin = n_players * CARDS_PER_PLAYER
+        n_decks = ceil(cmin/CARDS_PER_DECK)
         # calculate number of additional cards per player
-        additional_cards = n_decks * CARDS_PER_DECK - min
+        additional_cards = n_decks * CARDS_PER_DECK - cmin
         if additional_cards < 2 * n_players:
             # less than 2 additonal cards per player => use all cards
             return 0
@@ -114,7 +112,7 @@ class Game:
             # => remove some of the additional cards
             #    but randomly keep up to 2 cards per player.
             n_burnt = additional_cards - randint(1, 2 * n_players)
-            return  int(n_burnt)
+            return int(n_burnt)
 
     @classmethod
     def deal(cls, players, dealer, talon):
@@ -140,19 +138,19 @@ class Game:
         '''
         n_players = len(players)
         # deal each player 3 face down table cards.
-        for i in range(3):
+        for _ in range(3):
             for j in range(n_players):
                 players[(dealer + 1 + j) % n_players].deal(talon.pop_card())
 
         # deal each player 3 face up table cards.
-        for i in range(3):
+        for _ in range(3):
             for j in range(n_players):
                 card = talon.pop_card()
-                card.seen = True # we always know where this card is
+                card.seen = True    # we always know where this card is
                 players[(dealer + 1 + j) % n_players].deal(card)
 
         # deal each player 3 face down hand cards.
-        for i in range(3):
+        for _ in range(3):
             for j in range(n_players):
                 players[(dealer + 1 + j) % n_players].deal(talon.pop_card())
 
@@ -200,7 +198,7 @@ class Game:
             next_player = (player + n_players - 1) % n_players
 
         # skip over players according to the number of '8's played this turn
-        for i in range(state.eights):
+        for _ in range(state.eights):
             if direction:   # clockwise
                 next_player = (next_player + 1) % n_players
                 # don't count current player if he's already out
@@ -235,20 +233,21 @@ class Game:
         player = cls.get_current_player(state)
 
         # from now on we always know where this card is
-        card.seen = True # no longer unknown => mark it as face up
+        card.seen = True  # no longer unknown => mark it as face up
 
         # cards played from hand or face up table cards always fit the discard
         # pile, but cards played from face down table cards may not fit the
         # discard pile => take the discard pile
-        first = (state.n_played == 0) # 1st card played this turn
+        first = state.n_played == 0     # 1st card played this turn
         if not state.discard.check(first, card):
             # Doesn't fit => make sure it's not a hand or face up table card
             if (source == 'HAND') or (source == 'FUP'):
-                raise Exception(f"Legal play of {card} from {source} which doesn't fit the discard pile!")
+                raise ValueError(f"Legal play of {card} from {source}"
+                                 " which doesn't fit the discard pile!")
             # add this face down table card to the players hand
             player.hand.add_card(card)
             # take the discard pile
-            for i in range(len(state.discard)):
+            for _ in range(len(state.discard)):
                 # get card at top of discard pile
                 card = state.discard.pop_card()
                 # and add it to hand cards of this player
@@ -262,8 +261,9 @@ class Game:
             # resolve special card effects
             if card.rank == '10':
                 # kill the discard pile
-                # move all cards from the discard pile to the removed cards pile.
-                for i in range(len(state.discard)):
+                # move all cards from the discard pile to the removed cards
+                # pile.
+                for _ in range(len(state.discard)):
                     card = state.discard.pop_card()
                     state.killed.add_card(card)
             elif card.rank == '8':
@@ -316,7 +316,7 @@ class Game:
 
         elif n_shown == 0 or (n_shown > 1 and n_shown == state.n_decks):
             # nobody showed the starting card
-            # or multiple players have shown all available starting cards TODO is that right???
+            # or multiple players have shown all available starting cards
             # => try next higher starting card.
             state.starting_card += 1
             if state.starting_card >= CARDS_PER_DECK:
@@ -403,8 +403,9 @@ class Game:
                 # if a statistic has been specified update it
                 stats.update(name, score, turn_count)
             if fup_table:
-                # if a face up table has been specified (=> fup_table_generator),
-                # update the score fup table score = number of remaining players
+                # if a face up table has been specified
+                # (=> fup_table_generator), update the score fup table score
+                # (= number of remaining players)
                 score = len(state.players)
                 # update face up table
                 fup_table.score(name, score)
@@ -470,9 +471,9 @@ class Game:
                                 - '10'  => kill discard pile.
                                 - '8'   => skip player.
                                 - 'K'   => change direction.
-            - FUP, index    => play face up table card at index to discard pile.
+            - FUP, index    => play face up table card at idx to discard pile.
                             => resolve card effects ('10', '8', 'K').
-            - FOOWN, index  => play face down table card at index to discard pile.
+            - FOOWN, index  => play face dwn table card at idx to discard pile.
                             => resolve card effects ('10, '8', 'K').
             - OUT           => remove player from list of active players.
                             => check if only one player left (end of game).
@@ -498,7 +499,7 @@ class Game:
         :type play:         Play
         :param fup_table:   face up table (only for creating new fup table).
         :type fup_table:    FupTable
-        :param stats:       statistic => score, number of turns, number of games.
+        :param stats:       statistic => score, nbr of turns, nbr of games.
         :type stats:        Statistic
         :return:            game state after specified play has been applied.
         :rtype:             State
@@ -511,7 +512,6 @@ class Game:
         dealer = next_state.dealer
         player = cls.get_current_player(next_state)
         talon = next_state.talon
-        discard = next_state.discard
         burnt = next_state.burnt
         action = play.action
         index = play.index
@@ -529,7 +529,7 @@ class Game:
         elif action == 'BURN':
             # calculate the number of burnt cards for this number of players
             n_burnt = Game.calc_burnt_cards(len(players))
-            for i in range(n_burnt):
+            for _ in range(n_burnt):
                 # move cards from talon to burnt card pile.
                 burnt.add_card(talon.pop_card())
             next_state.log_player = next_state.players[next_state.dealer].name
@@ -583,10 +583,10 @@ class Game:
                 player.get_fup_rank = None
                 # Turn is not over yet, player has to pick 1, 2, or 3 face up
                 # table cards on the same turn
-                next_state.n_played +=1
+                next_state.n_played += 1
 
             # current player takes discard pile
-            for i in range(len(next_state.discard)):
+            for _ in range(len(next_state.discard)):
                 # get card at top of discard pile
                 card = next_state.discard.pop_card()
                 # and add it to hand cards of this player
@@ -600,7 +600,7 @@ class Game:
         elif action == 'KILL':
             # kill discard pile because of 4 or more cards of same rank at top.
             # move all cards from the discard pile to the removed cards pile.
-            for i in range(len(next_state.discard)):
+            for _ in range(len(next_state.discard)):
                 card = next_state.discard.pop_card()
                 next_state.killed.add_card(card)
             # reset the '8's and 'K's counter
@@ -629,10 +629,10 @@ class Game:
             next_state.game_phase = ABORTED
 
         else:
-            raise Exception(f'Unknown action {action}!')
+            raise ValueError(f'Unknown action {action}!')
 
         # if a card has been played log its name
-        if card and action in ['GET','PUT', 'SHOW', 'HAND', 'FUP', 'FDOWN']:
+        if card and action in ['GET', 'PUT', 'SHOW', 'HAND', 'FUP', 'FDOWN']:
             next_state.log_card = str(card)
         else:
             next_state.log_card = ''
@@ -693,77 +693,20 @@ class Game:
         else:
             return None
 
-def test_discard_pile():
-    print('------------------------------------------------------------------------------')
-    print('Test discard pile get_top_rank() method ')
-    discard = Discard()
-    card = Card(0, 'Clubs', '4')
-    print(f'check if {card} can be added to empty discard pile')
-    print(discard.check(True, card))
-    discard.add_card(card)
-    discard.print()
-    print(f'top rank: {discard.get_top_rank()}')
-    card = Card(0, 'Spades', '5')
-    print(f'check if {card} could be added as follow up card')
-    print(discard.check(False, card))
-    card = Card(0, 'Spades', '4')
-    print(f'check if {card} could be added as follow up card')
-    print(discard.check(False, card))
-    discard.add_card(card)
-    discard.print()
-    print(f'number of cards with same rank at the top: {discard.get_ntop()}')
-    card = Card(0, 'Hearts', '7')
-    print(f'check if {card} can be added to discard pile')
-    print(discard.check(True, card))
-    discard.add_card(card)
-    discard.print()
-    card = Card(0, 'Hearts', 'A')
-    print(f'check if {card} can be added to discard pile')
-    print(discard.check(True, card))
-    card = Card(0, 'Diamonds', '5')
-    print(f'check if {card} can be added to discard pile')
-    print(discard.check(True, card))
-    discard.add_card(card)
-    discard.print()
-    card = Card(0, 'Hearts', 'Q')
-    print(f'check if {card} can be added to discard pile')
-    print(discard.check(True, card))
-    discard.add_card(card)
-    discard.print()
-    card = Card(0, 'Clubs', '7')
-    print(f'check if {card} can be added to discard pile as follow up card')
-    print(discard.check(False, card))
-    discard.add_card(card)
-    discard.print()
-    card = Card(0, 'Spades', '7')
-    print(f'check if {card} can be added to discard pile as follow up card')
-    print(discard.check(False, card))
-    discard.add_card(card)
-    discard.print()
-    card = Card(0, 'Spades', '3')
-    print(f'check if {card} can be added to discard pile')
-    print(discard.check(True, card))
-    discard.add_card(card)
-    discard.print()
-    card = Card(0, 'Hearts', '3')
-    print(f'check if {card} can be added to discard pile as follow up card')
-    print(discard.check(False, card))
-    discard.add_card(card)
-    discard.print()
-    card = Card(0, 'Spades', '10')
-    print(f'check if {card} can be added to discard pile')
-    print(discard.check(True, card))
-    print(f'top rank: {discard.get_top_rank()}')
-    print(f'number of cards with same rank at the top: {discard.get_ntop()}')
-    print(f'top non-3 rank at the top: {discard.get_top_non3_rank()}')
 
 def initial_tests():
+    """
+    Initial tests for module game.py.
+    """
+    # I'm doing this here to avoid the circular import error
+    # these imports are only used for testing in '__main__'.
+    from .player import CheapShit
+    from .cards import Deck
     print('\nTest creating a new game:')
     players = []
-    players.append(plr.CheapShit('Player1', None, False))
-    players.append(plr.CheapShit('Player2', None, False))
+    players.append(CheapShit('Player1', None, False))
+    players.append(CheapShit('Player2', None, False))
     dealer = 0
-    n_decks = 1
     log_level = 'No Secrets'
     log_to_file = False
     log_file = ''
@@ -772,183 +715,208 @@ def initial_tests():
     state.print()
 
     print('\nTest check if 1st card can be played on empty discard pile:')
-    discard = Discard() # empty discard pile
-    print(discard.check(True, Card(0,'Clubs', '4')))
-    print(discard.check(True, Card(0,'Spades', 'A')))
+    discard = Discard()  # empty discard pile
+    print(discard.check(True, Card(0, 'Clubs', '4')))
+    print(discard.check(True, Card(0, 'Spades', 'A')))
 
     print("\nTest check if 1st card can be played on '2':")
-    discard.add_card(Card(0,'Clubs','2'))
-    print(discard.check(True, Card(0,'Clubs', '5')))
-    print(discard.check(True, Card(0,'Hearts', 'K')))
+    discard.add_card(Card(0, 'Clubs', '2'))
+    print(discard.check(True, Card(0, 'Clubs', '5')))
+    print(discard.check(True, Card(0, 'Hearts', 'K')))
 
     print("\nTest check if 1st card can be played on '4':")
-    discard.add_card(Card(0,'Clubs','4'))
-    print(discard.check(True, Card(0,'Diamonds', '4')))
-    print(discard.check(True, Card(0,'Diamonds', '5')))
-    print(discard.check(True, Card(0,'Spades', '9')))
+    discard.add_card(Card(0, 'Clubs', '4'))
+    print(discard.check(True, Card(0, 'Diamonds', '4')))
+    print(discard.check(True, Card(0, 'Diamonds', '5')))
+    print(discard.check(True, Card(0, 'Spades', '9')))
 
     print("\nTest check if 1st card can be played on '5':")
-    discard.add_card(Card(0,'Clubs','5'))
-    print(discard.check(True, Card(0,'Diamonds', '4')))
-    print(discard.check(True, Card(0,'Diamonds', '5')))
-    print(discard.check(True, Card(0,'Spades', '7')))
+    discard.add_card(Card(0, 'Clubs', '5'))
+    print(discard.check(True, Card(0, 'Diamonds', '4')))
+    print(discard.check(True, Card(0, 'Diamonds', '5')))
+    print(discard.check(True, Card(0, 'Spades', '7')))
 
     print("\nTest check if 1st card can be played on '6':")
-    discard.add_card(Card(0,'Clubs','6'))
-    print(discard.check(True, Card(0,'Diamonds', '5')))
-    print(discard.check(True, Card(0,'Diamonds', '7')))
-    print(discard.check(True, Card(0,'Spades', 'A')))
+    discard.add_card(Card(0, 'Clubs', '6'))
+    print(discard.check(True, Card(0, 'Diamonds', '5')))
+    print(discard.check(True, Card(0, 'Diamonds', '7')))
+    print(discard.check(True, Card(0, 'Spades', 'A')))
 
     print("\nTest check if 1st card can be played on '7':")
-    discard.add_card(Card(0,'Clubs','7'))
-    print(discard.check(True, Card(0,'Diamonds', '5')))
-    print(discard.check(True, Card(0,'Diamonds', '8')))
-    print(discard.check(True, Card(0,'Spades', '10')))
+    discard.add_card(Card(0, 'Clubs', '7'))
+    print(discard.check(True, Card(0, 'Diamonds', '5')))
+    print(discard.check(True, Card(0, 'Diamonds', '8')))
+    print(discard.check(True, Card(0, 'Spades', '10')))
 
     print("\nTest check if 1st card can be played on '8':")
-    discard.add_card(Card(0,'Clubs','8'))
-    print(discard.check(True, Card(0,'Diamonds', '7')))
-    print(discard.check(True, Card(0,'Diamonds', '9')))
-    print(discard.check(True, Card(0,'Spades', 'Q')))
+    discard.add_card(Card(0, 'Clubs', '8'))
+    print(discard.check(True, Card(0, 'Diamonds', '7')))
+    print(discard.check(True, Card(0, 'Diamonds', '9')))
+    print(discard.check(True, Card(0, 'Spades', 'Q')))
 
     print("\nTest check if 1st card can be played on '9':")
-    discard.add_card(Card(0,'Clubs','8'))
-    print(discard.check(True, Card(0,'Diamonds', '7')))
-    print(discard.check(True, Card(0,'Diamonds', '9')))
-    print(discard.check(True, Card(0,'Spades', 'Q')))
+    discard.add_card(Card(0, 'Clubs', '8'))
+    print(discard.check(True, Card(0, 'Diamonds', '7')))
+    print(discard.check(True, Card(0, 'Diamonds', '9')))
+    print(discard.check(True, Card(0, 'Spades', 'Q')))
 
     print("\nTest check if 1st card can be played on 'J':")
-    discard.add_card(Card(0,'Clubs','J'))
-    print(discard.check(True, Card(0,'Diamonds', '9')))
-    print(discard.check(True, Card(0,'Hearts', 'Q')))
-    print(discard.check(True, Card(0,'Spades', 'A')))
+    discard.add_card(Card(0, 'Clubs', 'J'))
+    print(discard.check(True, Card(0, 'Diamonds', '9')))
+    print(discard.check(True, Card(0, 'Hearts', 'Q')))
+    print(discard.check(True, Card(0, 'Spades', 'A')))
 
     print("\nTest check if 1st card can be played on 'Q':")
-    discard.add_card(Card(0,'Clubs','Q'))
-    print(discard.check(True, Card(0,'Diamonds', 'J')))
-    print(discard.check(True, Card(0,'Hearts', 'Q')))
-    print(discard.check(True, Card(0,'Spades', 'K')))
+    discard.add_card(Card(0, 'Clubs', 'Q'))
+    print(discard.check(True, Card(0, 'Diamonds', 'J')))
+    print(discard.check(True, Card(0, 'Hearts', 'Q')))
+    print(discard.check(True, Card(0, 'Spades', 'K')))
 
     print("\nTest check if 1st card can be played on 'K':")
-    discard.add_card(Card(0,'Clubs','K'))
-    print(discard.check(True, Card(0,'Diamonds', 'Q')))
-    print(discard.check(True, Card(0,'Hearts', 'K')))
-    print(discard.check(True, Card(0,'Spades', 'A')))
+    discard.add_card(Card(0, 'Clubs', 'K'))
+    print(discard.check(True, Card(0, 'Diamonds', 'Q')))
+    print(discard.check(True, Card(0, 'Hearts', 'K')))
+    print(discard.check(True, Card(0, 'Spades', 'A')))
 
     print("\nTest check if 1st card can be played on 'A':")
-    discard.add_card(Card(0,'Clubs','A'))
-    print(discard.check(True, Card(0,'Diamonds', 'K')))
-    print(discard.check(True, Card(0,'Hearts', '2')))
-    print(discard.check(True, Card(0,'Spades', '3')))
-    print(discard.check(True, Card(0,'Clubs', '10')))
-    print(discard.check(True, Card(0,'Diamonds', 'A')))
+    discard.add_card(Card(0, 'Clubs', 'A'))
+    print(discard.check(True, Card(0, 'Diamonds', 'K')))
+    print(discard.check(True, Card(0, 'Hearts', '2')))
+    print(discard.check(True, Card(0, 'Spades', '3')))
+    print(discard.check(True, Card(0, 'Clubs', '10')))
+    print(discard.check(True, Card(0, 'Diamonds', 'A')))
 
     print("\nTest check if 1st card can be played on 'J' below '3':")
-    discard.add_card(Card(0,'Clubs','J'))
-    discard.add_card(Card(0,'Diamonds','3'))
-    discard.add_card(Card(0,'Hearts','3'))
-    print(discard.check(True, Card(0,'Diamonds', '7')))
-    print(discard.check(True, Card(0,'Hearts', 'J')))
-    print(discard.check(True, Card(0,'Spades', '2')))
-    print(discard.check(True, Card(0,'Clubs', 'K')))
-    print(discard.check(True, Card(0,'Diamonds', 'A')))
+    discard.add_card(Card(0, 'Clubs', 'J'))
+    discard.add_card(Card(0, 'Diamonds', '3'))
+    discard.add_card(Card(0, 'Hearts', '3'))
+    print(discard.check(True, Card(0, 'Diamonds', '7')))
+    print(discard.check(True, Card(0, 'Hearts', 'J')))
+    print(discard.check(True, Card(0, 'Spades', '2')))
+    print(discard.check(True, Card(0, 'Clubs', 'K')))
+    print(discard.check(True, Card(0, 'Diamonds', 'A')))
 
     print("\nTest check if 2nd card can be played on 'Q':")
-    discard.add_card(Card(0,'Clubs','Q'))
-    print(discard.check(False, Card(0,'Diamonds', '7')))
-    print(discard.check(False, Card(0,'Clubs', '4')))
-    print(discard.check(False, Card(0,'Hearts', 'A')))
+    discard.add_card(Card(0, 'Clubs', 'Q'))
+    print(discard.check(False, Card(0, 'Diamonds', '7')))
+    print(discard.check(False, Card(0, 'Clubs', '4')))
+    print(discard.check(False, Card(0, 'Hearts', 'A')))
 
     print("\nTest check if 2nd card can be played on 4 'Q's:")
-    discard.add_card(Card(0,'Clubs','Q'))
-    discard.add_card(Card(0,'Diamonds','Q'))
-    discard.add_card(Card(0,'Hearts','Q'))
-    discard.add_card(Card(0,'Spades','Q'))
-    print(discard.check(False, Card(0,'Diamonds', '7')))
-    print(discard.check(False, Card(0,'Hearts', 'A')))
-    print(discard.check(False, Card(1,'Spades', 'Q')))
+    discard.add_card(Card(0, 'Clubs', 'Q'))
+    discard.add_card(Card(0, 'Diamonds', 'Q'))
+    discard.add_card(Card(0, 'Hearts', 'Q'))
+    discard.add_card(Card(0, 'Spades', 'Q'))
+    print(discard.check(False, Card(0, 'Diamonds', '7')))
+    print(discard.check(False, Card(0, 'Hearts', 'A')))
+    print(discard.check(False, Card(1, 'Spades', 'Q')))
 
     print("\nTest check if 2nd card can be played on '4':")
-    discard.add_card(Card(0,'Clubs','4'))
-    print(discard.check(False, Card(0,'Diamonds', '7')))
-    print(discard.check(False, Card(0,'Hearts', 'A')))
-    print(discard.check(False, Card(0,'Diamonds', '4')))
+    discard.add_card(Card(0, 'Clubs', '4'))
+    print(discard.check(False, Card(0, 'Diamonds', '7')))
+    print(discard.check(False, Card(0, 'Hearts', 'A')))
+    print(discard.check(False, Card(0, 'Diamonds', '4')))
 
     print("\nTest check if 2nd card can be played on 'K':")
-    discard.add_card(Card(0,'Clubs','K'))
-    print(discard.check(False, Card(0,'Hearts', 'A')))
-    print(discard.check(False, Card(0,'Diamonds', 'K')))
+    discard.add_card(Card(0, 'Clubs', 'K'))
+    print(discard.check(False, Card(0, 'Hearts', 'A')))
+    print(discard.check(False, Card(0, 'Diamonds', 'K')))
 
     players = []
-    players.append(plr.CheapShit('Player1', None, False))
-    players.append(plr.CheapShit('Player2', None, False))
+    players.append(CheapShit('Player1', None, False))
+    players.append(CheapShit('Player2', None, False))
     dealer = 0
-    n_decks = 1
     log_level = 'No Secrets'
     log_to_file = False
     log_file = ''
     log_info = (log_level, log_to_file, log_file)
     state = State(players, dealer, 1, log_info)
     state.game_phase = PLAY_GAME
-    state.print()
-    action, cards = players[0].get_card_source()
     print("\nTest get legal plays (1st card, empty discard pile):")
+    players[0].take_card('HAND', Card(0, 'Diamonds', '5'))
+    players[0].take_card('HAND', Card(0, 'Hearts', '10'))
+    players[0].take_card('HAND', Card(0, 'Hearts', '8'))
+    print('Discard: ', end='')
+    state.discard.print_top()
+    players[0].print(visibility=3)
     plays = players[0].get_legal_plays(state)
     print(' '.join([str(play) for play in plays]))
 
     print("\nTest get legal plays (1st card, discard pile not empty):")
-    state.discard.add_card(Card(0,'Diamonds','5'))
-    state.players[0].hand = [Card(0,'Clubs','5'), Card(0,'Hearts','10'), Card(0,'Spades', '2')]
+    state.discard.add_card(Card(0, 'Diamonds', '5'))
+    players[0].hand = Deck(empty=True)
+    players[0].take_card('HAND', Card(0, 'Clubs', '5'))
+    players[0].take_card('HAND', Card(0, 'Hearts', '10'))
+    players[0].take_card('HAND', Card(0, 'Spades', '2'))
+    print('Discard: ', end='')
+    state.discard.print_top()
+    players[0].print(visibility=3)
     plays = players[0].get_legal_plays(state)
     print(' '.join([str(play) for play in plays]))
-    state.discard.add_card(Card(0,'Clubs','7'))
+
+    state.discard.add_card(Card(0, 'Clubs', '7'))
+    print('Discard: ', end='')
+    state.discard.print_top()
+    players[0].print(visibility=3)
     plays = players[0].get_legal_plays(state)
     print(' '.join([str(play) for play in plays]))
-    state.discard.add_card(Card(0,'Clubs','K'))
+
+    state.discard.add_card(Card(0, 'Clubs', 'K'))
+    print('Discard: ', end='')
+    state.discard.print_top()
+    players[0].print(visibility=3)
     plays = players[0].get_legal_plays(state)
     print(' '.join([str(play) for play in plays]))
 
     print("\nTest get legal plays (2nd card, refill):")
     state.n_played = 1
-    state.discard.add_card(Card(0,'Diamonds','5'))
-    state.players[0].hand = [Card(0,'Clubs','5'), Card(0,'Hearts','10')]
+    state.discard.add_card(Card(0, 'Diamonds', '5'))
+    players[0].hand = Deck(empty=True)
+    players[0].take_card('HAND', Card(0, 'Clubs', '5'))
+    players[0].take_card('HAND', Card(0, 'Hearts', '10'))
+    print('Discard: ', end='')
+    state.discard.print_top()
+    players[0].print(visibility=3)
     plays = players[0].get_legal_plays(state)
     print(' '.join([str(play) for play in plays]))
 
     print("\nTest get legal plays (2nd card, kill or play another '5'):")
     state.n_played = 1
-    state.discard.add_card(Card(1,'Clubs','5'))
-    state.discard.add_card(Card(0,'Hearts','5'))
-    state.discard.add_card(Card(0,'Spades','5'))
-    state.players[0].hand = [Card(0,'Clubs','5'), Card(0,'Hearts','10')]
+    state.discard.add_card(Card(1, 'Clubs', '5'))
+    state.discard.add_card(Card(0, 'Hearts', '5'))
+    state.discard.add_card(Card(0, 'Spades', '5'))
+    print('Discard: ', end='')
+    state.discard.print_top()
+    players[0].print(visibility=3)
     plays = players[0].get_legal_plays(state)
     print(' '.join([str(play) for play in plays]))
 
     print("\nTest get legal plays (2nd card, play on 'Q'):")
     state.n_played = 1
-    state.discard.add_card(Card(1,'Clubs','Q'))
-    state.players[0].hand = [Card(0,'Clubs','5'), Card(0,'Hearts','10'), Card(0,'Hearts',8)]
+    state.discard.add_card(Card(1, 'Clubs', 'Q'))
+    players[0].take_card('HAND', Card(0, 'Hearts', '8'))
+    print('Discard: ', end='')
+    state.discard.print_top()
+    players[0].print(visibility=3)
     plays = players[0].get_legal_plays(state)
     print(' '.join([str(play) for play in plays]))
 
     print("\nTest get legal plays (2nd card, end turn):")
     state.n_played = 1
-    state.discard.add_card(Card(1,'Clubs','5'))
-    state.players[0].hand = [Card(0,'Diamonds','5'), Card(0,'Hearts','10'), Card(0,'Hearts',8)]
+    state.discard.add_card(Card(1, 'Hearts', '5'))
+    print('Discard: ', end='')
+    state.discard.print_top()
+    players[0].print(visibility=3)
     plays = players[0].get_legal_plays(state)
     print(' '.join([str(play) for play in plays]))
 
 
 if __name__ == '__main__':
-    """
-    !!!NOTE!!!
-    Trying to call this with 
-        $ python game.py
-    results in an ImportError because I used relative imports for the local
-    modules (pyinstaller is to blame for that).
-    Therefore we have to go one directory up and call it with
-        $ python -m shithead.game
-    """
-    test_discard_pile()
-#    initial_tests()
-
+    # !!!NOTE!!!
+    # Trying to call this with
+    #     $ python game.py
+    # results in an ImportError because I used relative imports for the local
+    # modules (pyinstaller is to blame for that).
+    # Therefore we have to go one directory up and call it with
+    #     $ python -m shithead.game
+    initial_tests()
