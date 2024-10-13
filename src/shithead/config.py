@@ -417,7 +417,7 @@ class PlayerConfig():
         """
         self.label.draw()
         self.type_field.draw_field()
-        self.name_field.draw()
+        self.name_field.draw_field()
 
     def get_config(self):
         """
@@ -471,7 +471,7 @@ class PlayerConfig():
                       f" integers, {self.name_field.text} not changed!")
                 return
 
-        # type must be one of the types in the options list.
+        # player type must be one of the types in the options list.
         try:
             sel = self.type_field.options.index(ptype)
         except ValueError as err:
@@ -484,7 +484,7 @@ class PlayerConfig():
         self.name_field.text = name
         self.name_field.add_content(name)
         self.type_field.sel = sel
-        self.type_field.add_content(type)
+        self.type_field.add_content(ptype)
         self.counters = counters
         return
 
