@@ -289,7 +289,7 @@ class State:
         # and discard pile size to string
         log_msg = f'{turn}   {dir}   {talon}   {player} {action} {card}   {discard}    '
         # add top cards of discard pile to string
-        log_msg += self.discard.get_string()
+        log_msg += self.discard.get_top_string()
         return log_msg
 
 
@@ -319,7 +319,7 @@ class State:
 
         # add discard size and discard pile cards to string
         log_msg += f'Discard: {len(self.discard):>3}   '
-        log_msg += self.discard.get_string(None, True) + '\n'
+        log_msg += self.discard.get_top_string(None, True) + '\n'
 
         # add one line per player to the string
         cur = self.players[self.player]
@@ -363,7 +363,7 @@ class State:
         log_msg += f'Unknown: {len(unknown):>3}   '
         log_msg += f'Talon:   {len(self.talon):>3}   '
         log_msg += f'Discard: {len(self.discard):>3}   '
-        log_msg += self.discard.get_string() + '\n'
+        log_msg += self.discard.get_top_string() + '\n'
 
         # add one line per player to the string
         cur = self.players[self.player]
