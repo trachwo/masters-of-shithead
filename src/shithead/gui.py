@@ -24,8 +24,8 @@ the gui:
       of coordinates and a list of corresponding card lists. 'removed',
       'talon', and 'discard' have only one entry in each of these lists, e.g.
       places['talon'].coords[0] = (TALON_X, TALON_Y) and
-      places['talon'].cards[0] = [<card_sprite0>, <card_sprite1>, ...] but in case
-      of the player places we have 4 entries, with the table cards at
+      places['talon'].cards[0] = [<card_sprite0>, <card_sprite1>, ...] but in
+      case of the player places we have 4 entries, with the table cards at
       index 0..2 and the hand cards at index 3.
       In case of the players the Place object also contains a text object with
       the name of the player placed beneath his table cards, and one filled and
@@ -135,7 +135,7 @@ the gui:
              discard pile, and in the the opponent players hands below the
              corresponding mat.
          --- draws the player names below their table cards.
-         --- marks the legal plays of the human player with bright green frames.
+         --- marks the legal plays of the human player with green frames.
          --- draws the lines of text in the message window.
          --- draws all card sprites (done last because they are on top of
              everything else).
@@ -189,10 +189,11 @@ import json
 from .player import HumanPlayer, AiPlayer
 from .cards import Card, Deck
 from .discard import Discard
-from .fup_table import FupTable, FUP_TABLE_FILE, TEXT_FILE
-from . import player as plr # to avoid confusion with 'player' used as variable name
+from .fup_table import FupTable, FUP_TABLE_FILE
+from . import player as plr  # to avoid confusion with 'player'
 from .stats import Statistics
-from .game import Game, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME, SHITHEAD_FOUND, ABORTED
+from .game import (Game, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME,
+                   SHITHEAD_FOUND, ABORTED)
 from .state import State
 from .play import Play
 from . import result
@@ -229,7 +230,6 @@ MARGIN = int((SCREEN_WIDTH - (12 * X_SPACING + CARD_WIDTH)) / 2)
 # Position of human players hand cards (center)
 # with a maximum of 2 decks we should have vertical space for 8 cards
 HAND_X = int(SCREEN_WIDTH / 2)
-#HAND_Y = 7 * CARD_VERTICAL_OFFSET + int(CARD_HEIGHT / 2) + MARGIN
 HAND_Y = 3 * CARD_VERTICAL_OFFSET + int(CARD_HEIGHT / 2) + MARGIN
 
 Y_SPACING = int((SCREEN_HEIGHT - HAND_Y - MARGIN - CARD_HEIGHT / 2) / 4)
@@ -277,7 +277,8 @@ OPP_12_X = int(SCREEN_WIDTH / 2 - OPPONENT_WIDTH / 2 + CARD_WIDTH / 2)
 OPP_11_X = int((SCREEN_WIDTH - 2 * OPPONENT_WIDTH) / 3 + CARD_WIDTH / 2)
 
 # 1-o'clock opponent X-coord
-OPP_1_X = OPP_11_X + int((SCREEN_WIDTH -2 * OPPONENT_WIDTH) / 3) + OPPONENT_WIDTH
+OPP_1_X = (OPP_11_X + int((SCREEN_WIDTH - 2 * OPPONENT_WIDTH) / 3)
+           + OPPONENT_WIDTH)
 
 # 2- and 3-o'clock opponent X-coord
 OPP_2_3_X = SCREEN_WIDTH - MARGIN - OPPONENT_WIDTH + int(CARD_WIDTH / 2)
@@ -304,7 +305,7 @@ OPPONENTS = [
 MESSAGE_X = TALON_X
 MESSAGE_Y = OPP_LOWER_Y + CARD_HEIGHT / 2
 
-MIN_DIST   = 10 # minimum distance recognized as arrived at target
+MIN_DIST = 10  # minimum distance recognized as 'arrived at target'
 BURN_DELAY = 0.05
 DEAL_DELAY = 0.5
 TAKE_DELAY = 0.05
@@ -322,17 +323,60 @@ AI_DELAY = 0.5
 
 # English messages
 MESSAGES_EN = {
-    'SHOW_STARTER':         [ "f'Show {card} to start the game!'", "f'{name}'", "'shows starter card'", "''", "''"],
-    'FINISHED_SWAPPING':    [ "''", "f'{name}'", "'finished swapping cards'", "''", "''"],
-    'DOES_NOT_SHOW':        [ "f'Show {card} to start the game!'", "f'{name}'", "'does not show starter card'", "''", "''"],
-    'IS_OUT':               [ "''", "f'{name}'", "'is out!'", "''", "''"],
-    'MAY_SWAP':             [ "f'{name}'", "'you may swap face up table cards'", "'with hand cards now'", "'click <DONE> button, when ready'", "''"],
-    'IS_SWAPPING':          [ "''", "f'{name}'", "'is swapping cards'", "''", "''"],
-    'TURN_NAME':            [ "''", "f'Turn {turn} {dir}: {name} {thinking}'", "f'{tips[0]}'", "f'{tips[1]}'", "f'{tips[2]}'"],
-    'IS_SHITHEAD':          [ "''", "f'{name}'", "'is the SHITHEAD'", "''", "''"],
-    'SHOW_OR_SKIP':         [ "f'Show {card} to start the game!'", "''", "f'{name}'", "f'click on {card} to show it'", "'or <DONE> to skip'"],
-    'IS_STARTER':           [ "''", "f'{name}'", "'is the starting player!!!'", "''", "''"],
-    'GAME_ABORTED':         [ "''", "'!!! TOO MANY TURNS USED !!!'", "f'GAME ABORTED AFTER {turn} TURNS'", "''", "''"]
+    'SHOW_STARTER': ["f'Show {card} to start the game!'",
+                     "f'{name}'", "'shows starter card'",
+                     "''",
+                     "''"],
+    'FINISHED_SWAPPING': ["''",
+                          "f'{name}'",
+                          "'finished swapping cards'",
+                          "''",
+                          "''"],
+    'DOES_NOT_SHOW': ["f'Show {card} to start the game!'",
+                      "f'{name}'",
+                      "'does not show starter card'",
+                      "''",
+                      "''"],
+    'IS_OUT': ["''",
+               "f'{name}'",
+               "'is out!'",
+               "''",
+               "''"],
+    'MAY_SWAP': ["f'{name}'",
+                 "'you may swap face up table cards'",
+                 "'with hand cards now'",
+                 "'click <DONE> button, when ready'",
+                 "''"],
+    'IS_SWAPPING': ["''",
+                    "f'{name}'",
+                    "'is swapping cards'",
+                    "''",
+                    "''"],
+    'TURN_NAME': ["''",
+                  "f'Turn {turn} {dir}: {name} {thinking}'",
+                  "f'{tips[0]}'",
+                  "f'{tips[1]}'",
+                  "f'{tips[2]}'"],
+    'IS_SHITHEAD': ["''",
+                    "f'{name}'",
+                    "'is the SHITHEAD'",
+                    "''",
+                    "''"],
+    'SHOW_OR_SKIP': ["f'Show {card} to start the game!'",
+                     "''",
+                     "f'{name}'",
+                     "f'click on {card} to show it'",
+                     "'or <DONE> to skip'"],
+    'IS_STARTER': ["''",
+                   "f'{name}'",
+                   "'is the starting player!!!'",
+                   "''",
+                   "''"],
+    'GAME_ABORTED': ["''",
+                     "'!!! TOO MANY TURNS USED !!!'",
+                     "f'GAME ABORTED AFTER {turn} TURNS'",
+                     "''",
+                     "''"]
 }
 
 # English tool tips
@@ -361,7 +405,7 @@ TIPS_EN = {
 }
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class CardSprite(arcade.Sprite):
     '''
     Sprites representing the cards in a shithead game.
@@ -370,10 +414,10 @@ class CardSprite(arcade.Sprite):
         '''
         Initialize a card sprite.
 
-        The card parameter references the card as it is seen by the game engine.
-        Its rank and suit attributes specifies the image rendered to display this
-        card face up, while the id attribute specifies the image rendered, when
-        it is displayed face down.
+        The card parameter references the card as it is seen by the game
+        engine.  Its rank and suit attributes specifies the image rendered to
+        display this card face up, while the id attribute specifies the image
+        rendered, when it is displayed face down.
 
         :param card:    card represented by this sprite.
         :type card:     Card
@@ -381,16 +425,17 @@ class CardSprite(arcade.Sprite):
         :type scale:    float
     '''
 
-        self.card  = card
+        self.card = card
         self.speed = 0      # speed of card when it is moved.
         # image to be used for this card sprite if it's face up.
         # each of the card images is identified by suit and rank
-        self.image = f":resources:images/cards/card{self.card.suit}{self.card.rank}.png"
+        self.image = (f":resources:images/cards/card{self.card.suit}"
+                      f"{self.card.rank}.png")
 
         # call the super class (arcade.Sprite) initializer
         # cards are initially rendered face down
-        super().__init__(FACE_DOWN_IMAGE[self.card.id % 2], scale, hit_box_algorithm='None')
-
+        super().__init__(FACE_DOWN_IMAGE[self.card.did % 2], scale,
+                         hit_box_algorithm='None')
 
     def face_down(self):
         """
@@ -401,7 +446,7 @@ class CardSprite(arcade.Sprite):
         odd id have blue backs.
         """
         # load the face down image into the sprite
-        self.texture = arcade.load_texture(FACE_DOWN_IMAGE[self.card.id % 2])
+        self.texture = arcade.load_texture(FACE_DOWN_IMAGE[self.card.did % 2])
         # reset the face up flag
         self.card.is_face_up = False
 
@@ -425,7 +470,7 @@ class CardSprite(arcade.Sprite):
         return not self.card.is_face_up
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class Message:
     """
     Print up to 5 lines of text to the screen.
@@ -438,8 +483,7 @@ class Message:
         Defines a text window used for instructional messages.
 
         """
-        self.coords = (MESSAGE_X, MESSAGE_Y)    # coords of message window
-                                                # => center/top
+        self.coords = (MESSAGE_X, MESSAGE_Y)    # center/top of message window
         self.n_lines = 5                        # number of lines
         self.color = arcade.color.WHITE         # text color
         self.font_size = TEXT_FONT_SIZE         # text size
@@ -460,13 +504,14 @@ class Message:
         if line_nbr >= 0 and line_nbr < self.n_lines:
             self.lines[line_nbr] = text
         else:
-            raise Exception(f"Line number {line_nbr} is outside of the text window!")
+            raise ValueError(f"Line number {line_nbr} is outside of the text"
+                             " window!")
 
     def draw_text(self):
         """
         Draw text to the screen.
         """
-        for i,line in enumerate(self.lines):
+        for i, line in enumerate(self.lines):
             arcade.draw_text(
                     line,                       # displayed text
                     self.coords[0],             # x-coordinate of line center
@@ -474,12 +519,12 @@ class Message:
                     self.coords[1] - i * self.line_spacing,
                     self.color,                 # text color
                     self.font_size,             # font size
-                    anchor_x='center',          # x-ccord denotes center of line
-                    anchor_y='top'              # y-coord denotes top of line
+                    anchor_x='center',          # x-ccord => center of line
+                    anchor_y='top'              # y-coord => top of line
             )
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class Place:
     """
     Card mover target.
@@ -519,20 +564,20 @@ class Place:
         self.name = name
         self.coords = coords
         self.human = human
-        self.cards = [] # list of cardlists per coordinate
+        self.cards = []  # list of cardlists per coordinate
         for i in range(len(coords)):
             self.cards.append([])   # add empty list per coordinate
         # if this is a player place, create a text object with his name
         # below the middle table card
         if len(coords) > 1:
             self.label = arcade.Text(
-            name,
-            coords[1][0],
-            coords[1][1] - CARD_HEIGHT/2 - TEXT_VERTICAL_OFFSET,
-            arcade.color.WHITE,
-            DEFAULT_FONT_SIZE,
-            anchor_x='center',
-            anchor_y='top')
+                name,
+                coords[1][0],
+                coords[1][1] - CARD_HEIGHT/2 - TEXT_VERTICAL_OFFSET,
+                arcade.color.WHITE,
+                DEFAULT_FONT_SIZE,
+                anchor_x='center',
+                anchor_y='top')
             # get width and height of text object
             w = self.label.content_width
             h = self.label.content_height
@@ -540,9 +585,11 @@ class Place:
             x = self.label.x
             y = self.label.y
             # create an outline rectangle to mark this player as next player
-            self.frame_next = arcade.create_rectangle_outline(x, y - h/2, w+6, h+4, arcade.color.BRIGHT_GREEN, 3, 0)
+            self.frame_next = arcade.create_rectangle_outline(
+                x, y - h/2, w+6, h+4, arcade.color.BRIGHT_GREEN, 3, 0)
             # create a filled rectangle to mark this player as current player
-            self.frame_current = arcade.create_rectangle_filled(x, y - h/2, w+6, h+4, arcade.color.BRIGHT_GREEN, 0)
+            self.frame_current = arcade.create_rectangle_filled(
+                x, y - h/2, w+6, h+4, arcade.color.BRIGHT_GREEN, 0)
 
     def print(self):
         """
@@ -555,7 +602,7 @@ class Place:
             print(' '.join([str(card) for card in self.cards[i]]))
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class CardMover:
     """
     Moves cards in its list to a target position.
@@ -626,8 +673,8 @@ class CardMover:
         # set card animation speed
         self.card_speed = card_speed
         self.started = False    # True => increment time
-        self.time = 0 # incrementing after mover has been started
-        self.move_list = [] # list of cards to be moved
+        self.time = 0  # incrementing after mover has been started
+        self.move_list = []  # list of cards to be moved
         # dictionary of possible targets (key = name of target)
         self.places = {}
 
@@ -655,7 +702,8 @@ class CardMover:
         Adds the created sprites to the mat sprite list.
         """
         # create mat where talon is placed on the screen
-        mat = arcade.SpriteSolidColor(CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+        mat = arcade.SpriteSolidColor(
+            CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
         mat.position = (TALON_X, TALON_Y)
         # add it to the mover places
         self.add_place('talon', [(TALON_X, TALON_Y)])
@@ -663,7 +711,8 @@ class CardMover:
         self.mat_list.append(mat)
 
         # create mat where discard pile is placed on the screen
-        mat = arcade.SpriteSolidColor(CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+        mat = arcade.SpriteSolidColor(
+            CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
         mat.position = (DISCARD_X, DISCARD_Y)
         # add it to the mover places
         self.add_place('discard', [(DISCARD_X, DISCARD_Y)])
@@ -671,7 +720,8 @@ class CardMover:
         self.mat_list.append(mat)
 
         # create mat where cards removed from the game are placed
-        mat = arcade.SpriteSolidColor(CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+        mat = arcade.SpriteSolidColor(
+            CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
         mat.position = (REMOVED_X, REMOVED_Y)
         # add it to the mover places
         self.add_place('removed', [(REMOVED_X, REMOVED_Y)])
@@ -693,10 +743,11 @@ class CardMover:
         :type left_xy:   tuple
         """
         x, y = left_xy
-        coords = [] # list of coordinates from left to right
+        coords = []  # list of coordinates from left to right
         for i in range(4):
             coords.append((x + i * X_SPACING, y))
-            mat = arcade.SpriteSolidColor(CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+            mat = arcade.SpriteSolidColor(
+                CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
             mat.position = coords[i]
             # add sprite to the mat sprite list
             self.mat_list.append(mat)
@@ -758,15 +809,16 @@ class CardMover:
         :param name:    name of player.
         :type name:     str
         """
-        hand_xy = (HAND_X, HAND_Y)  # X/Y-coordinates of central hand card.
-        x, y = (TABLE_X, TABLE_Y)   # X/Y-coordinates of leftmost table card mat.
+        hand_xy = (HAND_X, HAND_Y)  # X/Y-coords of central hand card.
+        x, y = (TABLE_X, TABLE_Y)   # X/Y-coords of leftmost table card mat.
 
         # list of coordinats: hand + table from left to right
         coords = []
         for i in range(3):
             # create table card mats and assign them to coords[0]..coords[2]
             coords.append((x + i * X_SPACING, y))
-            mat = arcade.SpriteSolidColor(CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+            mat = arcade.SpriteSolidColor(
+                CARD_WIDTH, CARD_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
             mat.position = coords[i]
             # add sprite to the mat sprite list
             self.mat_list.append(mat)
@@ -797,7 +849,7 @@ class CardMover:
         :type face_up:      bool
         """
         if self.started:
-            raise Exception("Can't add card to already started move!")
+            raise ValueError("Can't add card to already started move!")
         else:
             target = self.places[name].coords[idx]
             self.move_list.append((card, name, idx, target, delay, face_up))
@@ -807,7 +859,7 @@ class CardMover:
         Set 'started' flag to start moving cards.
         """
         if self.started:
-            raise Exception("Moving cards has already been started!")
+            raise ValueError("Moving cards has already been started!")
         else:
             self.started = True
 
@@ -882,7 +934,7 @@ class CardMover:
                 if card_sprite.card == card:
                     break
             else:
-                raise Exception("Card sprite doesn't exist!")
+                raise ValueError("Card sprite doesn't exist!")
             card_sprite.position = (col_x, HAND_Y - offset)
             # pull it to the top of the sprite list
             self.sprite_list.remove(card_sprite)
@@ -1065,11 +1117,13 @@ class CardMover:
                     # add card to target's card list
                     self.places[name].cards[trg_idx].append(card)
                     if self.places[name].human and trg_idx == 3:
-                        # card was moved to the human player's hand => re-arrange cards
+                        # card was moved to the human player's hand
+                        # => re-arrange cards
                         card.face_up()
                         self.spread_out_hand(self.places[name].cards[trg_idx])
                     elif name == 'discard':
-                        # fan out cards of same rank at the top of the discard pile
+                        # fan out cards of same rank at the top
+                        # of the discard pile
                         self.fan_out_discard()
 
                     # remove it from the move list
@@ -1138,7 +1192,8 @@ class CardMover:
             arcade.draw_text(
                     str(len(self.places[player.name].cards[3])),
                     self.places[player.name].coords[3][0],
-                    self.places[player.name].coords[3][1] - CARD_HEIGHT/2 - TEXT_VERTICAL_OFFSET,
+                    (self.places[player.name].coords[3][1]
+                     - CARD_HEIGHT/2 - TEXT_VERTICAL_OFFSET),
                     arcade.color.WHITE,
                     DEFAULT_FONT_SIZE,
                     anchor_x='center',
@@ -1169,7 +1224,7 @@ class CardMover:
             self.places[player.name].label.draw()
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class GameView(arcade.View):
     """ View where the actual game is played """
 
@@ -1191,7 +1246,8 @@ class GameView(arcade.View):
         :return:                list of player objects for this game.
         :rtype:                 list
         """
-        # load lookup table from file in package, we need it to create the AI players.
+        # load lookup table from file in package, we need it to create the AI
+        # players.
         fup_table = FupTable()
         fup_table.load(FUP_TABLE_FILE, True)
 
@@ -1203,11 +1259,13 @@ class GameView(arcade.View):
                 type = 'DeeperShit'
             if type == 'Human':
                 # create a human player with specified name, who's using the
-                # gui and automatically ends his turn if there's no other option.
+                # gui and automatically ends his turn if there's no other
+                # option.
                 players.append(plr.HumanPlayer(name, True, True))
             else:
                 try:
-                    # type specifies the AiPlayer sub-class in the player module.
+                    # type specifies the AiPlayer sub-class in the player
+                    # module.
                     ai_player_class = getattr(plr, type)
                 except:
                     # skip empty player slots (type = '---')
@@ -1317,7 +1375,7 @@ class GameView(arcade.View):
         self.thinking = ['   ', '.  ', '.. ', '...']
 
         # tool tips
-        self.tips = ['','','']
+        self.tips = ['', '', '']
 
         # set the background color to amazon green.
         arcade.set_background_color(arcade.color.AMAZON)
@@ -1330,7 +1388,8 @@ class GameView(arcade.View):
         Adds the created button sprite to the mat sprite list.
         Creates the 'DONE' text object.
         """
-        self.button = arcade.Sprite(BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
+        self.button = arcade.Sprite(
+            BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
         self.button.position = (BUTTON_X, BUTTON_Y)
         self.mat_list.append(self.button)
 
@@ -1371,7 +1430,8 @@ class GameView(arcade.View):
         Adds all card sprites to the sprite list.
         Adds each sprite to the card2sprite lookup dictionary.
         """
-        # for each card in talon create a sprite and add talon's coords to this card sprites
+        # for each card in talon create a sprite and add talon's coords to
+        # this card sprites
         for card in self.state.talon:
             # create a sprite for this card
             sprite = CardSprite(card)
@@ -1583,7 +1643,8 @@ class GameView(arcade.View):
                     dealer = idx
                     break
             else:
-                raise Exception(f"Shithead {shithead} not found in list of players!")
+                raise ValueError(
+                    f"Shithead {shithead} not found in list of players!")
         else:
             # very first round => select dealer randomly
             dealer = -1
@@ -1610,14 +1671,16 @@ class GameView(arcade.View):
         self.state = State(players, dealer, n_decks, log_info)
 
         # shuffle the talon
-        self.state = Game.next_state(self.state, Play('SHUFFLE'), None, self.stats)
+        self.state = Game.next_state(
+            self.state, Play('SHUFFLE'), None, self.stats)
         self.state.print()
 
         # create a card sprite for each card in the talon
         self.create_card_sprites()
 
         # remove some talon cards to match the player count
-        self.state = Game.next_state(self.state, Play('BURN'), None, self.stats)
+        self.state = Game.next_state(
+            self.state, Play('BURN'), None, self.stats)
         self.state.print()
         # and program the card mover to show how these cards are moved to the
         # removed cards pile
@@ -1630,7 +1693,8 @@ class GameView(arcade.View):
         self.move_dealt_cards()
 
         # deal 3 face down, 3 face up, and 3 hand cards to each player
-        self.state = Game.next_state(self.state, Play('DEAL'), None, self.stats)
+        self.state = Game.next_state(
+            self.state, Play('DEAL'), None, self.stats)
         self.state.print()
 
         # start the card mover => animation of burning cards and dealing cards.
@@ -1678,9 +1742,9 @@ class GameView(arcade.View):
             - the cards/sprites representing removed cards.
             - the cards/sprites representing talon cards.
             - the cards/sprites representing discarded cards.
-            - the cards/sprites representing hand and table cards of each player.
-        Recreate all other game state attributes (current player, direction, ...)
-        from the loaded state info.
+            - the cards/sprites representing hand/table cards of each player.
+        Recreate all other game state attributes (current player,
+        direction, ...) from the loaded state info.
 
         :param state_info:  state information loaded from JSON file.
         :type state_info:   dict
@@ -1720,7 +1784,7 @@ class GameView(arcade.View):
         dealer = state_info['dealer']
 
         self.shithead = None    # shithead of this round not found yet
-        self.aborted = False    # reset 'aborted' flag 
+        self.aborted = False    # reset 'aborted' flag
 
         # get the number of necessary card decks from state info
         n_decks = state_info['n_decks']
@@ -1804,11 +1868,11 @@ class GameView(arcade.View):
         This is used to highlight the 'REfILL' play.
         '''
         arcade.draw_rectangle_outline(
-                TALON_X, TALON_Y,           # position
-                CARD_WIDTH+4,CARD_HEIGHT+4, # size
-                arcade.color.BRIGHT_GREEN,  # color
-                3,                          # border width
-                0)                          # tilt angle
+                TALON_X, TALON_Y,               # position
+                CARD_WIDTH+4, CARD_HEIGHT+4,    # size
+                arcade.color.BRIGHT_GREEN,      # color
+                3,                              # border width
+                0)                              # tilt angle
 
     def mark_discard(self, discard):
         '''
@@ -1956,7 +2020,7 @@ class GameView(arcade.View):
         for play in plays:
             if play.action == 'REFILL':
                 self.mark_talon()
-            elif  play.action == 'END':
+            elif play.action == 'END':
                 self.mark_end_turn()
             elif play.action == 'HAND' or play.action == 'PUT':
                 self.mark_hand_cards(player, play.index)
@@ -2135,7 +2199,8 @@ class GameView(arcade.View):
             # must be opponent card or removed card => don't return a play.
             return None
 
-    def set_message(self, message, turn=0, name='', thinking='', card='', dir='', tips=['','','']):
+    def set_message(self, message, turn=0, name='', thinking='', card='',
+                    dir='', tips=['', '', '']):
         """
         Create multi-line message from message dictionary.
 
@@ -2159,7 +2224,7 @@ class GameView(arcade.View):
         :param tips:        tips to card under mouse (hover)
         :type tips:         list
         """
-        for i,line in enumerate(self.msg_dict[message]):
+        for i, line in enumerate(self.msg_dict[message]):
             self.message.set_line(i, eval(line))
 
     def get_play_delay(self, player):
@@ -2175,7 +2240,7 @@ class GameView(arcade.View):
         :rtype:         float
         """
         # is it the human player
-        if isinstance(player,plr.HumanPlayer):
+        if isinstance(player, plr.HumanPlayer):
             # human player => move card immediately
             return 0
         else:
@@ -2252,7 +2317,7 @@ class GameView(arcade.View):
         self.pull_to_top(sprite)
         # print instructions
         self.set_message('SHOW_STARTER', 0, player.name, '', card)
-        if isinstance(player,plr.AiPlayer): # AI player
+        if isinstance(player, plr.AiPlayer):    # AI player
             self.wait_time = 1
             if self.fast_play:
                 # fast play => no need to click to continue
@@ -2281,7 +2346,7 @@ class GameView(arcade.View):
 
     def show_refill_play(self, player):
         """
-        Programs the card mover to move the top talon cards to the player's hand.
+        Programs card mover to move the top talon cards to the player's hand.
 
         Move cards from the top of the talon to the players hand until either
         the hand has been refilled to 3 cards or the talon is empty.
@@ -2301,7 +2366,8 @@ class GameView(arcade.View):
             if i < n_refilled:
                 # add talon cards sprites in reversed order to mover list
                 # with player's hand as target
-                self.mover.add(sprite, player.name, 3, 2 * delay + i * TAKE_DELAY, False )
+                self.mover.add(
+                    sprite, player.name, 3, 2 * delay + i * TAKE_DELAY, False)
 
     def show_take_play(self, player):
         """
@@ -2318,7 +2384,8 @@ class GameView(arcade.View):
         for i, sprite in enumerate(cards[::-1]):
             # add discard pile cards sprites in reversed order to mover list
             # with player's hand as target
-            self.mover.add(sprite, player.name, 3, 2 * delay + i * TAKE_DELAY, False )
+            self.mover.add(
+                sprite, player.name, 3, 2 * delay + i * TAKE_DELAY, False)
 
     def show_kill_play(self, player):
         """
@@ -2335,11 +2402,12 @@ class GameView(arcade.View):
         for i, sprite in enumerate(cards[::-1]):
             # add discard pile cards in reversed order to mover list
             # with removed cards pile as target
-            self.mover.add(sprite, 'removed', 0, 2 * delay + i * KILL_DELAY, False )
+            self.mover.add(
+                sprite, 'removed', 0, 2 * delay + i * KILL_DELAY, False)
 
     def show_fup_play(self, player, index):
         """
-        Programs the card mover to move a face up table card to the discard pile.
+        Programs card mover to move a face up table card to the discard pile.
 
         :param player:  current player.
         :type player:   Player
@@ -2399,9 +2467,9 @@ class GameView(arcade.View):
             self.set_message('DOES_NOT_SHOW', 0, player.name, '', card)
             self.wait_time = 1
 
-        else :
+        else:
             # player has ended his turn during normal game play
-            if isinstance(player,plr.AiPlayer):
+            if isinstance(player, plr.AiPlayer):
                 # end of AI turn during normal turns
                 if self.fast_play:
                     # fast play => no need to click to continue
@@ -2498,13 +2566,14 @@ class GameView(arcade.View):
             - end turn button => 'END'
             - quit button => 'QUIT'
             - everywhere else => play = None
-        We set this play (or None) as selected play of the human player (players[0]).
+        We set this play (or None) as selected play of the human player
+        (players[0]).
         Note, that we still have to check in the 'select_play()' methode of
         HumanPlayer, if this is a legal play.
 
-        If it's not the human player's turn, a mouse click everywhere, will reset
-        the 'waiting_for_human' flag as an acknowledge from the human player for the
-        last opponent action.
+        If it's not the human player's turn, a mouse click everywhere, will
+        reset the 'waiting_for_human' flag as an acknowledge from the human
+        player for the last opponent action.
 
         :param x:               X-coord of mouse when button was pressed.
         :type x:                float
@@ -2516,7 +2585,7 @@ class GameView(arcade.View):
         :type key_modifiers:    int
         """
         # reset the tips in the message window
-        self.tips = ['','','']
+        self.tips = ['', '', '']
 
         # reset the 'wait_for_human' flag
         self.wait_for_human = False
@@ -2530,7 +2599,7 @@ class GameView(arcade.View):
             return  # nothing more to do
 
         # get list of cards we clicked on
-        cards = arcade.get_sprites_at_point((x,y), self.card_list)
+        cards = arcade.get_sprites_at_point((x, y), self.card_list)
 
         # have we clicked on a card?
         if len(cards) > 0:
@@ -2538,7 +2607,7 @@ class GameView(arcade.View):
             play = self.get_human_play(top_card)
         else:
             # check if we have pressed the button
-            mats = arcade.get_sprites_at_point((x,y), self.mat_list)
+            mats = arcade.get_sprites_at_point((x, y), self.mat_list)
             if len(mats) > 0 and mats[0] == self.button:
                 # load the pressed button image into the sprite
                 self.press_button()
@@ -2556,7 +2625,7 @@ class GameView(arcade.View):
             # => reset selected play to None
             self.state.players[0].set_clicked_play(None)
             # TODO acknowledge an opponent action
-            #self.ack = True
+#            self.ack = True
 
     def pull_to_top(self, card: arcade.Sprite):
         """
@@ -2595,7 +2664,7 @@ class GameView(arcade.View):
         :return:        3 lines of tips.
         :rtype:         list
         """
-        tips = ['','','']
+        tips = ['', '', '']
         if play:
             legal_plays = self.state.players[0].get_legal_plays(self.state)
             # turn into a list of strings
@@ -2636,14 +2705,14 @@ class GameView(arcade.View):
             return  # nothing more to do
 
         # is the mouse hovering over a card
-        cards = arcade.get_sprites_at_point((x,y), self.card_list)
+        cards = arcade.get_sprites_at_point((x, y), self.card_list)
         if len(cards) > 0:
             top_card = cards[-1]
             play = self.get_human_play(top_card)
             rank = top_card.card.rank
         else:
             # check if the mouse is over the 'DONE' button
-            mats = arcade.get_sprites_at_point((x,y), self.mat_list)
+            mats = arcade.get_sprites_at_point((x, y), self.mat_list)
             if len(mats) > 0 and mats[0] == self.button:
                 play = Play('END')
                 rank = None
@@ -2671,9 +2740,9 @@ class GameView(arcade.View):
               pile (no 'KILL' play by current player).
 
         In case of a mismatch, we have to find out where the card belonging to
-        the sprite at the top of the discard pile is now in the game state (removed
-        cards pile or player) and program the card mover to move all sprites
-        from the discard pile to the found place.
+        the sprite at the top of the discard pile is now in the game state
+        (removed cards pile or player) and program the card mover to move all
+        sprites from the discard pile to the found place.
 
         TODO handle the case where a player is OUT and now where are 4 or more
              cards with same rank at the top of the discard pile, i.e. the
@@ -2696,7 +2765,8 @@ class GameView(arcade.View):
                 # => program mover to move discard pile to removed cards
                 for i, card_sprite in enumerate(disc[::-1]):
                     # add discard pile cards in reversed order to mover list
-                    self.mover.add(card_sprite, 'removed', 0, 1 + i * KILL_DELAY, False )
+                    self.mover.add(
+                        card_sprite, 'removed', 0, 1 + i * KILL_DELAY, False)
                 self.mover.start()
                 return True
 
@@ -2705,13 +2775,15 @@ class GameView(arcade.View):
                 if card_sprite.card in player.hand:
                     break
             else:
-                raise Exception(f"Cannot find player who took discard pile after playing face down card {card}!")
+                raise Exception("Cannot find player who took discard pile"
+                                f" after playing face down card {card}!")
 
-            # program the card mover to move the discard pile to the hand of the
-            # found player
+            # program the card mover to move the discard pile to the hand of
+            # the found player
             for i, card_sprite in enumerate(disc[::-1]):
                 # add discard pile cards in reversed order to mover list
-                self.mover.add(card_sprite, player.name, 3, 1 + i * TAKE_DELAY, False )
+                self.mover.add(
+                    card_sprite, player.name, 3, 1 + i * TAKE_DELAY, False)
             self.mover.start()
             return True
 
@@ -2721,14 +2793,15 @@ class GameView(arcade.View):
             # this is possible if the previous player went out playing his last
             #  card on the discard pile (i.e. hadn't the option to select the
             # 'KILL' play)
-            # => kill the discard pile in the current state without using a play
+            # => kill the discard pile in current state without using a play
             for i in range(len(self.state.discard)):
                 card = self.state.discard.pop_card()
                 self.state.killed.add_card(card)
             # and move the discard pile to the removed cards pile in the gui
             for i, card_sprite in enumerate(disc[::-1]):
                 # add discard pile cards in reversed order to mover list
-                self.mover.add(card_sprite, 'removed', 0, 1 + i * KILL_DELAY, False )
+                self.mover.add(
+                    card_sprite, 'removed', 0, 1 + i * KILL_DELAY, False)
             self.mover.start()
             return True
 
@@ -2770,7 +2843,8 @@ class GameView(arcade.View):
             else:
                 dir = '\u21ba'      # counterclockwise
             thinking = self.thinking[int(self.thinking_cnt / 20) % 4]
-            self.set_message('TURN_NAME', turn_count, player.name, thinking, dir=dir, tips=self.tips)
+            self.set_message('TURN_NAME', turn_count, player.name, thinking,
+                             dir=dir, tips=self.tips)
             if turn_count == 1:
                 # very 1st turn
                 # => make sure all shown AI player cards are face down again
@@ -2905,8 +2979,9 @@ class GameView(arcade.View):
         This function is called about 60 times per second by the game loop.
         This is where all of the game logic should be placed.
         We first wait for the card mover to finish moving cards around.
-        As a result of the previous play it may be necessary to move the discard
-        pile either to the previous player's hand or to the removed cards pile.
+        As a result of the previous play it may be necessary to move the
+        discard pile either to the previous player's hand or to the removed
+        cards pile.
         The message window is updated according to the current game phase.
         If the game is finished, i.e. a shithead has been found, we update the
         counters in the player configuration with the statistic counters and
@@ -2943,7 +3018,7 @@ class GameView(arcade.View):
         # taken by playing a face down table card, the discard pile has now to
         # be moved to the removed cards pile or the player's hand.
         if self.update_discard_pile():
-            return # wait for card mover to move the discard pile
+            return  # wait for card mover to move the discard pile
 
         # wait for human player to click anywhere
         # but game is neither finished nor aborted
@@ -2953,7 +3028,7 @@ class GameView(arcade.View):
 
         # update message window according to game phase
         # Shithead found => update stats of Shithead, set the 'shithead' flag
-        # Game aborted => revert stats and set the 'aborted' flag 
+        # Game aborted => revert stats and set the 'aborted' flag
         self.update_message_window()
 
         # shithead found or game aborted => show result
@@ -2991,9 +3066,11 @@ class GameView(arcade.View):
         # get player's next play and apply it to the game state
         self.apply_play(self.get_play())
 
+
 def main():
     pass
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
     main()
