@@ -987,13 +987,16 @@ class CardMover:
         :return:        name of source, index of card list.
         :rtype:         tuple
         """
-        for name in self.places.keys():
-            for idx in range(len(self.places[name].cards)):
-                if card in self.places[name].cards[idx]:
+#        for name in self.places.keys():
+#            for idx in range(len(self.places[name].cards)):
+#                if card in self.places[name].cards[idx]:
+#                    return (name, idx)
+        for name, place in self.places.items():
+            for idx, card_list in enumerate(place.cards):
+                if card in card_list:
                     return (name, idx)
-
         # if we get here, something is wrong
-        raise Exception(f"Card mover couldn't find {str(card)}!")
+        raise ValueError(f"Card mover couldn't find {str(card)}!")
 
     def get_delay(self):
         """
