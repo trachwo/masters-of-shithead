@@ -966,14 +966,14 @@ class CardMover:
         ntop = discard.get_ntop_visible()
 
         # fan cards so that ntop cards are visible
-        for i in range(len(cards)):
+        for i, card in enumerate(cards):
             if i > len(cards) - ntop:
                 # fanned out cards
                 off = (i - len(cards) + ntop) * CARD_HORIZONTAL_OFFSET
             else:
                 # cards up to the 1st visible card
                 off = 0
-            cards[i].position = (DISCARD_X + off, DISCARD_Y)
+            card.position = (DISCARD_X + off, DISCARD_Y)
 
     def find_source(self, card):
         """
