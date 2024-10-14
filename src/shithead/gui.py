@@ -1263,7 +1263,7 @@ class GameView(arcade.View):
                 # gui and automatically ends his turn if there's no other
                 # option.
                 players.append(plr.HumanPlayer(name, True, True))
-            else: 
+            else:
                 try:
                     # ptype specifies the AiPlayer sub-class in the player
                     # module.
@@ -2549,9 +2549,9 @@ class GameView(arcade.View):
             pass
 
         else:
-            raise Exception(f"Unexpected action: {action}")
+            raise ValueError(f"Unexpected action: {action}")
 
-    def on_mouse_press(self, x, y, button, key_modifiers):
+    def on_mouse_press(self, x, y, button, modifiers):
         """
         Mouse button pressed event callback function.
 
@@ -2586,8 +2586,8 @@ class GameView(arcade.View):
         :type y:                float
         :param button:          the mouse button which was pressed.
         :type button:           int
-        :param key_modifiers:   TODO
-        :type key_modifiers:    int
+        :param modifiers:       key modifiers (SHIFT, ALT, etc.)
+        :type modifiers:        int
         """
         # reset the tips in the message window
         self.tips = ['', '', '']
@@ -2640,7 +2640,7 @@ class GameView(arcade.View):
         self.card_list.remove(card)
         self.card_list.append(card)
 
-    def on_mouse_release(self, x, y, button, key_modifiers):
+    def on_mouse_release(self, x, y, button, modifiers):
         """
         Mouse button released event callback function.
 
@@ -2652,8 +2652,8 @@ class GameView(arcade.View):
         :type y:                float
         :param button:          the mouse button which was released.
         :type button:           int
-        :param key_modifiers:   TODO
-        :type key_modifiers:    int
+        :param modifiers:       Key modifiers (SHIFT, ALT, etc.)
+        :type modifiers:        int
         """
         # load the released button image into the sprite
         self.release_button()
@@ -2780,8 +2780,9 @@ class GameView(arcade.View):
                 if card_sprite.card in player.hand:
                     break
             else:
-                raise Exception("Cannot find player who took discard pile"
-                                f" after playing face down card {card}!")
+                raise ValueError("Cannot find player who took discard pile"
+                                 " after playing face down card"
+                                 f" {card_sprite.card}!")
 
             # program the card mover to move the discard pile to the hand of
             # the found player
@@ -2938,8 +2939,6 @@ class GameView(arcade.View):
         :param play:    play selected by current player.
         :type play:     Play
         """
-        # get the current player
-        player = self.state.players[self.state.player]
         # get game phase
         phase = self.state.game_phase
 
