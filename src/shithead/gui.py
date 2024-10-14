@@ -324,60 +324,60 @@ AI_DELAY = 0.5
 
 # English messages
 MESSAGES_EN = {
-    'SHOW_STARTER': ["f'Show {card} to start the game!'",
-                     "f'{name}'", "'shows starter card'",
-                     "''",
-                     "''"],
-    'FINISHED_SWAPPING': ["''",
-                          "f'{name}'",
-                          "'finished swapping cards'",
-                          "''",
-                          "''"],
-    'DOES_NOT_SHOW': ["f'Show {card} to start the game!'",
-                      "f'{name}'",
-                      "'does not show starter card'",
-                      "''",
-                      "''"],
-    'IS_OUT': ["''",
-               "f'{name}'",
-               "'is out!'",
-               "''",
-               "''"],
-    'MAY_SWAP': ["f'{name}'",
-                 "'you may swap face up table cards'",
-                 "'with hand cards now'",
-                 "'click <DONE> button, when ready'",
-                 "''"],
-    'IS_SWAPPING': ["''",
-                    "f'{name}'",
-                    "'is swapping cards'",
-                    "''",
-                    "''"],
-    'TURN_NAME': ["''",
-                  "f'Turn {turn} {dir}: {name} {thinking}'",
-                  "f'{tips[0]}'",
-                  "f'{tips[1]}'",
-                  "f'{tips[2]}'"],
-    'IS_SHITHEAD': ["''",
-                    "f'{name}'",
-                    "'is the SHITHEAD'",
-                    "''",
-                    "''"],
-    'SHOW_OR_SKIP': ["f'Show {card} to start the game!'",
-                     "''",
-                     "f'{name}'",
-                     "f'click on {card} to show it'",
-                     "'or <DONE> to skip'"],
-    'IS_STARTER': ["''",
-                   "f'{name}'",
-                   "'is the starting player!!!'",
-                   "''",
-                   "''"],
-    'GAME_ABORTED': ["''",
-                     "'!!! TOO MANY TURNS USED !!!'",
-                     "f'GAME ABORTED AFTER {turn} TURNS'",
-                     "''",
-                     "''"]
+    'SHOW_STARTER': ["Show {card} to start the game!",
+                     "{name}'", "'shows starter card",
+                     "",
+                     ""],
+    'FINISHED_SWAPPING': ["",
+                          "{name}",
+                          "finished swapping cards",
+                          "",
+                          ""],
+    'DOES_NOT_SHOW': ["Show {card} to start the game!",
+                      "{name}",
+                      "does not show starter card",
+                      "",
+                      ""],
+    'IS_OUT': ["",
+               "{name}",
+               "is out!",
+               "",
+               ""],
+    'MAY_SWAP': ["{name}",
+                 "you may swap face up table cards",
+                 "with hand cards now",
+                 "click <DONE> button, when ready",
+                 ""],
+    'IS_SWAPPING': ["",
+                    "{name}",
+                    "is swapping cards",
+                    "",
+                    ""],
+    'TURN_NAME': ["",
+                  "Turn {turn} {pdir}: {name} {thinking}",
+                  "{tips[0]}",
+                  "{tips[1]}",
+                  "{tips[2]}"],
+    'IS_SHITHEAD': ["",
+                    "{name}",
+                    "is the SHITHEAD",
+                    "",
+                    ""],
+    'SHOW_OR_SKIP': ["Show {card} to start the game!",
+                     "",
+                     "{name}",
+                     "click on {card} to show it",
+                     "or <DONE> to skip"],
+    'IS_STARTER': ["",
+                   "{name}",
+                   "is the starting player!!!",
+                   "",
+                   ""],
+    'GAME_ABORTED': ["",
+                     "!!! TOO MANY TURNS USED !!!",
+                     "GAME ABORTED AFTER {turn} TURNS",
+                     "",
+                     ""]
 }
 
 # English tool tips
@@ -2203,7 +2203,8 @@ class GameView(arcade.View):
             return None
 
     def set_message(self, message, turn=0, name='', thinking='', card='',
-                    dir='', tips=['', '', '']):
+                    pdir='', tips=None):
+
         """
         Create multi-line message from message dictionary.
 
@@ -2220,17 +2221,24 @@ class GameView(arcade.View):
         :param thinking:    '', '.', '..', or '...'
         :type thinking:     str
         :param card:        starting card.
-        :type card:         str
-        :param dir:         play direction symbol '\u21bb' => clockwise
+        :type card:         Card
+        :param pdir:        play direction symbol '\u21bb' => clockwise
                             or '\u21ba' => counterclockwise.
-        :type dir:          str
+        :type pdir:         str
         :param tips:        tips to card under mouse (hover)
         :type tips:         list
         """
-        # TODO find alternative to eval (literal_eval doesn't work)
-        #      also the unused parameters are actually used by eval.
         for i, line in enumerate(self.msg_dict[message]):
-            self.message.set_line(i, eval(line))
+            line = line.replace('{turn}', str(turn))
+            line = line.replace('{name}', name)
+            line = line.replace('{thinking}', thinking)
+            line = line.replace('{card}', str(card))
+            line = line.replace('{pdir}', pdir)
+            if tips is not None:
+                line = line.replace('{tips[0]}', tips[0])
+                line = line.replace('{tips[1]}', tips[1])
+                line = line.replace('{tips[2]}', tips[2])
+            self.message.set_line(i, line)
 
     def get_play_delay(self, player):
         """
@@ -2845,12 +2853,12 @@ class GameView(arcade.View):
 
         elif phase == PLAY_GAME:
             if self.state.next_direction:
-                dir = '\u21bb'      # clockwise
+                pdir = '\u21bb'      # clockwise
             else:
-                dir = '\u21ba'      # counterclockwise
+                pdir = '\u21ba'      # counterclockwise
             thinking = self.thinking[int(self.thinking_cnt / 20) % 4]
             self.set_message('TURN_NAME', turn_count, player.name, thinking,
-                             dir=dir, tips=self.tips)
+                             pdir=pdir, tips=self.tips)
             if turn_count == 1:
                 # very 1st turn
                 # => make sure all shown AI player cards are face down again
