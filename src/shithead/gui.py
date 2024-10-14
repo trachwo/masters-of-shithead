@@ -987,10 +987,6 @@ class CardMover:
         :return:        name of source, index of card list.
         :rtype:         tuple
         """
-#        for name in self.places.keys():
-#            for idx in range(len(self.places[name].cards)):
-#                if card in self.places[name].cards[idx]:
-#                    return (name, idx)
         for name, place in self.places.items():
             for idx, card_list in enumerate(place.cards):
                 if card in card_list:
@@ -1188,7 +1184,7 @@ class CardMover:
         :param players:     List of players.
         :type players:      list
         '''
-        for idx, player in enumerate(players):
+        for player in players:
             if isinstance(player, HumanPlayer):
                 continue    # skip number of hand cards for human player
 
