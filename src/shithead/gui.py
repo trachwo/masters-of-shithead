@@ -1253,21 +1253,22 @@ class GameView(arcade.View):
 
         players = []
         for player in self.config['players']:
-            name, type, counters = player
+            name, ptype, _ = player
             # change 'DeepShit' to 'DeeperShit'
-            if type == 'DeepShit':
-                type = 'DeeperShit'
-            if type == 'Human':
+            if ptype == 'DeepShit':
+                ptype = 'DeeperShit'
+
+            if ptype == 'Human':
                 # create a human player with specified name, who's using the
                 # gui and automatically ends his turn if there's no other
                 # option.
                 players.append(plr.HumanPlayer(name, True, True))
-            else:
+            else: 
                 try:
-                    # type specifies the AiPlayer sub-class in the player
+                    # ptype specifies the AiPlayer sub-class in the player
                     # module.
-                    ai_player_class = getattr(plr, type)
-                except:
+                    ai_player_class = getattr(plr, ptype)
+                except AttributeError:
                     # skip empty player slots (type = '---')
                     ai_player_class = None
                 if ai_player_class:
