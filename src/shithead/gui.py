@@ -3043,13 +3043,13 @@ class GameView(arcade.View):
 
             # update the player counters in the configuration
             for i, player in enumerate(self.config['players']):
-                name, type, counters = player
-                if type != '---':
+                name, ptype, counters = player
+                if ptype != '---':
                     counters = self.stats.get_stats(name)
-                    self.config['players'][i] = (name, type, counters)
+                    self.config['players'][i] = (name, ptype, counters)
             # save updated configuration to file
             filename = self.config['config_file']
-            with open(filename, 'w') as json_file:
+            with open(filename, 'w', encoding='utf-8') as json_file:
                 json.dump(self.config, json_file, indent=4)
 
             #  create the result screen view
@@ -3072,7 +3072,9 @@ class GameView(arcade.View):
 
 
 def main():
-    pass
+    """
+    Tests for gui module.
+    """
 
 
 # -----------------------------------------------------------------------------
