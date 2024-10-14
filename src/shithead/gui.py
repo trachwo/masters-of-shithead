@@ -2221,7 +2221,7 @@ class GameView(arcade.View):
         :type thinking:     str
         :param card:        starting card.
         :type card:         str
-        :param dir:         direction symbol '\u21bb' => clockwise
+        :param dir:         play direction symbol '\u21bb' => clockwise
                             or '\u21ba' => counterclockwise.
         :type dir:          str
         :param tips:        tips to card under mouse (hover)
@@ -2869,11 +2869,11 @@ class GameView(arcade.View):
             self.set_message('GAME_ABORTED', turn_count)
             # update statistics
             # revert statistics of all players which are already out.
-            result = Game.get_result(self.state)
-            for name in result.keys():
-                if result[name][0] != 0:  # player has already scored
-                    score = result[name][0]
-                    turn_count = result[name][1]
+            rslt = Game.get_result(self.state)
+            for name in rslt.keys():
+                if rslt[name][0] != 0:  # player has already scored
+                    score = rslt[name][0]
+                    turn_count = rslt[name][1]
                     self.stats.revert(name, score, turn_count)
             self.stats.print()
             self.aborted = True
