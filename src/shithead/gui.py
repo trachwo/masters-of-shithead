@@ -883,11 +883,11 @@ class CardMover:
         :param name:    name of player.
         :type name:     str
         """
-        if name in self.places.keys():
+        if name in self.places:
             for card in self.places[name].cards[3]:
                 card.face_down()
         else:
-            raise Exception(f"Unknown player {name}!")
+            raise ValueError(f"Unknown player {name}!")
 
     def spread_out_hand(self, cards):
         """
