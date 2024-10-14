@@ -181,9 +181,10 @@ the gui:
 22.01.2023 Wolfgang Trachsler
 """
 
-import arcade
 import math
 import json
+
+import arcade
 
 # local imports (modules in same package)
 from .player import HumanPlayer, AiPlayer
@@ -489,7 +490,7 @@ class Message:
         self.font_size = TEXT_FONT_SIZE         # text size
         self.line_spacing = CARD_HEIGHT / 5     # distance between lines
         self.lines = []                         # list of text lines
-        for i in range(self.n_lines):
+        for _ in range(self.n_lines):
             self.lines.append('')               # initialize with empty lines
 
     def set_line(self, line_nbr, text):
@@ -565,7 +566,7 @@ class Place:
         self.coords = coords
         self.human = human
         self.cards = []  # list of cardlists per coordinate
-        for i in range(len(coords)):
+        for _ in range(len(coords)):
             self.cards.append([])   # add empty list per coordinate
         # if this is a player place, create a text object with his name
         # below the middle table card
@@ -596,8 +597,8 @@ class Place:
         Print place information.
         """
         print(f'{self.name}:')
-        for i in range(len(self.coords)):
-            x, y = self.coords[i]
+        for i, coord in enumerate(self.coords):
+            x, y = coord
             print(f' ({x},{y}),', end=' ')
             print(' '.join([str(card) for card in self.cards[i]]))
 
