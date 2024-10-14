@@ -1287,8 +1287,8 @@ class GameView(arcade.View):
         # create a Statistics object
         stats = Statistics()
         for player in self.config['players']:
-            name, type, counters = player
-            if type != '---':   # skip players which are not in the game
+            name, ptype, counters = player
+            if ptype != '---':   # skip players which are not in the game
                 stats.set_stats(name, counters)
         return stats
 
@@ -1316,6 +1316,7 @@ class GameView(arcade.View):
 
         # create the list of players from the players in the configuration.
         self.players = self.create_players()
+        self.n_players = len(self.players)
 
         # extract the game statistics from the players in the configuration
         self.stats = self.create_statistics()
@@ -1356,6 +1357,7 @@ class GameView(arcade.View):
 
         # 'DONE' button
         self.button = None
+        self.button_text = None
 
         # Text window for instructional messages
         self.message = None
@@ -1663,7 +1665,7 @@ class GameView(arcade.View):
         # if log-to-file has been selected, open the specified file for writing
         #  (=> reset file) and close it again.
         if log_info[1]:
-            with open(log_info[3], 'w') as log_file:
+            with open(log_info[3], 'w', encoding='utf-8') as log_file:
                 log_file.write('--- Sh*thead Log-File ---\n')
 
         # create the initial game state with the original list of players,
@@ -1858,7 +1860,7 @@ class GameView(arcade.View):
         self.state.starting_card = state_info['starting_card']
         self.state.auction_members = state_info['auction_members']
         self.state.shown_starting_card = state_info['shown_starting_card']
-        self.state.result = state_info['result']    # TODO still needed
+        self.state.result = state_info['result']
         # reset 'dealing' flag
         self.state.dealing = False
 
@@ -2225,6 +2227,8 @@ class GameView(arcade.View):
         :param tips:        tips to card under mouse (hover)
         :type tips:         list
         """
+        # TODO find alternative to eval (literal_eval doesn't work)
+        #      also the unused parameters are actually used by eval.
         for i, line in enumerate(self.msg_dict[message]):
             self.message.set_line(i, eval(line))
 
@@ -2293,7 +2297,7 @@ class GameView(arcade.View):
                 break   # found a mat without face up table card
         else:
             # didn't find a mat without face up table card => something's wrong
-            raise Exception("Face up table cards already complete!")
+            raise ValueError("Face up table cards already complete!")
         # get delay for human or AI
         delay = self.get_play_delay(player)
         # add card to mover list with found table slot as target
