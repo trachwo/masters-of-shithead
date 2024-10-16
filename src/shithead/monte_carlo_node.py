@@ -82,10 +82,10 @@ class MonteCarloNode():
         '''
         try:
             child = self.children[str(play)]
-        except KeyError:
-            raise Exception('No such play!')
+        except KeyError as err:
+            raise KeyError('No such play!') from err
         if child['node'] is None:
-            raise Exception('Child is not expanded!')
+            raise ValueError('Child is not expanded!')
         return child['node']
 
     def expand(self, play, child_state, unexpanded_plays):
@@ -102,14 +102,14 @@ class MonteCarloNode():
         :param child_state: game state after play has been applied to the
                            current state.
         :type child_state: State
-        :param unexpanded_plays: list of legal plays available in the child state.
+        :param unexpanded_plays: legal plays available in the child state.
         :type unexpanded_plays: list
         :return: new child node
         :rtype: MontecarloNode
         '''
         # check if specified play is a key for the childrens list
-        if str(play) not in self.children.keys():
-            raise Exception('No such play!')
+        if str(play) not in self.children:
+            raise ValueError('No such play!')
         # create a new node
         child_node = MonteCarloNode(self, play, child_state, unexpanded_plays)
         # update the children list entry with the new node
@@ -151,8 +151,8 @@ class MonteCarloNode():
         for child in self.children.values():
             if child['node'] is None:
                 return False
-        else:
-            return True
+        # if we get here, all children have been expanded.
+        return True
 
     def is_leaf(self):
         '''
@@ -220,9 +220,9 @@ class MonteCarloNode():
             print(f'\t{str(play)}')
 
         print(f'\n{current_player} expanded plays:')
-        for play in self.children.keys():
-            if self.children[play]['node'] is not None:
-                print(f'\t{str(play)}')
+        for play, child in self.children.items():
+            if child['node'] is not None:
+                print(f'\t{play}')
 
         print(f'\nn_plays: {self.n_plays}')
         print(f'n_wins: {self.n_wins}')
