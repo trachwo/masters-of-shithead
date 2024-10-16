@@ -583,9 +583,10 @@ def restore_end_game_state(filename, verbose=False, first='ShitHappens',
 
     try:
         # load end game state from json-file
-        with open(state_file, 'r') as json_file:
+        with open(state_file, 'r', encoding='utf-8') as json_file:
             state_info = json.load(json_file)
-    except OSError as exception:
+    except OSError as err:
+        print(err)
         print(f"### Error: couldn't load file {state_file}")
         return
 
@@ -608,7 +609,7 @@ def restore_end_game_state(filename, verbose=False, first='ShitHappens',
     # => only 2 players left
     # => empty talon
     if n_players != 2 or len(state_info['talon']) != 0:
-        raise Exception("This is not an end game state!")
+        raise ValueError("This is not an end game state!")
 
     # create list of remaining player
     # Note, that the AI type is not in the status (but in the config).
