@@ -921,9 +921,9 @@ def play_end_game(filename, timeout=3.0, policy='robust'):
     # Create a dictionary with assumed state and search tree per player.
     assumed = defaultdict(dict)
     for player in state.players:
-        plr = player.name
-        assumed[plr]['state'] = state.simulation_state(state, plr)
-        assumed[plr]['mcts'] = MonteCarlo(game)
+        pr = player.name
+        assumed[pr]['state'] = state.simulation_state(state, pr)
+        assumed[pr]['mcts'] = MonteCarlo(game)
 
     # loop until the shithead has been found
     while len(state.players) > 1:
@@ -976,9 +976,9 @@ def play_end_game(filename, timeout=3.0, policy='robust'):
             print(f"### Number of unknown cards: before: {nof_unknown} now:"
                   f" {len(state.get_unknown_cards())}")
             for player in state.players:
-                plr = player.name
-                assumed[plr]['state'] = state.simulation_state(state, plr)
-                assumed[plr]['mcts'] = MonteCarlo(game)
+                pr = player.name
+                assumed[pr]['state'] = state.simulation_state(state, pr)
+                assumed[pr]['mcts'] = MonteCarlo(game)
         else:
             # no new info => continue with the assumed states
             # apply best_play to assumed state of current player
