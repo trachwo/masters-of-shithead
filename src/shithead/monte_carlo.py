@@ -1004,7 +1004,7 @@ def play_end_game(filename, timeout=3.0, policy='robust'):
                     # something went wrong, this should be a known card
                     # and therefore also in be found in this assumed state
                     raise ValueError("Known hand card not found in"
-                                    " opponent's state!")
+                                     " opponent's state!")
                 else:
                     # create best_play as 'HAND' play with found index
                     best_play = Play('HAND', idx)
