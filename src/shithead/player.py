@@ -149,7 +149,7 @@ class Player:
             self.hand.add_card(card)
             self.hand.sort()    # keep hand cards sorted
         else:
-            raise Exception("Only 9 cards are dealt to player!")
+            raise ValueError("Only 9 cards are dealt to player!")
 
     def reset(self):
         """
