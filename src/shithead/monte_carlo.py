@@ -1043,7 +1043,7 @@ def deeper_shit_test(filename, opponent='DeepShit', timeout=1.0, policy='max'):
               '============================================\n')
         # let the current player play one action
         player = state.players[state.player]
-        while (True):
+        while True:
             play = player.play(state)
             if play is not None:
                 break
@@ -1110,7 +1110,7 @@ def deeper_shit_performance_test(filename, opponent='DeepShit', timeout=1.0,
                   f" ({ratio}%)", end='\r')
             # let the current player play one action
             player = state.players[state.player]
-            while (True):
+            while True:
                 play = player.play(state)
                 if play is not None:
                     break
