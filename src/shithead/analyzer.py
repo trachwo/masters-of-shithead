@@ -768,8 +768,8 @@ def find_best_fup_pick(state, get_fup_rank):
     hand = fup[:]       # remaining face up cards
     if get_fup_rank is None:    # 1st pick
         # create all possible pick up combinations
-        for rank in count.keys():
-            for i in range(count[rank]):
+        for rank, cnt in count.items():
+            for _ in range(cnt):
                 seq.append(rank)
                 hand.remove(rank)
                 # create combination
@@ -786,7 +786,7 @@ def find_best_fup_pick(state, get_fup_rank):
         combis.append(combi)
         if get_fup_rank in count.keys():
             # more cards with same rank as 1st pick
-            for i in range(count[get_fup_rank]):
+            for _ in range(count[get_fup_rank]):
                 seq.append(get_fup_rank)
                 hand.remove(get_fup_rank)
                 # create combination
