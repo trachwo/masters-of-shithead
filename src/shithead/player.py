@@ -123,7 +123,7 @@ class Player:
         self.face_up = Deck(empty=True)    # player's face up table cards
         self.hand = Deck(empty=True)       # player's hand cards.
         self.get_fup = False    # True => take face up table card as 2nd play
-        self.get_fup_rank = None # rank of face up table card taken on 2nd play
+        self.get_fup_rank = None  # rank of face up table card taken on hand
         self.is_human = False   # True => human player
 
     def deal(self, card):
@@ -141,8 +141,8 @@ class Player:
             self.face_down.add_card(card)
         elif len(self.face_up) < 3:
             # the next 3 cards are dealt as face up table cards.
-            card.face_up() # flip this card face up
-            card.seen = True # => we know where this card is.
+            card.face_up()      # flip this card face up
+            card.seen = True    # => we know where this card is.
             self.face_up.add_card(card)
         elif len(self.hand) < 3:
             # the final 3 cards are dealt as face down hand cards.
@@ -155,9 +155,9 @@ class Player:
         """
         Remove all of the player's cards.
         """
-        self.face_down = Deck(empty=True) # player's face down table cards
-        self.face_up = Deck(empty=True)   # player's face up table cards
-        self.hand = Deck(empty=True)      # player's hand cards.
+        self.face_down = Deck(empty=True)   # player's face down table cards
+        self.face_up = Deck(empty=True)     # player's face up table cards
+        self.hand = Deck(empty=True)        # player's hand cards.
 
     def get_string(self, score=None, visibility=0):
         '''
@@ -201,7 +201,7 @@ class Player:
         if score is None:
             player_str += f'HAND: {hand_str}'           # print hand cards
         else:
-            player_str += f'HAND: {hand_str}   {score}' # print hand cards and score
+            player_str += f'HAND: {hand_str}   {score}'  # hand cards andscore
         return player_str
 
     def print(self, score=None, visibility=0, end='\n'):
@@ -372,7 +372,7 @@ class Player:
         :return:            list of legal plays ('SHOW',index or 'END',0).
         :rtype:             list
         '''
-        plays = [] # initialize empty play list
+        plays = []  # initialize empty play list
         # get the requested suit
         suit = STARTING_SUITS[starting % 4]
         rank = STARTING_RANKS[starting // 4]
@@ -416,32 +416,36 @@ class Player:
         '''
         plays = []
         if source == 'HAND':
-            # Hand cards can always only be played if the discard pile allows it.
+            # Hand cards can always only be played if discard pile allows it.
             # it doesn't matter if it's the 1st or any other play.
-            plays += [Play(source, idx) for idx,card in enumerate(cards)
+            plays += [Play(source, idx)
+                      for idx, card in enumerate(cards)
                       if discard.check(first, cards[idx])]
         elif source == 'FUP':
             if first or not self.get_fup:
                 # 1st play, or following plays if not taken the discard pile.
                 # Face up table cards can only be played, if the discard pile
                 # allows it.
-                plays += [Play(source, idx) for idx,card in enumerate(cards)
+                plays += [Play(source, idx)
+                          for idx, card in enumerate(cards)
                           if discard.check(first, cards[idx])]
             else:
                 # 2nd, 3rd, or 4th after taking the discard pile
                 if not self.get_fup_rank:
                     # 2nd play => get any face up table card on hand.
-                    plays += [Play('GET', idx) for idx,card in enumerate(cards)]
+                    plays += [Play('GET', idx)
+                              for idx, card in enumerate(cards)]
                 else:
                     # 3rd or 4th play => get another card of same rank.
-                    plays += [Play('GET', idx) for idx,card in enumerate(cards)
+                    plays += [Play('GET', idx)
+                              for idx, card in enumerate(cards)
                               if (self.get_fup_rank == cards[idx].rank)]
 
         elif source == 'FDOWN':
             if first:
                 # A face down table card can always be played blindly as 1st
-                # card (=> check if player has to take discard pile afterwards).
-                plays += [Play(source, idx) for idx,card in enumerate(cards)]
+                # card => check if player has to take discard pile afterwards.
+                plays += [Play(source, idx) for idx, card in enumerate(cards)]
             else:
                 if (len(discard) == 0 or discard.get_top_rank() == 'Q'):
                     # if we have either killed the discard pile or played a 'Q'
@@ -449,7 +453,8 @@ class Player:
                     # our face down table cards.
                     # Note, that we cannot use discard.check() here because
                     #       we have to pick the cards blindly.
-                    plays += [Play(source, idx) for idx,card in enumerate(cards)]
+                    plays += [Play(source, idx)
+                              for idx, card in enumerate(cards)]
 
         return plays
 
@@ -465,9 +470,9 @@ class Player:
         :return: list of legal plays
         :rtype: list
         '''
-        discard = state.discard # shortcut to discard pile
-        talon = state.talon     # shortcut to talon
-        plays = []              # initialize list of legal plays
+        discard = state.discard     # shortcut to discard pile
+        talon = state.talon         # shortcut to talon
+        plays = []                  # initialize list of legal plays
 
         # get current card source (hand, face up, face down)
         # and corresponding cards.
@@ -497,8 +502,8 @@ class Player:
         # or has played from face up table cards and taken the discard pile
         else:
             if self.get_fup:
-                # player has taken discard pile playing from face up table cards
-                # => must take 1 face up table card on hand
+                # player has taken discard pile playing from face up table
+                # cards => must take 1 face up table card on hand
                 # !!!note!!! don't use source here, it will be 'HAND'
                 cards = [card for card in self.face_up]
                 if len(cards) > 0:
@@ -520,7 +525,7 @@ class Player:
                 if source == 'HAND' or source == 'FUP':
                     # or add a hand or face up card with the same rank as the
                     # top card (but no face down table card).
-                    plays +=  self.get_card_plays(False, source, cards, discard)
+                    plays += self.get_card_plays(False, source, cards, discard)
 
             # if there are less than 4 cards of same rank at the top of the
             # discard pile, we always 1st refill our hand cards if possible.
@@ -535,13 +540,13 @@ class Player:
             # at the top), the current player has to play a card (except, if
             # he's already out, which has already been handled above)
             elif (len(discard) == 0 or discard.get_top_rank() == 'Q'):
-                plays +=  self.get_card_plays(False, source, cards, discard)
+                plays += self.get_card_plays(False, source, cards, discard)
 
             # At this point the player may play another card of same rank as
             # the top card (from hand or face up table cards), or end his turn.
             else:
                 # check if player has more cards of same rank as top card
-                plays +=  self.get_card_plays(False, source, cards, discard)
+                plays += self.get_card_plays(False, source, cards, discard)
 
                 # after mandatory 'KILL', 'REFILL' actions or mandatory cards
                 # played on empty discard pile or Queen, it's always possible
@@ -565,11 +570,11 @@ class Player:
         if state.game_phase == SWAPPING_CARDS:
             # get list of possible swaps
             plays = self.get_legal_swaps([card for card in self.face_up],
-                    [card for card in self.hand])
+                                         [card for card in self.hand])
         elif state.game_phase == FIND_STARTER:
             # get list of possible bids (show or pass)
             plays = self.get_legal_bids(state.starting_card,
-                    [card for card in self.hand])
+                                        [card for card in self.hand])
         else:   # PLAY_GAME
             # get legal game plays
             plays = self.get_legal_game_plays(state)
@@ -601,7 +606,7 @@ class Player:
             elif play.action == 'FUP':
                 val = map[self.face_up[play.index].rank]
             elif play.action == 'GET':
-                # take cheapest face up table card after taking the discard pile
+                # take cheapest face up table card after taking discard pile
                 val = map[self.face_up[play.index].rank]
             else:
                 val = min_val   # all others are don't care
@@ -644,7 +649,7 @@ class Player:
         :rtype:         bool
         '''
         actions = [play.action for play in plays]
-        return 'HAND' in actions  and 'REFILL' in actions
+        return 'HAND' in actions and 'REFILL' in actions
 
     def kill_or_play_again(self, plays):
         '''
@@ -676,8 +681,7 @@ class Player:
         :rtype:         int
         """
 
-        count = Counter(hand) # count ranks in hand
-#        print(count)
+        count = Counter(hand)   # count ranks in hand
         # since all cards with same rank can be played in one turn, we start
         # with one turn per rank in this hand
         turns = len(count.keys())
@@ -714,7 +718,6 @@ class Player:
         # hand plus good cards ('2', '3', 'K', 'A').
         hand = [card.rank for card in self.hand]
         discard = [card.rank for card in state.discard]
-#        print(f"hand:{hand} discard: {discard}")
         if len(discard) == 0:
             # No discard pile
             return False
@@ -724,10 +727,8 @@ class Player:
             # cards faster
             no_take_turns = self.estimate_turns_per_hand(hand)
             take_turns = self.estimate_turns_per_hand(hand + discard)
-#            print(f"no_take_turns: {no_take_turns} take_turns: {take_turns}")
             # if we take the discard pile we use 1 additional turn
             if take_turns + 1 < no_take_turns:
-#                print(f"hand: {hand} discard: {discard}")
                 return True
             else:
                 return False
@@ -742,7 +743,6 @@ class Player:
         # + the good ranks '2', '3', 'Q', 'K', 'A'.
         allowed = hand + ['2', '3', 'Q', 'K', 'A']
         allowed = set(allowed)
-#        print(f"hand: {hand} allowed: {allowed} discard: {discard}")
         good_cards = 0
         for rank in discard:
             if rank not in allowed:
@@ -758,22 +758,18 @@ class Player:
         # estimate how many turns it takes to get rid of the hand after taking
         # the discard pile and add 1 turn (taking the discard pile)
         take_turns = self.estimate_turns_per_hand(hand + discard) + 1
-#        print(f"take_turns: {take_turns}")
 
         # We use this number, but at least 3 as hand size of the current player
         # to estimate the remaining turns till the talon runs out.
         if take_turns <= 3:
-#            print(f"hand:{hand} discard: {discard} talon: {len(state.talon)} take_turns: {take_turns}")
             return True    # taking the discard pile makes no difference
 
         n_turns, n_draws, n_hand = state.estimate_remaining_draws(take_turns)
-#        print(f"n_turns: {n_turns} n_draws: {n_draws} n_hand: {n_hand}")
         if n_hand > 3:
             # can't get rid of hand cards before talon runs out
             return False
         else:
             # enough turns remaining to get rid of additional cards
-#            print(f"hand:{hand} discard: {discard} talon: {len(state.talon)} n_turns: {n_turns} n_draws: {n_draws} n_hand: {n_hand}")
             return True
 
     def select_simulated_play(self, plays, state):
@@ -800,7 +796,7 @@ class Player:
             - doesn't play another '8' if only 2 players are left.
               => plays '8', ends turn, other player skipped, plays '8', ...
             - always refills on 'Q' or empty discard pile.
-            - plays as many bad cards (4, 5, 6, 7) as possible before refilling,
+            - plays as many bad cards (4, 5, 6, 7) as possible before refill,
               but refills before playing another good (2, 3, 10, Q, K, A)
               or medium card (8, 9, J).
         '''
@@ -808,7 +804,8 @@ class Player:
 
         # handle all cases with only one option:
         if len(plays) == 1:
-            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT') => do it.
+            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT')
+            # => do it.
             return plays[0]
 
         # swap face up table cards with hand cards.
@@ -847,7 +844,7 @@ class Player:
         # play another card of same rank or refill first
         if self.refill_or_play_again(plays):
             # alway refill 1st on 'Q' or empty discard pile.
-            top_rank = discard.get_top_rank() # None => empty
+            top_rank = discard.get_top_rank()   # None => empty
             if top_rank is None or top_rank == 'Q':
                 return Play('REFILL')
             if (top_rank == '4' or top_rank == '5' or top_rank == '6' or
@@ -904,13 +901,16 @@ class Player:
         :rtype:         Play
         """
         for play in plays:
-            if play.action == 'HAND' and self.hand[play.index].rank == rank:
+            if (play.action == 'HAND'
+                    and self.hand[play.index].rank == rank):
                 return play
 
-            elif play.action == 'FUP' and self.face_up[play.index].rank == rank:
+            elif (play.action == 'FUP'
+                  and self.face_up[play.index].rank == rank):
                 return play
 
-            elif play.action == 'GET' and self.face_up[play.index].rank == rank:
+            elif (play.action == 'GET'
+                  and self.face_up[play.index].rank == rank):
                 return play
         else:
             return None
@@ -927,7 +927,8 @@ class Player:
         :return:        selected play.
         :rtype:         Play
         '''
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the"
+                                  " subclass")
 
     def play(self, state):
         '''
@@ -955,7 +956,8 @@ class Player:
         :return:        copy of this player (not just reference).
         :rtype:         Player
         '''
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the"
+                                  " subclass")
 
     def get_state(self):
         '''
@@ -964,7 +966,8 @@ class Player:
         :return:    dictionary with player attributes.
         :rtype:     dict
         '''
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the"
+                                  " subclass")
 
     def load_from_state(self, state):
         '''
@@ -973,10 +976,11 @@ class Player:
         :param state:    dictionary with player attributes.
         :type state:     dict
         '''
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the"
+                                  " subclass")
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class HumanPlayer(Player):
     '''
     Class representing a human shithead player.
@@ -1003,7 +1007,6 @@ class HumanPlayer(Player):
         super().__init__(name)
         self.gui = gui              # True => gui, False => cli
         self.auto_end = auto_end    # True => automatically return 'END' play
-                                    # if it's the only legal play
         self.clicked_play = None    # play selected by mouse click.
         self.legal_plays = []       # legal plays for current game state
         self.is_human = True        # True => human player
@@ -1042,7 +1045,7 @@ class HumanPlayer(Player):
         # a human player has the additional possibility to quit (end) the game.
         plays.append(Play('QUIT'))
         # present available plays to human player.
-        for i,play in enumerate(plays):
+        for i, play in enumerate(plays):
             action = play.action
             index = play.index
             if action == 'HAND':
@@ -1133,7 +1136,7 @@ class HumanPlayer(Player):
 
         :param state:   shithead game state
         :type state:    State
-        :return:        selected play or None if the selected play wasn't legal.
+        :return:        selected play or None if selected play wasn't legal.
         :rtype:         Play
         '''
         # if play() is called the 1st time for this game state
@@ -1165,13 +1168,21 @@ class HumanPlayer(Player):
         :rtype:         Player
         '''
         new_player = HumanPlayer(self.name, self.gui, self.auto_end)
-        new_player.turn_count = self.turn_count         # number of turns played
-        new_player.face_down = self.face_down.copy()    # player's face down table cards
-        new_player.face_up = self.face_up.copy()        # player's face up table cards
-        new_player.hand = self.hand.copy()              # player's hand cards.
-        new_player.get_fup = self.get_fup               # True => must take face up table card as 2nd play
-        new_player.get_fup_rank = self.get_fup_rank     # rank of face up table card taken on 2nd play
-        new_player.auto_end = self.auto_end             # play 'END' automatically if it's the only option
+        # number of turns played
+        new_player.turn_count = self.turn_count
+        # player's face down table cards
+        new_player.face_down = self.face_down.copy()
+        # player's face up table cards
+        new_player.face_up = self.face_up.copy()
+        # player's hand cards.
+        new_player.hand = self.hand.copy()
+        # must take face up table card as 2nd play
+        new_player.get_fup = self.get_fup
+        # rank of face up table card taken on 2nd play
+        new_player.get_fup_rank = self.get_fup_rank
+        # play 'END' automatically if it's the only option
+        new_player.auto_end = self.auto_end
+
         return new_player
 
     def get_state(self):
@@ -1213,7 +1224,7 @@ class HumanPlayer(Player):
         self.auto_end = state['auto_end']
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class AiPlayer(Player):
     '''
     Class representing an AI shithead player.
@@ -1233,12 +1244,12 @@ class AiPlayer(Player):
         :param fdown_random:    True => select face down table cards at random.
         :type fdown_random:     bool
         '''
-        super().__init__(name)  # set player's name
-        self.fup_table = fup_table # table with best fup card combinations.
-        self.swap_count = 0 # => state of face up table cards swapping
-        self.best_fup = []  # => list of 3 best face up table cards to PUT.
-        self.fdown_random = fdown_random    # False => pick face down table
-                                            #          cards from left to right
+        super().__init__(name)      # set player's name
+        self.fup_table = fup_table  # table with best fup card combinations.
+        self.swap_count = 0         # state of face up table cards swapping
+        self.best_fup = []          # list of 3 best face up table cards.
+        # False => pick face down table cards from left to right (not random).
+        self.fdown_random = fdown_random
 
     def select_swap(self, plays):
         '''
@@ -1269,14 +1280,16 @@ class AiPlayer(Player):
             # put hand to face up table cards
             if self.swap_count == 3:
                 # 6 cards on hand => get best face up combination
-                self.best_fup = self.fup_table.find_best([card for card in self.hand])
+                self.best_fup = self.fup_table.find_best(
+                    [card for card in self.hand])
 
             # filter out 'PUT' plays
             _plays = [play for play in plays if play.action == 'PUT']
 
             # find 'PUT' play for 1st card in best_fup
             _plays = [play for play in _plays
-                      if Card.cmp(self.hand[play.index],self.best_fup[0]) == 0]
+                      if Card.cmp(
+                          self.hand[play.index], self.best_fup[0]) == 0]
             if len(_plays) > 0:
                 self.swap_count += 1
                 self.best_fup.pop(0)    # remove 1st (put) card from best_fup
@@ -1287,7 +1300,7 @@ class AiPlayer(Player):
             # 3 cards on hand and best 3 cards on table
             _plays = [play for play in plays if play.action == 'END']
             if len(_plays) > 0:
-                self.swap_count = 0 # reset swap counter
+                self.swap_count = 0     # reset swap counter
                 return _plays[0]
             else:
                 raise Exception("Error swapping cards!")
@@ -1304,7 +1317,8 @@ class AiPlayer(Player):
         :return:        selected play.
         :rtype:         Play
         '''
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the"
+                                  " subclass")
 
     def copy(self):
         '''
@@ -1313,7 +1327,8 @@ class AiPlayer(Player):
         :return:        copy of this player (not just reference).
         :rtype:         Player
         '''
-        raise NotImplementedError("This method must be implemented in the subclass")
+        raise NotImplementedError("This method must be implemented in the"
+                                  " subclass")
 
     def get_state(self):
         '''
@@ -1368,7 +1383,7 @@ class AiPlayer(Player):
             self.best_fup.append(card)
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class ShitHappens(AiPlayer):
     '''
     Class representing an AI player playing its cards at random.
@@ -1391,7 +1406,8 @@ class ShitHappens(AiPlayer):
         :type fdown_random:     bool
         '''
         ShitHappens._count += 1   # count number of ShitHappens instances
-        super().__init__(name, fup_table, fdown_random)   # set name and fup lookup table.
+        # set name, fup lookup table, and fdown mode in super class.
+        super().__init__(name, fup_table, fdown_random)
 
     def select_play(self, plays, state):
         '''
@@ -1421,7 +1437,8 @@ class ShitHappens(AiPlayer):
         '''
         # handle all case where there is only one option:
         if len(plays) == 1:
-            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT') => do it.
+            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT')
+            # => do it.
             return plays[0]
 
         # swap face up table cards with hand cards.
@@ -1459,7 +1476,8 @@ class ShitHappens(AiPlayer):
         if len(refill) > 0:
             return refill[0]
 
-        # use the 'index >= 0' to make sure, that there are only card plays left.
+        # use 'index >= 0'
+        # to make sure, that there are only card plays left.
         plays = [play for play in plays if play.index >= 0]
         if len(plays) == 0:
             raise Exception("Left with empty list of plays!")
@@ -1480,19 +1498,21 @@ class ShitHappens(AiPlayer):
         :rtype:         Player
         '''
         new_player = ShitHappens(self.name, self.fup_table, self.fdown_random)
-        new_player.swap_count = self.swap_count         # swap phase state
-        new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.turn_count = self.turn_count         # number of turns played
-        new_player.face_down = self.face_down.copy()    # player's face down table cards
-        new_player.face_up = self.face_up.copy()        # player's face up table cards
-        new_player.hand = self.hand.copy()              # player's hand cards.
-        new_player.get_fup = self.get_fup               # True => must take face up table card as 2nd play
-        new_player.get_fup_rank = self.get_fup_rank     # rank of face up table card taken on 2nd play
+        new_player.swap_count = self.swap_count     # swap phase state
+        new_player.best_fup = self.best_fup[:]      # best face up table cards
+        new_player.turn_count = self.turn_count     # number of turns played
+        new_player.face_down = self.face_down.copy()  # face down table cards
+        new_player.face_up = self.face_up.copy()    # face up table cards
+        new_player.hand = self.hand.copy()          # hand cards.
+        # True => must take face up table card as 2nd play
+        new_player.get_fup = self.get_fup
+        # rank of face up table card taken on 2nd play
+        new_player.get_fup_rank = self.get_fup_rank
 
         return new_player
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class CheapShit(AiPlayer):
     '''
     Class representing an AI player always playing the cheapest card.
@@ -1516,7 +1536,6 @@ class CheapShit(AiPlayer):
         '''
         CheapShit._count += 1
         super().__init__(name, fup_table, fdown_random)
-
 
     def select_play(self, plays, state):
         '''
@@ -1546,7 +1565,8 @@ class CheapShit(AiPlayer):
         '''
         # handle all case where there is only one option:
         if len(plays) == 1:
-            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT') => do it.
+            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT')
+            # => do it.
             return plays[0]
 
         # swap face up table cards with hand cards.
@@ -1581,14 +1601,16 @@ class CheapShit(AiPlayer):
         # check if we could play another card or end the turn:
         if self.play_again_or_end(plays):
             # play card if talon is empty or its value is < 7 ('Q')
-            if (len(state.talon) == 0 or
-                    RANK_TO_VALUE_CHEAP_SHIT[state.discard.get_top_rank()] < HOLD_BACK_VALUE):
+            if (len(state.talon) == 0
+                    or RANK_TO_VALUE_CHEAP_SHIT[state.discard.get_top_rank()]
+                    < HOLD_BACK_VALUE):
                 # remove 'END' play => play card
                 plays = [play for play in plays if play.action != 'END']
             else:
                 return Play('END')  # => end turn
 
-        # use the 'index >= 0' to make sure, that there are only card plays left.
+        # use 'index >= 0'
+        # to make sure, that there are only card plays left.
         plays = [play for play in plays if play.index >= 0]
         if len(plays) == 0:
             raise Exception("Left with empty list of plays!")
@@ -1622,19 +1644,21 @@ class CheapShit(AiPlayer):
         :rtype:         Player
         '''
         new_player = CheapShit(self.name, self.fup_table, self.fdown_random)
-        new_player.swap_count = self.swap_count         # swap phase state
-        new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.turn_count = self.turn_count         # number of turns played
-        new_player.face_down = self.face_down.copy()    # player's face down table cards
-        new_player.face_up = self.face_up.copy()        # player's face up table cards
-        new_player.hand = self.hand.copy()              # player's hand cards.
-        new_player.get_fup = self.get_fup               # True => must take face up table card as 2nd play
-        new_player.get_fup_rank = self.get_fup_rank     # rank of face up table card taken on 2nd play
+        new_player.swap_count = self.swap_count     # swap phase state
+        new_player.best_fup = self.best_fup[:]      # best face up table cards
+        new_player.turn_count = self.turn_count     # number of turns played
+        new_player.face_down = self.face_down.copy()  # face down table cards
+        new_player.face_up = self.face_up.copy()     # face up table cards
+        new_player.hand = self.hand.copy()           # hand cards.
+        # True => must take face up table card as 2nd play
+        new_player.get_fup = self.get_fup
+        # rank of face up table card taken on 2nd play
+        new_player.get_fup_rank = self.get_fup_rank
 
         return new_player
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class TakeShit(AiPlayer):
     '''
     Class representing an AI player with some improvements (?) to CheapShit.
@@ -1695,7 +1719,7 @@ class TakeShit(AiPlayer):
             - doesn't play another '8' if only 2 players are left.
               => plays '8', ends turn, other player skipped, plays '8', ...
             - always refills on 'Q' or empty discard pile.
-            - plays as many bad cards (4, 5, 6, 7) as possible before refilling,
+            - plays as many bad cards (4, 5, 6, 7) as possible before refill,
               but refills before playing another good (2, 3, 10, Q, K, A)
               or medium card (8, 9, J).
 
@@ -1710,7 +1734,8 @@ class TakeShit(AiPlayer):
 
         # handle all case where there is only one option:
         if len(plays) == 1:
-            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT') => do it.
+            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT')
+            # => do it.
             return plays[0]
 
         # swap face up table cards with hand cards.
@@ -1732,17 +1757,12 @@ class TakeShit(AiPlayer):
             play = self.rank_to_play(state.discard.get_top_rank(), plays)
             if play is not None:
                 discard = [card.rank for card in state.discard]
-                hand = [card.rank for card in self.hand]
-                fup = [card.rank for card in self.face_up]
-#                print(f"### First Kill: discard: {discard} hand: {hand} fup: {fup}")
                 return play
 
         _plays = [play for play in plays if play.action == 'TAKE']
         if len(_plays) > 0:
             # 'TAKE' is one of several legal plays => check if we should do it
             if self.take_discard_or_not(state):
-#                print('### Take the discard pile')
-#                print(f"hand: {[card.rank for card in self.hand]} discard: {[card.rank for card in state.discard]} talon: {len(state.talon)}")
                 return Play('TAKE')
 
         # play another card of same rank or end turn?
@@ -1763,11 +1783,13 @@ class TakeShit(AiPlayer):
         # play another card of same rank or refill first
         if self.refill_or_play_again(plays):
             # alway refill 1st on 'Q' or empty discard pile.
-            top_rank = discard.get_top_rank() # None => empty
+            top_rank = discard.get_top_rank()   # None => empty
             if top_rank is None or top_rank == 'Q':
                 return Play('REFILL')
-            if (top_rank == '4' or top_rank == '5' or top_rank == '6' or
-                top_rank == '7'):
+            if (top_rank == '4'
+                    or top_rank == '5'
+                    or top_rank == '6'
+                    or top_rank == '7'):
                 # play bad cards before refilling => kill pile first
                 # remove 'REFILL' => play card
                 plays = [play for play in plays if play.action != 'REFILL']
@@ -1781,7 +1803,8 @@ class TakeShit(AiPlayer):
             # the discard pile => remove 'KILL' from possible plays
             plays = [play for play in plays if play.action != 'KILL']
 
-        # use the 'index >= 0' to make sure, that there are only card plays left.
+        # 'index >= 0'
+        # to make sure, that there are only card plays left.
         plays = [play for play in plays if play.index >= 0]
         if len(plays) == 0:
             raise Exception("Left with empty list of plays!")
@@ -1823,18 +1846,21 @@ class TakeShit(AiPlayer):
         :rtype:         Player
         '''
         new_player = TakeShit(self.name, self.fup_table, self.fdown_random)
-        new_player.swap_count = self.swap_count         # swap phase state
-        new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.turn_count = self.turn_count         # number of turns played
-        new_player.face_down = self.face_down.copy()    # player's face down table cards
-        new_player.face_up = self.face_up.copy()        # player's face up table cards
-        new_player.hand = self.hand.copy()              # player's hand cards.
-        new_player.get_fup = self.get_fup               # True => must take face up table card as 2nd play
-        new_player.get_fup_rank = self.get_fup_rank     # rank of face up table card taken on 2nd play
+        new_player.swap_count = self.swap_count     # swap phase state
+        new_player.best_fup = self.best_fup[:]      # best face up table cards
+        new_player.turn_count = self.turn_count     # number of turns played
+        new_player.face_down = self.face_down.copy()  # face down table cards
+        new_player.face_up = self.face_up.copy()    # face up table cards
+        new_player.hand = self.hand.copy()          # hand cards.
+        # True => must take face up table card as 2nd play
+        new_player.get_fup = self.get_fup
+        # rank of face up table card taken on 2nd play
+        new_player.get_fup_rank = self.get_fup_rank
+
         return new_player
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class BullShit(AiPlayer):
     '''
     Class representing an AI player using the analyzer module.
@@ -1897,11 +1923,10 @@ class BullShit(AiPlayer):
         :return:        selected play.
         :rtype:         Play
         '''
-        discard = state.discard     # discard pile
-
         # handle all cases where there is only one option:
         if len(plays) == 1:
-            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT') => do it.
+            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT')
+            # => do it.
             return plays[0]
 
         # swap face up table cards with hand cards.
@@ -1950,7 +1975,9 @@ class BullShit(AiPlayer):
                 if play is not None:
                     return play
                 else:
-                    raise Exception(f"rank {best_combi.seq[0]} does not correspond to one of the legal plays!")
+                    raise Exception(
+                        f"rank {best_combi.seq[0]} does not correspond to one"
+                        " of the legal plays!")
 
         # use the analyzer module to find the best play sequence for hand or
         # face up table cards
@@ -1972,14 +1999,17 @@ class BullShit(AiPlayer):
                 elif 'END' in actions:
                     return Play('END')
                 else:
-                    raise Exception("Neither 'REFILL', 'KILL', nor 'END' in legal plays")
+                    raise Exception("Neither 'REFILL', 'KILL', nor 'END' in"
+                                    " legal plays")
         else:
             # play a hand or face up table card
             play = self.rank_to_play(best_combi.seq[0], plays)
             if play is not None:
                 return play
             else:
-                raise Exception(f"rank {best_combi.seq[0]} does not correspond to one of the legal plays!")
+                raise Exception(
+                    f"rank {best_combi.seq[0]} does not correspond to one of"
+                    " the legal plays!")
 
     def copy(self):
         '''
@@ -1989,14 +2019,16 @@ class BullShit(AiPlayer):
         :rtype:         Player
         '''
         new_player = BullShit(self.name, self.fup_table, self.fdown_random)
-        new_player.swap_count = self.swap_count         # swap phase state
-        new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.turn_count = self.turn_count         # number of turns played
-        new_player.face_down = self.face_down.copy()    # player's face down table cards
-        new_player.face_up = self.face_up.copy()        # player's face up table cards
-        new_player.hand = self.hand.copy()              # player's hand cards.
-        new_player.get_fup = self.get_fup               # True => must take face up table card as 2nd play
-        new_player.get_fup_rank = self.get_fup_rank     # rank of face up table card taken on 2nd play
+        new_player.swap_count = self.swap_count     # swap phase state
+        new_player.best_fup = self.best_fup[:]      # best face up table cards
+        new_player.turn_count = self.turn_count     # number of turns played
+        new_player.face_down = self.face_down.copy()  # face down table cards
+        new_player.face_up = self.face_up.copy()    # face up table cards
+        new_player.hand = self.hand.copy()          # hand cards.
+        # True => must take face up table card as 2nd play
+        new_player.get_fup = self.get_fup
+        # rank of face up table card taken on 2nd play
+        new_player.get_fup_rank = self.get_fup_rank
 
         return new_player
 
@@ -2053,7 +2085,7 @@ def run_simulation(state, play):
     return 0
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class SelectSimulatedPlayThread(Thread):
     """
     Thread for running multiple simulations for game state.
@@ -2070,10 +2102,10 @@ class SelectSimulatedPlayThread(Thread):
         :param plays:   list of possible plays for which we run the simulation.
         :type plays:    List
         '''
-        Thread.__init__(self)   # call super class initializer
+        Thread.__init__(self)       # call super class initializer
         self.state = state.copy()   # copy of the original game state
         self.plays = plays          # possible plays we have to select from
-        self.selected_play = None   # attribute to return the the found best play
+        self.selected_play = None   # used to return the the found best play
 
     def run(self):
         '''
@@ -2082,17 +2114,16 @@ class SelectSimulatedPlayThread(Thread):
         Copies the specified state and randomly redistribute all unknown cards
         (except for the unknown cards in the current player's hand).
         Runs based on this new state one simulation per entry in the list of
-        plays and uses the returned score (number of opponents still in the game,
-        when the current player went out) to select the best play.
+        plays and uses the returned score (number of opponents still in the
+        game, when the current player went out) to select the best play.
         '''
         # initialize score list with one entry per play
         scores = [0 for x in self.plays]
         # calculate the number of different simulation states
-        n_sim_states = State.calc_nof_simulation_states(self.state)
         for i in range(NOF_SIMULATIONS_PER_PLAY):
             # copy the original state and redistribute the unknown cards.
             sim = State.simulation_state(self.state)
-            for j,play in enumerate(self.plays):
+            for j, play in enumerate(self.plays):
                 score = run_simulation(sim, play)
                 if score < 0:
                     # TODO treat deadlocks like lost games ???
@@ -2109,7 +2140,7 @@ class SelectSimulatedPlayThread(Thread):
         self.selected_play = random.choice(best_plays)
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class DeepShit(AiPlayer):
     '''
     Class representing an AI player which uses simulation.
@@ -2131,9 +2162,10 @@ class DeepShit(AiPlayer):
         '''
         DeepShit._count += 1
         super().__init__(name, fup_table, fdown_random)
-        self.thread = None          # thread for play selection by simulation
-        self.thead_started = False  # flag indicating, that thread has already
-                                    # been started.
+        # thread for play selection by simulation
+        self.thread = None
+        # flag indicating, that thread has already been started.
+        self.thead_started = False
 
     def select_play(self, plays, state):
         '''
@@ -2168,9 +2200,9 @@ class DeepShit(AiPlayer):
             - doesn't play another '8' if only 2 players are left.
               => plays '8', ends turn, other player skipped, plays '8', ...
             - always refills on 'Q' or empty discard pile.
-            - plays as many bad cards (4, 5, 6, 7) as possible before refilling,
-              but refills before playing another good (2, 3, 10, Q, K, A)
-              or medium card (8, 9, J).
+            - plays as many bad cards (4, 5, 6, 7) as possible before
+              refilling, but refills before playing another good (2, 3, 10, Q,
+              K, A) or medium card (8, 9, J).
 
         But during the end game (i.e. talon is empty and  only 2 player's left)
         he uses simulation to find the best play. Multiple simulation with the
@@ -2204,7 +2236,7 @@ class DeepShit(AiPlayer):
             # check if the SelectSimulatedPlayThread has finished
             if self.thread.is_alive():
                 # not finished yet
-                return None     # => tell caller that AI player is still thinking
+                return None  # => tell caller that AI player is still thinking
             else:
                 # thread has finished => return selected play
                 self.thread_started = False     # reset flag
@@ -2213,7 +2245,8 @@ class DeepShit(AiPlayer):
         # no pending thread => 1st handle the simple cases
         # handle all case where there is only one option:
         if len(plays) == 1:
-            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT') => do it.
+            # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT')
+            # => do it.
             return plays[0]
 
         # swap face up table cards with hand cards.
@@ -2248,15 +2281,16 @@ class DeepShit(AiPlayer):
 
             # always try to kill the discard pile with the 1st play
             if state.n_played == 0 and state.discard.get_ntop() == 3:
-                # find the 'HAND' or 'FUP' play with the same rank as the card at
-                # the top of the discard pile
+                # find the 'HAND' or 'FUP' play with the same rank as the card
+                # at the top of the discard pile
                 play = self.rank_to_play(state.discard.get_top_rank(), plays)
                 if play is not None:
                     return play
 
             _plays = [play for play in plays if play.action == 'TAKE']
             if len(_plays) > 0:
-            # 'TAKE' is one of several legal plays => check if we should do it
+                # 'TAKE' is one of several legal plays
+                # => check if we should do it
                 if self.take_discard_or_not(state):
                     return Play('TAKE')
 
@@ -2272,11 +2306,13 @@ class DeepShit(AiPlayer):
             # play another card of same rank or refill first
             if self.refill_or_play_again(plays):
                 # alway refill 1st on 'Q' or empty discard pile.
-                top_rank = discard.get_top_rank() # None => empty
+                top_rank = discard.get_top_rank()   # None => empty
                 if top_rank is None or top_rank == 'Q':
                     return Play('REFILL')
-                if (top_rank == '4' or top_rank == '5' or top_rank == '6' or
-                    top_rank == '7'):
+                if (top_rank == '4'
+                        or top_rank == '5'
+                        or top_rank == '6'
+                        or top_rank == '7'):
                     # play bad cards before refilling => kill pile first
                     # remove 'REFILL' => play card
                     plays = [play for play in plays if play.action != 'REFILL']
@@ -2290,7 +2326,8 @@ class DeepShit(AiPlayer):
                 # the discard pile => remove 'KILL' from possible plays
                 plays = [play for play in plays if play.action != 'KILL']
 
-            # use the 'index >= 0' to make sure, that there are only card plays left.
+            # use 'index >= 0'
+            # to make sure, that there are only card plays left.
             card_plays = [play for play in plays if play.index >= 0]
             if len(card_plays) == 0:
                 raise Exception("Left with empty list of plays!")
@@ -2329,18 +2366,21 @@ class DeepShit(AiPlayer):
         :rtype:         Player
         '''
         new_player = DeepShit(self.name, self.fup_table, self.fdown_random)
-        new_player.swap_count = self.swap_count         # swap phase state
-        new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.turn_count = self.turn_count         # number of turns played
-        new_player.face_down = self.face_down.copy()    # player's face down table cards
-        new_player.face_up = self.face_up.copy()        # player's face up table cards
-        new_player.hand = self.hand.copy()              # player's hand cards.
-        new_player.get_fup = self.get_fup               # True => must take face up table card as 2nd play
-        new_player.get_fup_rank = self.get_fup_rank     # rank of face up table card taken on 2nd play
+        new_player.swap_count = self.swap_count     # swap phase state
+        new_player.best_fup = self.best_fup[:]      # best face up table cards
+        new_player.turn_count = self.turn_count     # number of turns played
+        new_player.face_down = self.face_down.copy()  # face down table cards
+        new_player.face_up = self.face_up.copy()    # face up table cards
+        new_player.hand = self.hand.copy()          # hand cards.
+        # True => must take face up table card as 2nd play
+        new_player.get_fup = self.get_fup
+        # rank of face up table card taken on 2nd play
+        new_player.get_fup_rank = self.get_fup_rank
 
         return new_player
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 class SelectMctsThread(Thread):
     """
     Thread for running Monte Carlo Tree Search for game state.
@@ -2365,7 +2405,7 @@ class SelectMctsThread(Thread):
         self.policy = policy
         self.verbose = verbose
         self.mcts = MonteCarlo(Game)    # create search tree
-        self.selected_play = None   # attribute to return the the found best play
+        self.selected_play = None   # attribute to return the found best play
 
     def run(self):
         '''
@@ -2394,14 +2434,16 @@ class SelectMctsThread(Thread):
         # set selected play as found best plays
         self.selected_play = best_play
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 class DeeperShit(AiPlayer):
     '''
     Class representing an AI player which uses Monte Carlo Tree Search (MCTS).
     '''
     _count = 0   # counts number of DeeperShit instances.
 
-    def __init__(self, name, fup_table=None, fdown_random=True, timeout=1.0, policy='max', verbose=False):
+    def __init__(self, name, fup_table=None, fdown_random=True, timeout=1.0,
+                 policy='max', verbose=False):
         '''
         Initialize DeeperShit.
 
@@ -2426,8 +2468,8 @@ class DeeperShit(AiPlayer):
         self.policy = policy
         self.verbose = verbose
         self.thread = None          # thread for play selection by MCTS
-        self.thead_started = False  # flag indicating, that thread has already
-                                    # been started.
+        # flag indicating, that thread has already been started.
+        self.thead_started = False
 
     def select_play(self, plays, state):
         '''
@@ -2462,7 +2504,7 @@ class DeeperShit(AiPlayer):
             - doesn't play another '8' if only 2 players are left.
               => plays '8', ends turn, other player skipped, plays '8', ...
             - always refills on 'Q' or empty discard pile.
-            - plays as many bad cards (4, 5, 6, 7) as possible before refilling,
+            - plays as many bad cards (4, 5, 6, 7) as possible before refill,
               but refills before playing another good (2, 3, 10, Q, K, A)
               or medium card (8, 9, J).
 
@@ -2493,7 +2535,7 @@ class DeeperShit(AiPlayer):
             # check if the SelectMctsThread has finished
             if self.thread.is_alive():
                 # not finished yet
-                return None     # => tell caller that AI player is still thinking
+                return None  # => tell caller that AI player is still thinking
             else:
                 # thread has finished => return selected play
                 self.thread_started = False     # reset flag
@@ -2506,7 +2548,8 @@ class DeeperShit(AiPlayer):
 
             # handle all case where there is only one option:
             if len(plays) == 1:
-                # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT') => do it.
+                # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT')
+                # => do it.
                 return plays[0]
 
             # swap face up table cards with hand cards.
@@ -2537,15 +2580,16 @@ class DeeperShit(AiPlayer):
 
             # always try to kill the discard pile with the 1st play
             if state.n_played == 0 and state.discard.get_ntop() == 3:
-                # find the 'HAND' or 'FUP' play with the same rank as the card at
-                # the top of the discard pile
+                # find the 'HAND' or 'FUP' play with the same rank as the card
+                # at the top of the discard pile
                 play = self.rank_to_play(state.discard.get_top_rank(), plays)
                 if play is not None:
                     return play
 
             _plays = [play for play in plays if play.action == 'TAKE']
             if len(_plays) > 0:
-            # 'TAKE' is one of several legal plays => check if we should do it
+                # 'TAKE' is one of several legal plays
+                # => check if we should do it
                 if self.take_discard_or_not(state):
                     return Play('TAKE')
 
@@ -2561,11 +2605,13 @@ class DeeperShit(AiPlayer):
             # play another card of same rank or refill first
             if self.refill_or_play_again(plays):
                 # alway refill 1st on 'Q' or empty discard pile.
-                top_rank = discard.get_top_rank() # None => empty
+                top_rank = discard.get_top_rank()   # None => empty
                 if top_rank is None or top_rank == 'Q':
                     return Play('REFILL')
-                if (top_rank == '4' or top_rank == '5' or top_rank == '6' or
-                    top_rank == '7'):
+                if (top_rank == '4'
+                        or top_rank == '5'
+                        or top_rank == '6'
+                        or top_rank == '7'):
                     # play bad cards before refilling => kill pile first
                     # remove 'REFILL' => play card
                     # if 'REFILL' was the only play it would have been returned
@@ -2581,7 +2627,8 @@ class DeeperShit(AiPlayer):
                 # the discard pile => remove 'KILL' from possible plays
                 plays = [play for play in plays if play.action != 'KILL']
 
-            # use the 'index >= 0' to make sure, that there are only card plays left.
+            # use 'index >= 0'
+            # to make sure, that there are only card plays left.
             card_plays = [play for play in plays if play.index >= 0]
             if len(card_plays) == 0:
                 raise Exception("Left with empty list of plays!")
@@ -2642,7 +2689,6 @@ class DeeperShit(AiPlayer):
         return new_player
 
 
-
 if __name__ == '__main__':
     print('\nTest deal cards to player:')
     my_deck = Deck()
@@ -2658,7 +2704,7 @@ if __name__ == '__main__':
     my_player.print(True)
 
     print('\nTest get_card_source:')
-    source,cards = my_player.get_card_source()
+    source, cards = my_player.get_card_source()
     print(source)
     print(' '.join([str(card) for card in cards]))
     for i in range(9):
@@ -2668,6 +2714,6 @@ if __name__ == '__main__':
             my_player.face_up.pop_card()
         else:
             my_player.face_down.pop_card()
-        source,cards = my_player.get_card_source()
+        source, cards = my_player.get_card_source()
         print(source)
         print(' '.join([str(card) for card in cards]))
