@@ -261,7 +261,7 @@ class Player:
             # remove from face down table cards
             card = self.face_down.pop_card(index)
         else:
-            raise Exception(f'Unexpected card source {source}!')
+            raise ValueError(f'Unexpected card source {source}!')
         return card
 
     def remove_card(self, source, card):
@@ -284,7 +284,7 @@ class Player:
             # remove from face down table cards
             card = self.face_down.remove_card(card)
         else:
-            raise Exception(f'Unexpected card source {source}!')
+            raise ValueError(f'Unexpected card source {source}!')
         return card
 
     def take_card(self, target, card):
@@ -309,7 +309,7 @@ class Player:
             # add to face down table cards
             self.face_down.add_card(card)
         else:
-            raise Exception(f'Unexpected card target {target}!')
+            raise ValueError(f'Unexpected card target {target}!')
 
     def get_legal_swaps(self, fup, hand):
         '''
@@ -439,7 +439,7 @@ class Player:
                     # 3rd or 4th play => get another card of same rank.
                     plays += [Play('GET', idx)
                               for idx, card in enumerate(cards)
-                              if (self.get_fup_rank == cards[idx].rank)]
+                              if self.get_fup_rank == cards[idx].rank]
 
         elif source == 'FDOWN':
             if first:
@@ -616,7 +616,7 @@ class Player:
                 cheapest = i
         # return the play using the cheapest card
         if cheapest < 0:
-            raise Exception("Error trying to find cheapest card!")
+            raise ValueError("Error trying to find cheapest card!")
         return plays[cheapest]
 
     def play_again_or_end(self, plays):
@@ -865,7 +865,7 @@ class Player:
         # use the 'index >= 0' to make sure, that only card plays are left.
         plays = [play for play in plays if play.index >= 0]
         if len(plays) == 0:
-            raise Exception("Left with empty list of plays!")
+            raise ValueError("Left with empty list of plays!")
 
         # play random face down table card.
         fdown_plays = [play for play in plays if play.action == 'FDOWN']
@@ -1275,7 +1275,7 @@ class AiPlayer(Player):
                 self.swap_count += 1
                 return _plays[0]
             else:
-                raise Exception("Error getting face up table cards on hand!")
+                raise ValueError("Error getting face up table cards on hand!")
         elif self.swap_count >= 3 and self.swap_count < 6:
             # put hand to face up table cards
             if self.swap_count == 3:
@@ -1295,7 +1295,7 @@ class AiPlayer(Player):
                 self.best_fup.pop(0)    # remove 1st (put) card from best_fup
                 return _plays[0]
             else:
-                raise Exception("Error putting hand cards to table!")
+                raise ValueError("Error putting hand cards to table!")
         else:
             # 3 cards on hand and best 3 cards on table
             _plays = [play for play in plays if play.action == 'END']
@@ -1303,7 +1303,7 @@ class AiPlayer(Player):
                 self.swap_count = 0     # reset swap counter
                 return _plays[0]
             else:
-                raise Exception("Error swapping cards!")
+                raise ValueError("Error swapping cards!")
 
     def select_play(self, plays, state):
         '''
@@ -1480,7 +1480,7 @@ class ShitHappens(AiPlayer):
         # to make sure, that there are only card plays left.
         plays = [play for play in plays if play.index >= 0]
         if len(plays) == 0:
-            raise Exception("Left with empty list of plays!")
+            raise ValueError("Left with empty list of plays!")
 
         # At this point the only legal plays left should be:
         #   - play a matching hand card
@@ -1613,7 +1613,7 @@ class CheapShit(AiPlayer):
         # to make sure, that there are only card plays left.
         plays = [play for play in plays if play.index >= 0]
         if len(plays) == 0:
-            raise Exception("Left with empty list of plays!")
+            raise ValueError("Left with empty list of plays!")
 
         # At this point the only legal plays left should be:
         #   - play a matching hand card
@@ -1807,7 +1807,7 @@ class TakeShit(AiPlayer):
         # to make sure, that there are only card plays left.
         plays = [play for play in plays if play.index >= 0]
         if len(plays) == 0:
-            raise Exception("Left with empty list of plays!")
+            raise ValueError("Left with empty list of plays!")
 
         # At this point the only legal plays left should be:
         #   - play a matching hand card
@@ -1967,7 +1967,7 @@ class BullShit(AiPlayer):
                 if 'END' in actions:
                     return Play('END')  # end turn
                 else:
-                    raise Exception("'END' is not in legal plays")
+                    raise ValueError("'END' is not in legal plays")
             else:
                 # return the play which corresponds to the rank selected by
                 # the analyzer
@@ -1975,7 +1975,7 @@ class BullShit(AiPlayer):
                 if play is not None:
                     return play
                 else:
-                    raise Exception(
+                    raise ValueError(
                         f"rank {best_combi.seq[0]} does not correspond to one"
                         " of the legal plays!")
 
@@ -1989,7 +1989,7 @@ class BullShit(AiPlayer):
                 if 'TAKE' in actions:
                     return Play('TAKE')
                 else:
-                    raise Exception("'TAKE' is not in legal plays")
+                    raise ValueError("'TAKE' is not in legal plays")
             else:
                 # 2nd, 3rd, ... play => 'REFILL', 'KILL', 'END'
                 if 'REFILL' in actions:
@@ -1999,7 +1999,7 @@ class BullShit(AiPlayer):
                 elif 'END' in actions:
                     return Play('END')
                 else:
-                    raise Exception("Neither 'REFILL', 'KILL', nor 'END' in"
+                    raise ValueError("Neither 'REFILL', 'KILL', nor 'END' in"
                                     " legal plays")
         else:
             # play a hand or face up table card
@@ -2007,7 +2007,7 @@ class BullShit(AiPlayer):
             if play is not None:
                 return play
             else:
-                raise Exception(
+                raise ValueError(
                     f"rank {best_combi.seq[0]} does not correspond to one of"
                     " the legal plays!")
 
@@ -2330,7 +2330,7 @@ class DeepShit(AiPlayer):
             # to make sure, that there are only card plays left.
             card_plays = [play for play in plays if play.index >= 0]
             if len(card_plays) == 0:
-                raise Exception("Left with empty list of plays!")
+                raise ValueError("Left with empty list of plays!")
 
             # only 'HAND', 'FUP', or 'GET' plays left ('FDOWN' plays were
             # already handled).
@@ -2631,7 +2631,7 @@ class DeeperShit(AiPlayer):
             # to make sure, that there are only card plays left.
             card_plays = [play for play in plays if play.index >= 0]
             if len(card_plays) == 0:
-                raise Exception("Left with empty list of plays!")
+                raise ValueError("Left with empty list of plays!")
 
             # only 'HAND', 'FUP', or 'GET' plays left ('FDOWN' plays were
             # already handled).
@@ -2689,7 +2689,10 @@ class DeeperShit(AiPlayer):
         return new_player
 
 
-if __name__ == '__main__':
+def main():
+    """
+    Player tests.
+    """
     print('\nTest deal cards to player:')
     my_deck = Deck()
     my_deck.shuffle()
@@ -2717,3 +2720,7 @@ if __name__ == '__main__':
         source, cards = my_player.get_card_source()
         print(source)
         print(' '.join([str(card) for card in cards]))
+
+
+if __name__ == '__main__':
+    main()
