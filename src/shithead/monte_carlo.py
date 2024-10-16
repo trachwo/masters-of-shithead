@@ -68,7 +68,7 @@ class MonteCarlo:
         :param state:   Shithead game state.
         :type state:    State
         '''
-        if state.hash() not in self.nodes.keys():
+        if state.hash() not in self.nodes:
             # get the current player in this state
             player = state.players[state.player]
             # get list of legal plays for this player in this state
@@ -411,8 +411,8 @@ class MonteCarlo:
 
         # check if all possible plays for the root node identified by this
         # state's play history have been expanded.
-        if self.nodes[state.hash()].is_fully_expanded() == False:
-            raise Exception('Not enough information!')
+        if not self.nodes[state.hash()].is_fully_expanded():
+            raise ValueError('Not enough information!')
 
         # get the root node identified by this state's play history.
         node = self.nodes[state.hash()]
@@ -423,22 +423,22 @@ class MonteCarlo:
 
         # find the child with the most visits (robust child)
         if policy == 'robust':
-            max = float('-inf')   # initialize max value
+            vmax = float('-inf')   # initialize max value
             for play in all_plays:
                 child_node = node.child_node(play)
-                if child_node.n_plays > max:
+                if child_node.n_plays > vmax:
                     best_play = play
-                    max = child_node.n_plays
+                    vmax = child_node.n_plays
 
         # find the child with the highest win rate (max child)
         if policy == 'max':
-            max = float('-inf')   # initialize max value
+            vmax = float('-inf')   # initialize max value
             for play in all_plays:
                 child_node = node.child_node(play)
                 ratio = child_node.n_wins / child_node.n_plays
-                if ratio > max:
+                if ratio > vmax:
                     best_play = play
-                    max = ratio
+                    vmax = ratio
 
         return best_play
 
