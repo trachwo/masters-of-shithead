@@ -918,6 +918,9 @@ def play_end_game(filename, timeout=3.0, policy='robust'):
     print(f'\n### End game state loaded from {filename}')
     state.print()
 
+    current = None
+    other = None
+
     # Create a dictionary with assumed state and search tree per player.
     assumed = defaultdict(dict)
     for player in state.players:
@@ -1000,7 +1003,7 @@ def play_end_game(filename, timeout=3.0, policy='robust'):
                 if idx < 0:
                     # something went wrong, this should be a known card
                     # and therefore also in be found in this assumed state
-                    raise Exception("Known hand card not found in"
+                    raise ValueError("Known hand card not found in"
                                     " opponent's state!")
                 else:
                     # create best_play as 'HAND' play with found index
