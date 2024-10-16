@@ -581,7 +581,7 @@ class Player:
 
         return plays
 
-    def find_cheapest_play(self, plays, map):
+    def find_cheapest_play(self, plays, vmap):
         '''
         Find the cheapest card to play from a list of legal plays.
 
@@ -591,23 +591,23 @@ class Player:
 
         :param plays:   possible plays.
         :type plays:    list
-        :param map:     maps ranks to value.
-        :type map:      dictionary.
+        :param vmap:    maps ranks to value.
+        :type vmap:     dictionary.
         :return:        play of card with lowest value.
         :rtype:         Play
         '''
         # initialize with a value larger than the most expensive rank.
-        min_val = max(map.values()) + 1
+        min_val = max(vmap.values()) + 1
         # initialize index of cheapest play found with invalid value.
         cheapest = -1
         for i, play in enumerate(plays):
             if play.action == 'HAND':
-                val = map[self.hand[play.index].rank]
+                val = vmap[self.hand[play.index].rank]
             elif play.action == 'FUP':
-                val = map[self.face_up[play.index].rank]
+                val = vmap[self.face_up[play.index].rank]
             elif play.action == 'GET':
                 # take cheapest face up table card after taking discard pile
-                val = map[self.face_up[play.index].rank]
+                val = vmap[self.face_up[play.index].rank]
             else:
                 val = min_val   # all others are don't care
             if val < min_val:
@@ -876,12 +876,12 @@ class Player:
         # select from the remaining face up table or hand card plays.
         top_non3 = discard.get_top_non3_rank()
         if top_non3 == '7' or top_non3 == 'K' or top_non3 == 'A':
-            map = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
+            vmap = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
         else:
-            map = RANK_TO_VALUE         # '2' cheaper than '3'
+            vmap = RANK_TO_VALUE         # '2' cheaper than '3'
 
         # play the cheapest legal 'HAND' or 'FUP' card.
-        return self.find_cheapest_play(plays, map)
+        return self.find_cheapest_play(plays, vmap)
 
     def rank_to_play(self, rank, plays):
         """
@@ -1833,10 +1833,10 @@ class TakeShit(AiPlayer):
             # heat for the next player.
             top_non3 = discard.get_top_non3_rank()
             if top_non3 == '7' or top_non3 == 'K' or top_non3 == 'A':
-                map = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
+                vmap = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
             else:
-                map = RANK_TO_VALUE         # '2' cheaper than '3'
-            return self.find_cheapest_play(plays, map)
+                vmap = RANK_TO_VALUE         # '2' cheaper than '3'
+            return self.find_cheapest_play(plays, vmap)
 
     def copy(self):
         '''
@@ -2345,11 +2345,11 @@ class DeepShit(AiPlayer):
                 top_non3 = discard.get_top_non3_rank()
                 if top_non3 == '7' or top_non3 == 'K' or top_non3 == 'A':
                     # 7, K, or A => play 3 before 2
-                    map = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
+                    vmap = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
                 else:
-                    map = RANK_TO_VALUE         # '2' cheaper than '3'
+                    vmap = RANK_TO_VALUE         # '2' cheaper than '3'
                 # select the cheapest 'HAND' or 'FUP' play
-                return self.find_cheapest_play(card_plays, map)
+                return self.find_cheapest_play(card_plays, vmap)
         else:
             # if the talon is empty and there are only 2 players left,
             # we use simulation to find the best play
@@ -2646,11 +2646,11 @@ class DeeperShit(AiPlayer):
                 top_non3 = discard.get_top_non3_rank()
                 if top_non3 == '7' or top_non3 == 'K' or top_non3 == 'A':
                     # 7, K, or A => play 3 before 2
-                    map = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
+                    vmap = RANK_TO_VALUE_DRUCK   # '3' cheaper than '2'
                 else:
-                    map = RANK_TO_VALUE         # '2' cheaper than '3'
+                    vmap = RANK_TO_VALUE         # '2' cheaper than '3'
                 # select the cheapest 'HAND' or 'FUP' play
-                return self.find_cheapest_play(card_plays, map)
+                return self.find_cheapest_play(card_plays, vmap)
         else:
             # if the talon is empty and there are only 2 players left,
             # we use Monte Carlo Tree Search to find the best play
