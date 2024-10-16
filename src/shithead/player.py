@@ -44,7 +44,6 @@ list of legal plays:
 
 import random
 from threading import Thread
-import time
 from collections import Counter
 
 # local imports (modules in same package)
@@ -62,7 +61,8 @@ FIND_STARTER = 1        # player with lowest card on hand starts
 PLAY_GAME = 2           # play till only one player is left
 
 # card ranks for starting player auction from worst to best
-STARTING_RANKS = ['4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A', '10', '2', '3']
+STARTING_RANKS = ['4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A', '10', '2',
+                  '3']
 # card suits for starting player auction from worst to best
 STARTING_SUITS = ['Clubs', 'Spades', 'Hearts', 'Diamonds']
 
@@ -72,15 +72,20 @@ STARTING_SUITS = ['Clubs', 'Spades', 'Hearts', 'Diamonds']
 # 10 => can be played on every card except 7.
 # 2 => can be played on every card, but next player can also play every card.
 # 3 => can be played on every card, but next player must match last non-3 card.
-RANK_TO_VALUE = {'4':0, '5':1, '6':2, '7':3, '8':4, '9':5, 'J':6, 'Q':7, 'K':8, 'A':9, '10':10, '2':11, '3':12}
-# alternative map => play '3' before '2' (e.g. on '7', 'K', 'A' => "Druck mache!!!")
-RANK_TO_VALUE_DRUCK = {'4':0, '5':1, '6':2, '7':3, '8':4, '9':5, 'J':6, 'Q':7, 'K':8, 'A':9, '10':10, '3':11, '2':12}
+RANK_TO_VALUE = {'4': 0, '5': 1, '6': 2, '7': 3, '8': 4, '9': 5, 'J': 6,
+                 'Q': 7, 'K': 8, 'A': 9, '10': 10, '2': 11, '3': 12}
+# alternative map => play '3' before '2' (e.g. on '7', 'K', 'A'
+# => "Druck mache!!!")
+RANK_TO_VALUE_DRUCK = {'4': 0, '5': 1, '6': 2, '7': 3, '8': 4, '9': 5, 'J': 6,
+                       'Q': 7, 'K': 8, 'A': 9, '10': 10, '3': 11, '2': 12}
 
 # Ranks with value >= HOLD_BACK_VALUE don't play more than 1 card
 HOLD_BACK_VALUE = 7
 
 # has been better than RANK_TO_VALUE in tests with only CheapShit players
-RANK_TO_VALUE_CHEAP_SHIT = {'4':0, '5':1, '6':2, '7':3, '8':4, '9':5, 'J':6, 'Q':7, 'K':8, 'A':9, '3':10, '2':11, '10':12}
+RANK_TO_VALUE_CHEAP_SHIT = {'4': 0, '5': 1, '6': 2, '7': 3, '8': 4, '9': 5,
+                            'J': 6, 'Q': 7, 'K': 8, 'A': 9, '3': 10, '2': 11,
+                            '10': 12}
 
 # In pure AiPlayer games, the game could get into a deadlock
 # => abort after a maximum number of turns per player
@@ -94,7 +99,7 @@ MAX_NOF_TURNS_PER_PLAYER = 100
 NOF_SIMULATIONS_PER_PLAY = 30
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class Player:
     '''
     Class representing a shithead player
@@ -113,13 +118,11 @@ class Player:
         :type name:             str
         '''
         self.name = name        # player's name
-        self.shit_count = 0     # number of times this player was the shithead TODO still used?.
-        self.game_count = 0     # number of games played
         self.turn_count = 0     # number of turns played
-        self.face_down = Deck(empty=True) # player's face down table cards
-        self.face_up = Deck(empty=True)   # player's face up table cards
-        self.hand = Deck(empty=True)      # player's hand cards.
-        self.get_fup = False    # True => must take face up table card as 2nd play
+        self.face_down = Deck(empty=True)  # player's face down table cards
+        self.face_up = Deck(empty=True)    # player's face up table cards
+        self.hand = Deck(empty=True)       # player's hand cards.
+        self.get_fup = False    # True => take face up table card as 2nd play
         self.get_fup_rank = None # rank of face up table card taken on 2nd play
         self.is_human = False   # True => human player
 
@@ -1162,8 +1165,6 @@ class HumanPlayer(Player):
         :rtype:         Player
         '''
         new_player = HumanPlayer(self.name, self.gui, self.auto_end)
-        new_player.shit_count = self.shit_count         # number of times this player was the shithead.
-        new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
         new_player.face_down = self.face_down.copy()    # player's face down table cards
         new_player.face_up = self.face_up.copy()        # player's face up table cards
@@ -1182,8 +1183,6 @@ class HumanPlayer(Player):
         '''
         state = {}
         state['name'] = self.name
-        state['shit_count'] = self.shit_count
-        state['game_count'] = self.game_count
         state['turn_count'] = self.turn_count
         state['face_down'] = self.face_down.get_state()
         state['face_up'] = self.face_up.get_state()
@@ -1203,8 +1202,6 @@ class HumanPlayer(Player):
         :type state:     dict
         '''
         self.name = state['name']
-        self.shit_count = state['shit_count']
-        self.game_count = state['game_count']
         self.turn_count = state['turn_count']
         self.face_down.load_from_state(state['face_down'])
         self.face_up.load_from_state(state['face_up'])
@@ -1330,8 +1327,6 @@ class AiPlayer(Player):
         '''
         state = {}
         state['name'] = self.name
-        state['shit_count'] = self.shit_count
-        state['game_count'] = self.game_count
         state['turn_count'] = self.turn_count
         state['face_down'] = self.face_down.get_state()
         state['face_up'] = self.face_up.get_state()
@@ -1354,8 +1349,6 @@ class AiPlayer(Player):
         :type state:     dict
         '''
         self.name = state['name']
-        self.shit_count = state['shit_count']
-        self.game_count = state['game_count']
         self.turn_count = state['turn_count']
         self.face_down.load_from_state(state['face_down'])
         self.face_up.load_from_state(state['face_up'])
@@ -1489,8 +1482,6 @@ class ShitHappens(AiPlayer):
         new_player = ShitHappens(self.name, self.fup_table, self.fdown_random)
         new_player.swap_count = self.swap_count         # swap phase state
         new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.shit_count = self.shit_count         # number of times this player was the shithead.
-        new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
         new_player.face_down = self.face_down.copy()    # player's face down table cards
         new_player.face_up = self.face_up.copy()        # player's face up table cards
@@ -1633,8 +1624,6 @@ class CheapShit(AiPlayer):
         new_player = CheapShit(self.name, self.fup_table, self.fdown_random)
         new_player.swap_count = self.swap_count         # swap phase state
         new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.shit_count = self.shit_count         # number of times this player was the shithead.
-        new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
         new_player.face_down = self.face_down.copy()    # player's face down table cards
         new_player.face_up = self.face_up.copy()        # player's face up table cards
@@ -1836,8 +1825,6 @@ class TakeShit(AiPlayer):
         new_player = TakeShit(self.name, self.fup_table, self.fdown_random)
         new_player.swap_count = self.swap_count         # swap phase state
         new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.shit_count = self.shit_count         # number of times this player was the shithead.
-        new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
         new_player.face_down = self.face_down.copy()    # player's face down table cards
         new_player.face_up = self.face_up.copy()        # player's face up table cards
@@ -2004,8 +1991,6 @@ class BullShit(AiPlayer):
         new_player = BullShit(self.name, self.fup_table, self.fdown_random)
         new_player.swap_count = self.swap_count         # swap phase state
         new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.shit_count = self.shit_count         # number of times this player was the shithead.
-        new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
         new_player.face_down = self.face_down.copy()    # player's face down table cards
         new_player.face_up = self.face_up.copy()        # player's face up table cards
@@ -2346,8 +2331,6 @@ class DeepShit(AiPlayer):
         new_player = DeepShit(self.name, self.fup_table, self.fdown_random)
         new_player.swap_count = self.swap_count         # swap phase state
         new_player.best_fup = self.best_fup[:]          # best face up table cards
-        new_player.shit_count = self.shit_count         # number of times this player was the shithead.
-        new_player.game_count = self.game_count         # number of games played
         new_player.turn_count = self.turn_count         # number of turns played
         new_player.face_down = self.face_down.copy()    # player's face down table cards
         new_player.face_up = self.face_up.copy()        # player's face up table cards
@@ -2643,10 +2626,6 @@ class DeeperShit(AiPlayer):
         new_player.swap_count = self.swap_count
         # best face up table cards
         new_player.best_fup = self.best_fup[:]
-        # number of times this player was the shithead.
-        new_player.shit_count = self.shit_count
-        # number of games played
-        new_player.game_count = self.game_count
         # number of turns played
         new_player.turn_count = self.turn_count
         # player's face down table cards
