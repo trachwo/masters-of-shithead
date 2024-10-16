@@ -2394,19 +2394,19 @@ class SelectMctsThread(Thread):
         '''
 
         # build the search tree with this state as root
-        self.mcts.runSearch(self.state, self.timeout)
+        self.mcts.run_search(self.state, self.timeout)
 
         # check statistics
-        self.mcts.checkStats(self.state)
+        self.mcts.check_stats(self.state)
 
         if self.verbose:
             # print statistics
             print('\n### MCTS Statistics:')
             print(f'Nodes: {len(self.mcts.nodes)}')
-            self.mcts.printStats(self.state)
+            self.mcts.print_stats(self.state)
 
         # select best play according to specified policy
-        best_play = self.mcts.bestPlay(self.state, self.policy)
+        best_play = self.mcts.best_play(self.state, self.policy)
 
         # set selected play as found best plays
         self.selected_play = best_play

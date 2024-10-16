@@ -25,18 +25,18 @@ MAX_SIMULATION_TURNS = 1000
 
 # Class representing the Monte Carlo search tree.
 class MonteCarlo:
-    def __init__(self, game, UCB1ExploreParam=2):
+    def __init__(self, game, ucb1_explore_param=2):
         '''
         Constructor.
 
         :param game: Shithead game (=> game rules).
         :type game: Game
-        :param UCB1ExploreParam: Explore parameter used for Upper Confidence
+        :param ucb1_explore_param: Explore parameter used for Upper Confidence
                                  Bound 1.
-        :type UCB1ExploreParam: float
+        :type ucb1_explore_param: float
         '''
         self.game = game
-        self.UCB1ExploreParam = UCB1ExploreParam
+        self.ucb1_explore_param = ucb1_explore_param
         # dictionary mapping State.hash() to MonteCarloNode
         # => a node is unambiguously identified by the play history leading up
         #    to its state.
@@ -49,7 +49,7 @@ class MonteCarlo:
                                         # loops without expansion
         self.single_children = 0        # single child nodes
 
-    def makeNode(self, state):
+    def make_node(self, state):
         '''
         Create dangling node.
 
@@ -58,9 +58,9 @@ class MonteCarlo:
         We create a new root node (no parent) and add it to nodes.
         !!!Note!!!
         Each state uses its whole play history as hash key, i.e. that usually
-        only the very 1st node is a dangling node. If runSearch() is called
+        only the very 1st node is a dangling node. If run_search() is called
         again at a later time, there should already be a node with this hash
-        in the existing tree and runSearch() just adds more nodes to this tree
+        in the existing tree and run_search() just adds more nodes to this tree
         below the specified node.
 
         :param state:   Shithead game state.
@@ -70,10 +70,10 @@ class MonteCarlo:
             # get the current player in this state
             player = state.players[state.player]
             # get list of legal plays for this player in this state
-            unexpandedPlays = player.get_legal_plays(state)
+            unexpanded_plays = player.get_legal_plays(state)
             # create a new node for this state (no parent, no play)
             # and add it to the nodes list
-            self.nodes[state.hash()] = MonteCarloNode(None, None, state, unexpandedPlays)
+            self.nodes[state.hash()] = MonteCarloNode(None, None, state, unexpanded_plays)
             # all nodes created after the root node immediatly get n_plays = 1.
             # to avoid inconsistencies in the node statistics we set the root
             # node to n_plays=1.
@@ -96,19 +96,19 @@ class MonteCarlo:
         # get the node belonging to this state (play history)
         node = self.nodes[state.hash()]
         # search through tree to find a not fully expanded or leaf node.
-        while node.isFullyExpanded() and not node.isLeaf():
+        while node.is_fully_expanded() and not node.is_leaf():
             # go to child node which yields the best UCB1
-            bestPlay = None             # initialize best play
-            bestUCB1 = float('-inf')    # initialize best upper confidence bound 1
-            plays = node.allPlays()     # all legal plays from this node
+            best_play = None             # initialize best play
+            best_ucb1 = float('-inf')    # initialize best upper confidence bound 1
+            plays = node.all_plays()     # all legal plays from this node
             for play in plays:
                 # calculate UCB1 for all children of current node
-                childUCB1 = node.childNode(play).getUCB1(self.UCB1ExploreParam)
-                if childUCB1 > bestUCB1:
-                    bestPlay = play
-                    bestUCB1 = childUCB1
+                child_ucb1 = node.child_node(play).get_ucb1(self.ucb1_explore_param)
+                if child_ucb1 > best_ucb1:
+                    best_play = play
+                    best_ucb1 = child_ucb1
             # select the child with the best UCB1 as next node
-            node = node.childNode(bestPlay)
+            node = node.child_node(best_play)
             if verbose:
                 node.print()
         return node
@@ -133,28 +133,28 @@ class MonteCarlo:
         :rtype:             MonteCarloNode
         '''
         # get a list of unexpanded plays for this node
-        plays = node.unexpandedPlays()
+        plays = node.unexpanded_plays()
         # select one play randomly from this list
         play = plays[randrange(len(plays))]
         if verbose:
             print(f'\n### expand: {node.state.hash()}+{str(play)}')
         # make a copy of this nodes state
-        childState = node.state.copy()
+        child_state = node.state.copy()
         # apply selected play to change into the state of the child node
-        childState = self.game.next_state(childState, play)
+        child_state = self.game.next_state(child_state, play)
         # get the current player in child's state
-        player = childState.players[childState.player]
+        player = child_state.players[child_state.player]
         # get list of legal plays for this player in child's state
-        childUnexpandedPlays = player.get_legal_plays(childState)
+        child_unexpanded_plays = player.get_legal_plays(child_state)
         # create the child node
-        childNode = node.expand(play, childState, childUnexpandedPlays)
+        child_node = node.expand(play, child_state, child_unexpanded_plays)
         if verbose:
-            childNode.print()
+            child_node.print()
         
         # add the new child node to the list of MTCS nodes
-        self.nodes[childState.hash()] = childNode
+        self.nodes[child_state.hash()] = child_node
         # return the new child node
-        return childNode
+        return child_node
 
     def simulate(self, node, verbose=False):
         '''
@@ -261,7 +261,7 @@ class MonteCarlo:
             # move up to the parent node.
             node = node.parent
 
-    def runSearch(self, state, timeout=3, verbose=False):
+    def run_search(self, state, timeout=3, verbose=False):
         '''
         From given state, repeatedly run MCTS to build statistics.
 
@@ -290,12 +290,12 @@ class MonteCarlo:
         :param verbose:     True => print details during search.
         :type verbose:      bool
         '''
-        # If this is the the 1st call of runSearch() we create the root node of
+        # If this is the the 1st call of run_search() we create the root node of
         # the search tree for the initial state.
         # Later calls will use the hash (play history) of the state to find the
         # corresponding node in the existing tree and expand the existing tree
         # below the found node.
-        self.makeNode(state)
+        self.make_node(state)
 
         # get the start node of the search
         start_node = self.nodes[state.hash()]
@@ -303,7 +303,7 @@ class MonteCarlo:
         # if there's only one legal play in the start state, there's no need to
         #  run a search, since the only play is always the best play.
         if len(start_node.children) == 1:
-            if not start_node.isFullyExpanded():
+            if not start_node.is_fully_expanded():
                 # create the only child of the start node and add it to the
                 # tree, but skip simulate() and backpropagate()
                 node = self.expand(start_node, verbose)
@@ -323,7 +323,7 @@ class MonteCarlo:
         start = time.time()
         # loop until timeout has expired
         # and each play from start node has been expanded.
-        while time.time() < start + timeout or not start_node.isFullyExpanded():
+        while time.time() < start + timeout or not start_node.is_fully_expanded():
             # find node which is not fully expanded moving along a path
             # following the child nodes with the best UCB1 value.
             selected = self.select(state)
@@ -335,7 +335,7 @@ class MonteCarlo:
                 selected.print()
             # check if found node already has a loser
             loser = self.game.loser(selected.state)
-            if not selected.isLeaf() and loser is None:
+            if not selected.is_leaf() and loser is None:
                 # not a leaf and no loser found yet
                 # => add one new child node using an unexpanded play  of this
                 #    node.
@@ -377,7 +377,7 @@ class MonteCarlo:
                 # backpropagate the loser of the selected node
                 self.backpropagate(selected, loser, start_node, False)
 
-    def bestPlay(self, state, policy='robust'):
+    def best_play(self, state, policy='robust'):
         '''
         Get the best play from available statistics.
 
@@ -398,42 +398,42 @@ class MonteCarlo:
         # this state's play history.
         # if a new root node is generated we will get an error next then
         # checking if it's fully expanded!
-        self.makeNode(state)
+        self.make_node(state)
 
         # check if all possible plays for the root node identified by this
         # state's play history have been expanded.
-        if self.nodes[state.hash()].isFullyExpanded() == False:
+        if self.nodes[state.hash()].is_fully_expanded() == False:
             raise Exception('Not enough information!')
 
         # get the root node identified by this state's play history.
         node = self.nodes[state.hash()]
         # initialize best play
-        bestPlay = None
+        best_play = None
         # get a list of all possible plays from this node.
-        allPlays = node.allPlays()
+        all_plays = node.all_plays()
 
         # find the child with the most visits (robust child)
         if policy == 'robust':
             max = float('-inf')   # initialize max value
-            for play in allPlays:
-                childNode = node.childNode(play)
-                if childNode.n_plays > max:
-                    bestPlay = play
-                    max = childNode.n_plays
+            for play in all_plays:
+                child_node = node.child_node(play)
+                if child_node.n_plays > max:
+                    best_play = play
+                    max = child_node.n_plays
 
         # find the child with the highest win rate (max child)
         if policy == 'max':
             max = float('-inf')   # initialize max value
-            for play in allPlays:
-                childNode = node.childNode(play)
-                ratio = childNode.n_wins / childNode.n_plays
+            for play in all_plays:
+                child_node = node.child_node(play)
+                ratio = child_node.n_wins / child_node.n_plays
                 if ratio > max:
-                    bestPlay = play
+                    best_play = play
                     max = ratio
 
-        return bestPlay
+        return best_play
 
-    def getStats(self, state):
+    def get_stats(self, state):
         '''
         Return MCTS statistics this state.
 
@@ -466,7 +466,7 @@ class MonteCarlo:
                 stats['total']['n_wins'] += child['node'].n_wins
         return stats
     
-    def checkStats(self, state):
+    def check_stats(self, state):
         '''
         Check MCTS statistics for selected node.
 
@@ -490,7 +490,7 @@ class MonteCarlo:
         :type state:    State.
         '''
         # get the statistics for the node of the specified game state
-        stats = self.getStats(state)
+        stats = self.get_stats(state)
 
         # check statistics if selected node has >1 children
         if len(stats['children']) > 1:
@@ -511,7 +511,7 @@ class MonteCarlo:
                           f" don't match total wins: {stats['total']['n_wins']}",
                           f" (+1)!")
 
-    def printStats(self, state):
+    def print_stats(self, state):
         '''
         Print MCTS statistics for selected node.
 
@@ -522,7 +522,7 @@ class MonteCarlo:
         :param state:   game state specifying the selected node.
         :type state:    State.
         '''
-        stats = self.getStats(state)
+        stats = self.get_stats(state)
         for entry in stats['children']:
             if entry['n_plays']:
                 # n_plays not None => play has been expanded
@@ -665,7 +665,7 @@ def restore_end_game_state(filename, verbose=False, first='ShitHappens', second=
 
 def run_first_step(filename):
     '''
-    run a single step of the MCTS runSearch() method.
+    run a single step of the MCTS run_search() method.
 
     Creates end game state loaded from specified json-file.
     Creates an empty MCTS-object for the shithead game.
@@ -700,7 +700,7 @@ def run_first_step(filename):
 
     # create the root node in the MonteCarlo tree from this end game state.
     print('\n### Root node ###')
-    mcts.makeNode(state)
+    mcts.make_node(state)
     mcts.nodes[''].print()
 
     # get the start node of the search (= root node)
@@ -729,12 +729,12 @@ def test_mcts(filename, timeout=3.0):
 
     Creates end game state loaded from specified json-file.
     Creates an empty MCTS-object for the shithead game.
-    Executes runSearch() method several times to build the search tree.
+    Executes run_search() method several times to build the search tree.
     Use the search tree to find the best play in this state.
 
     :param filename:    name of json-file containing end game state.
     :type filename:     str
-    :param timeout:     timeout for runSearch().
+    :param timeout:     timeout for run_search().
     :type timeout:      float
     '''
 
@@ -760,9 +760,9 @@ def test_mcts(filename, timeout=3.0):
     mcts = MonteCarlo(game)
 
     # build the search tree with this state as root
-    mcts.runSearch(state, timeout, verbose=True)
-    best_robust = mcts.bestPlay(state, 'robust')
-    best_max = mcts.bestPlay(state, 'max')
+    mcts.run_search(state, timeout, verbose=True)
+    best_robust = mcts.best_play(state, 'robust')
+    best_max = mcts.best_play(state, 'max')
 
     # print state overview
     print(f'\n### End game state loaded from {filename}')
@@ -783,8 +783,8 @@ def test_mcts(filename, timeout=3.0):
     if mcts.simulations > 0:
         print(f'Turns/Simulation: {mcts.simulation_turns / mcts.simulations:.1f}')
     print(f'Maximum no-expansion loops: {mcts.max_no_exp_loops}')
-    mcts.checkStats(state)
-    mcts.printStats(state)
+    mcts.check_stats(state)
+    mcts.print_stats(state)
     print(f'\nBest robust play:  {str(best_robust)}')
     print(f'Best maximum play: {str(best_max)}')
 
@@ -806,7 +806,7 @@ def play_end_game_with_open_cards(filename, timeout=3.0, policy='robust'):
 
     :param filename:    name of json-file containing end game state.
     :type filename:     str
-    :param timeout:     timeout for runSearch().
+    :param timeout:     timeout for run_search().
     :type timeout:      float
     :param policy:      'robust' => find robust child, 'max' => find max child.
     :type policy:       str
@@ -829,15 +829,15 @@ def play_end_game_with_open_cards(filename, timeout=3.0, policy='robust'):
 
     while len(state.players) > 1:
         # build the search tree with this state as root
-        mcts.runSearch(state, timeout)
+        mcts.run_search(state, timeout)
 
         # check statistics
-        mcts.checkStats(state)
+        mcts.check_stats(state)
         # print statistics
-        mcts.printStats(state)
+        mcts.print_stats(state)
 
         # select best play according to specified policy
-        best_play = mcts.bestPlay(state, policy)
+        best_play = mcts.best_play(state, policy)
 
         # apply best_play to state
         state = mcts.game.next_state(state, best_play)
@@ -885,7 +885,7 @@ def play_end_game(filename, timeout=3.0, policy='robust'):
     
     :param filename:    name of json-file containing end game state.
     :type filename:     str
-    :param timeout:     timeout for runSearch().
+    :param timeout:     timeout for run_search().
     :type timeout:      float
     :param policy:      'robust' => find robust child, 'max' => find max child.
     :type policy:       str
@@ -933,15 +933,15 @@ def play_end_game(filename, timeout=3.0, policy='robust'):
         mcts = assumed[current]['mcts']
 
         # expand the search tree
-        mcts.runSearch(sim_state, timeout)
+        mcts.run_search(sim_state, timeout)
 
         # check statistics
-        mcts.checkStats(sim_state)
+        mcts.check_stats(sim_state)
         # print statistics
-        mcts.printStats(sim_state)
+        mcts.print_stats(sim_state)
 
         # select best play according to specified policy
-        best_play = mcts.bestPlay(sim_state, policy)
+        best_play = mcts.best_play(sim_state, policy)
         print(f"\n### {current}: {str(best_play)}")
         if best_play.action == 'HAND':
             # get card to be played from hand
@@ -1141,7 +1141,7 @@ def main():
     # expand, simulate, and backpropagate phases.    
     run_first_step(filename)
 
-    # load end game state and build the search tree with runSearch() for 0.5 s.
+    # load end game state and build the search tree with run_search() for 0.5 s.
     # print status and simulation result for each node.
     # print the final statistics and the the found best play (robust and max). 
     test_mcts(filename, 0.1)
