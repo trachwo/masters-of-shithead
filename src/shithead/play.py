@@ -45,8 +45,11 @@ ACTIONS = (
     'DEALER',   # change the shuffling (for AI evaluation round)
 )
 
-# class representing a possible shithead play
+
 class Play:
+    """
+    class representing a possible shithead play.
+    """
     def __init__(self, action, index=-1):
         '''
         Initializer of Play class.
