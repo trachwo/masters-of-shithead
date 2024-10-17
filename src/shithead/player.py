@@ -764,7 +764,7 @@ class Player:
         if take_turns <= 3:
             return True    # taking the discard pile makes no difference
 
-        n_turns, n_draws, n_hand = state.estimate_remaining_draws(take_turns)
+        _, _, n_hand = state.estimate_remaining_draws(take_turns)
         if n_hand > 3:
             # can't get rid of hand cards before talon runs out
             return False
@@ -1008,7 +1008,6 @@ class HumanPlayer(Player):
         self.gui = gui              # True => gui, False => cli
         self.auto_end = auto_end    # True => automatically return 'END' play
         self.clicked_play = None    # play selected by mouse click.
-        self.legal_plays = []       # legal plays for current game state
         self.is_human = True        # True => human player
 
     def set_clicked_play(self, play):
@@ -1020,16 +1019,17 @@ class HumanPlayer(Player):
         card or button.
         'play' will not be None, if the human player is the current player and
         he has clicked on a card or button. But at this point, we do not check
-        if this is a legal play. When the human player's play() method is
-        called, the selected play set with this method will be checked against
-        the list of legal plays and reset to None unless it is in this list.
+        if this is a legal play. When the human player's select_play_by_gui()
+        method is called, the selected play set with this method will be
+        checked against the list of legal plays and reset to None unless it
+        is in this list.
 
         :param play:    action, index set by mouse click.
         :type play:     Play or None
         '''
         self.clicked_play = play
 
-    def select_play_by_cli(self, plays, state):
+    def select_play_by_cli(self, plays):
         '''
         Select one play from the list of legal plays with keyboard.
 
@@ -1037,8 +1037,6 @@ class HumanPlayer(Player):
 
         :param plays:   plays legal for this player in this game state.
         :type plays:    list
-        :param state:   shithead game state
-        :type state:    State
         :return:        selected play.
         :rtype:         Play
         '''
@@ -1076,7 +1074,7 @@ class HumanPlayer(Player):
                 # return the selected play
                 return plays[sel]
 
-    def select_play_by_gui(self, plays, state):
+    def select_play_by_gui(self, plays):
         '''
         Wait for human player to select legal play with mouse click.
 
@@ -1087,8 +1085,6 @@ class HumanPlayer(Player):
 
         :param plays:   plays legal for this player in this game state.
         :type plays:    list
-        :param state:   shithead game state
-        :type state:    State
         :return:        selected play or None if it wasn't legal.
         :rtype:         Play
         '''
@@ -1108,7 +1104,7 @@ class HumanPlayer(Player):
         self.clicked_play = None
         return play
 
-    def play(self, state):
+    def select_play(self, plays, state):
         '''
         Human player makes one legal play.
 
@@ -1119,45 +1115,36 @@ class HumanPlayer(Player):
         the human player has to try again, i.e. the human player's 'play()'
         method is called 60 times per second by 'on_update()' until a valid
         selection has been made.
-        When 'play()' is called the 1st time for a game state during the human
-        player's turn, we store the list of legal plays in a 'Player' attribut.
         The human player's mouse click during his turn sets the corresponding
         play as attribut 'clicked_play'. If 'clicked_play' has been set and
         is in the list of legal plays, it is returned and will be used to
-        generate the next game state, while the list of legal plays is reset to
-        an empty list.
+        generate the next game state.
         Otherwise the 'clicked_play' attribut is reset to 'None' and 'None'
-        is returned (displayed in the gui as player is thinking...), while the
-        list of legal plays stays the same.
+        is returned (displayed in the gui as player is thinking...), while
+        select_play() is called again from on_update() with the same list of
+        legal plays, since we are still in the same state.
 
         If the gui is not used, the player gets list of possible plays
         (actions) depending on the current game state.
         He selects one of them and returns it.
 
+        :param plays:   possible plays.
+        :type plays:    list
         :param state:   shithead game state
         :type state:    State
         :return:        selected play or None if selected play wasn't legal.
         :rtype:         Play
         '''
-        # if play() is called the 1st time for this game state
-        if not self.legal_plays:
-            self.legal_plays = self.get_legal_plays(state)
-            # if 'END' is the only possible play return it
-            if (self.auto_end and len(self.legal_plays) == 1 and
-                    self.legal_plays[0].action == 'END'):
-                self.legal_plays = []
-                return Play('END')
+        if (self.auto_end and len(plays) == 1 and plays[0].action == 'END'):
+            return Play('END')
 
         if self.gui:
             # select game with mouse click => may return None
-            play = self.select_play_by_gui(self.legal_plays, state)
+            play = self.select_play_by_gui(plays)
         else:
             # select game with keyboard => always returns play
-            play = self.select_play_by_cli(self.legal_plays, state)
+            play = self.select_play_by_cli(plays)
 
-        if play:
-            # not None => legal play => reset list of legal plays
-            self.legal_plays = []
         return play
 
     def copy(self):
