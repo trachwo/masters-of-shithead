@@ -12,8 +12,9 @@ and an 'EXIT GAME' button to leave the game.
 06.02.2023 Wolfgang Trachsler
 """
 
-import arcade
 import sys
+
+import arcade
 
 # local imports (modules in same package)
 from .stats import Statistics
@@ -48,7 +49,7 @@ LINE_HEIGHT = 30
 
 TITLE_WIDTHS = [NAME_WIDTH, SH_COUNT_WIDTH + SH_PERCENT_WIDTH, SCORE_WIDTH,
                 GAMES_WIDTH, TURNS_WIDTH + AVG_TURNS_WIDTH]
-TITLE_ALIGNS = ['center', 'center', 'center', 'center', 'center' ]
+TITLE_ALIGNS = ['center', 'center', 'center', 'center', 'center']
 TITLE_TEXTS = ['PLAYERS', 'SHITHEADS', 'SCORE', 'GAMES', 'TURNS']
 ENTRY_WIDTHS = [NAME_WIDTH, SH_COUNT_WIDTH, SH_PERCENT_WIDTH, SCORE_WIDTH,
                 GAMES_WIDTH, TURNS_WIDTH, AVG_TURNS_WIDTH]
@@ -93,7 +94,7 @@ class ResultLine:
         self.texts = []
         frame_color, text_color = color
         x, y = upper_left       # coords of upper left corner
-        y -=  height / 2        # center y-coord of line
+        y -= height / 2        # center y-coord of line
         for field in fields:
             # unpack field specification from tuple
             width, align, content = field
@@ -101,13 +102,13 @@ class ResultLine:
             x += width / 2
             # create this rectangle
             frame = arcade.create_rectangle_outline(
-                    x,          # x-coord of rectangle center
-                    y,          # y-coord of rectangle center
-                    width,      # width of rectangle
-                    height,     # height of rectangle
-                    frame_color, # color of rectangle outline
-                    border,     # size of border
-                    0)          # tilt angle
+                    x,              # x-coord of rectangle center
+                    y,              # y-coord of rectangle center
+                    width,          # width of rectangle
+                    height,         # height of rectangle
+                    frame_color,    # color of rectangle outline
+                    border,         # size of border
+                    0)              # tilt angle
             # and add it to the list of frames
             self.frames.append(frame)
 
@@ -124,7 +125,7 @@ class ResultLine:
                     y,
                     text_color,
                     DEFAULT_FONT_SIZE,
-                    anchor_x= align,
+                    anchor_x=align,
                     anchor_y='center')
             # and add it to the list of texts
             self.texts.append(text)
@@ -139,6 +140,7 @@ class ResultLine:
         # draw line content
         for text in self.texts:
             text.draw()
+
 
 class ResultTable:
 
@@ -184,7 +186,8 @@ class ResultTable:
         for entry in tab:
             if entry == tab[-1]:
                 border = 3
-            else: border = 1
+            else:
+                border = 1
             # if a Shithead has been found (no abort) mark it in red
             if shithead is not None and entry[0] == shithead:
                 color = (arcade.color.WHITE, arcade.color.CINNABAR)
@@ -192,7 +195,7 @@ class ResultTable:
                 color = (arcade.color.WHITE, arcade.color.WHITE)
             fields = zip(ENTRY_WIDTHS, ENTRY_ALIGNS, entry)
             y -= LINE_HEIGHT
-            line = ResultLine((x,y), LINE_HEIGHT, color, border, fields)
+            line = ResultLine((x, y), LINE_HEIGHT, color, border, fields)
             self.lines.append(line)
 
     def draw(self):
@@ -232,7 +235,8 @@ class ResultView(arcade.View):
         Adds the created button sprite to the button sprite list.
         Creates the 'NEXT GAME' text object.
         """
-        self.next = arcade.Sprite(BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
+        self.next = arcade.Sprite(
+            BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
         self.next.position = (NEXT_X, BUTTON_Y)
         self.button_list.append(self.next)
 
@@ -254,7 +258,8 @@ class ResultView(arcade.View):
         Adds the created button sprite to the button sprite list.
         Creates the 'EXIT GAME' text object.
         """
-        self.exit = arcade.Sprite(BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
+        self.exit = arcade.Sprite(
+            BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
         self.exit.position = (EXIT_X, BUTTON_Y)
         self.button_list.append(self.exit)
 
@@ -297,7 +302,8 @@ class ResultView(arcade.View):
         table_height = (n_players + 2) * LINE_HEIGHT
         # calculate the coords of the upper left corner of the result table
         upper_left = ((SCREEN_WIDTH - TABLE_WIDTH) / 2,
-                SCREEN_HEIGHT - (SCREEN_HEIGHT - BUTTON_Y - table_height) / 2 )
+                      SCREEN_HEIGHT - (SCREEN_HEIGHT - BUTTON_Y
+                                       - table_height) / 2)
         # create the result table for the current game statistics,
         # marking the shithead of the last game with red.
         self.result_table = ResultTable(upper_left, stats, shithead)
@@ -327,7 +333,7 @@ class ResultView(arcade.View):
         :type key_modifiers:    int
         """
         # check if we have pressed the button
-        button = arcade.get_sprites_at_point((x,y), self.button_list)
+        button = arcade.get_sprites_at_point((x, y), self.button_list)
         if len(button) > 0:
             # mouse clicked on one of the buttons
             if button[0] == self.next:
@@ -411,6 +417,7 @@ def main():
 
     # start
     arcade.run()
+
 
 if __name__ == "__main__":
     main()
