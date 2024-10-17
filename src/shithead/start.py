@@ -19,8 +19,6 @@ corresponding json file.
 23.04.2023 Wolfgang Trachsler
 """
 
-
-
 import arcade
 import subprocess
 import json
@@ -30,7 +28,7 @@ import sys
 import platform
 
 # local imports (modules in same package)
-from .cards import Card, Deck
+from .cards import Deck
 from .gui import CardSprite
 from . import config
 from . import rules
@@ -72,6 +70,7 @@ CARD_SCALE = 0.16
 # File containing position and angle of card sprites for title animation.
 TITLE_FILE = 'title.json'
 
+
 class StartView(arcade.View):
     '''
     View where we show the the title of the game.
@@ -99,7 +98,8 @@ class StartView(arcade.View):
         # create text list
         self.text_list = []
 
-        # create a sprite list for the 'RULES', 'REGELN' and 'CONTINUE' buttons.
+        # create a sprite list for the 'RULES', 'REGELN' and 'CONTINUE'
+        # buttons.
         self.button_list = arcade.SpriteList()
         self.english = None         # 'RULES' button
         self.german = None          # 'REGELN' button
@@ -117,9 +117,9 @@ class StartView(arcade.View):
         # create the main title text object
         start_x = 0
         start_y = SCREEN_HEIGHT - DEFAULT_LINE_HEIGHT * 2.5
-        text = arcade.Text('Masters of', start_x, start_y,
-                arcade.color.BRIGHT_GREEN, DEFAULT_FONT_SIZE * 2,
-                width=SCREEN_WIDTH, align='center')
+        text = arcade.Text(
+            'Masters of', start_x, start_y, arcade.color.BRIGHT_GREEN,
+            DEFAULT_FONT_SIZE * 2, width=SCREEN_WIDTH, align='center')
         self.text_list.append(text)
 
 #        # 'SHITHEAD' text object, replaced with card sprites
@@ -130,24 +130,25 @@ class StartView(arcade.View):
 #        self.text_list.append(text)
 
         # create version text object
-        start_y =  VERSION_Y
-        text = arcade.Text(VERSION, start_x, start_y,
-                arcade.color.WHITE, DEFAULT_FONT_SIZE,
-                width=SCREEN_WIDTH, align='center')
+        start_y = VERSION_Y
+        text = arcade.Text(
+            VERSION, start_x, start_y, arcade.color.WHITE, DEFAULT_FONT_SIZE,
+            width=SCREEN_WIDTH, align='center')
         self.text_list.append(text)
 
         # create programmed with ... text object
         start_y = text.bottom - DEFAULT_LINE_HEIGHT
-        text = arcade.Text('Programmed with Python3/Arcade Library', start_x, start_y,
-                arcade.color.WHITE, DEFAULT_FONT_SIZE,
-                width=SCREEN_WIDTH, align='center')
+        text = arcade.Text(
+            'Programmed with Python3/Arcade Library', start_x, start_y,
+            arcade.color.WHITE, DEFAULT_FONT_SIZE, width=SCREEN_WIDTH,
+            align='center')
         self.text_list.append(text)
 
         # create game assets from ... text object
         start_y = text.bottom - DEFAULT_LINE_HEIGHT
-        text = arcade.Text('Game Assets from kenney.nl', start_x, start_y,
-                arcade.color.WHITE, DEFAULT_FONT_SIZE,
-                width=SCREEN_WIDTH, align='center')
+        text = arcade.Text(
+            'Game Assets from kenney.nl', start_x, start_y, arcade.color.WHITE,
+            DEFAULT_FONT_SIZE, width=SCREEN_WIDTH, align='center')
         self.text_list.append(text)
 
     def setup_main_title(self):
@@ -166,7 +167,8 @@ class StartView(arcade.View):
         # load coords of cards forming the title
         try:
             data = pkgutil.get_data(__package__, TITLE_FILE)
-        except OSError as exception:
+        except OSError as err:
+            print(err)
             print(f"### Error couldn't load file {TITLE_FILE}")
             return
 
@@ -200,7 +202,8 @@ class StartView(arcade.View):
         Adds the created button sprite to the button sprite list.
         Creates the 'RULES' text object and adds it to the text object list.
         """
-        self.english = arcade.Sprite(BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
+        self.english = arcade.Sprite(
+            BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
         self.english.position = (ENGLISH_X, BUTTON_Y)
         self.button_list.append(self.english)
 
@@ -223,7 +226,8 @@ class StartView(arcade.View):
         Adds the created button sprite to the button sprite list.
         Creates the 'REGELN' text object and adds it to the text object list.
         """
-        self.german = arcade.Sprite(BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
+        self.german = arcade.Sprite(
+            BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
         self.german.position = (GERMAN_X, BUTTON_Y)
         self.button_list.append(self.german)
 
@@ -246,7 +250,8 @@ class StartView(arcade.View):
         Adds the created button sprite to the button sprite list.
         Creates the 'CONTINUE' text object.
         """
-        self.config = arcade.Sprite(BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
+        self.config = arcade.Sprite(
+            BUTTON_RELEASED, BUTTON_SCALE, hit_box_algorithm='None')
         self.config.position = (CONTINUE_X, BUTTON_Y)
         self.button_list.append(self.config)
 
@@ -276,9 +281,9 @@ class StartView(arcade.View):
         Mouse button pressed event callback function.
 
         This function is called when the mouse button was pressed.
-        We check if the mouse was clicked on the 'RULES', 'REGELN' or 'CONTINUE'
-        button and change the button image to reflect the pressed state.
-        Change the state according to the button press.
+        We check if the mouse was clicked on the 'RULES', 'REGELN' or
+        'CONTINUE' button and change the button image to reflect the pressed
+        state. Change the state according to the button press.
 
         :param x:               X-coord of mouse when button was pressed.
         :type x:                float
@@ -290,7 +295,7 @@ class StartView(arcade.View):
         :type key_modifiers:    int
         """
         # check if we have pressed the button
-        button = arcade.get_sprites_at_point((x,y), self.button_list)
+        button = arcade.get_sprites_at_point((x, y), self.button_list)
         if len(button) > 0:
             # mouse clicked on one of the buttons
             if button[0] == self.english:
@@ -414,8 +419,11 @@ class StartView(arcade.View):
         # display cards forming the 'SHITHEAD' title.
         self.title.draw()
 
-def main():
 
+def main():
+    """
+    Test start window.
+    """
     # testing the config view
     # open a window with predefined size and title
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
@@ -429,6 +437,7 @@ def main():
 
     # start
     arcade.run()
+
 
 if __name__ == "__main__":
     main()
