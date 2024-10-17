@@ -687,12 +687,12 @@ class Player:
         turns = len(count.keys())
         # but after playing the '10's, 'Q's, or each set of >=4 cards of same
         # rank, we can play one rank for free.
-        for rank in count.keys():
+        for rank, cnt in count.items():
             if rank == '10':
                 turns -= 1  # kills the discard pile, next rank free
             elif rank == 'Q':
                 turns -= 1  # must be covered, next rank free
-            elif count[rank] >= 4:
+            elif cnt >= 4:
                 turns -= 1  # kills the discard pile, next rank free
 
         return turns
