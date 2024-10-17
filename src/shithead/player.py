@@ -2138,13 +2138,13 @@ class SelectSimulatedPlayThread(Thread):
         # initialize score list with one entry per play
         scores = [0 for x in self.plays]
         # calculate the number of different simulation states
-        for i in range(NOF_SIMULATIONS_PER_PLAY):
+        for _ in range(NOF_SIMULATIONS_PER_PLAY):
             # copy the original state and redistribute the unknown cards.
             sim = State.simulation_state(self.state)
             for j, play in enumerate(self.plays):
                 score = run_simulation(sim, play)
                 if score < 0:
-                    # TODO treat deadlocks like lost games ???
+                    # treat deadlocks like lost games
                     score = 0
                 # add to total score of this play
                 scores[j] += score
@@ -2183,7 +2183,7 @@ class DeepShit(AiPlayer):
         # thread for play selection by simulation
         self.thread = None
         # flag indicating, that thread has already been started.
-        self.thead_started = False
+        self.thread_started = False
 
     def select_play(self, plays, state):
         '''
@@ -2487,7 +2487,7 @@ class DeeperShit(AiPlayer):
         self.verbose = verbose
         self.thread = None          # thread for play selection by MCTS
         # flag indicating, that thread has already been started.
-        self.thead_started = False
+        self.thread_started = False
 
     def select_play(self, plays, state):
         '''
@@ -2716,7 +2716,7 @@ def main():
     my_deck.shuffle()
     my_deck.print()
     my_player = Player('Wolfi')
-    for i in range(9):
+    for _ in range(9):
         my_player.deal(my_deck.pop_card())
     my_player.face_up.sort(False)
     my_player.hand.sort(False)
@@ -2728,7 +2728,7 @@ def main():
     source, cards = my_player.get_card_source()
     print(source)
     print(' '.join([str(card) for card in cards]))
-    for i in range(9):
+    for _ in range(9):
         if source == 'HAND':
             my_player.hand.pop_card()
         elif source == 'FUP':
