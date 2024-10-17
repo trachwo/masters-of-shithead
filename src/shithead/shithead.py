@@ -27,24 +27,22 @@ to the specified options:
 06.10.2022 Wolfgang Trachsler
 """
 
-import arcade
 import argparse
-from random import randrange
-import math
 from time import sleep
 import json
 
+import arcade
+
 # local imports (modules in same package)
 from .cards import Card
-from .game import Game, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME, SHITHEAD_FOUND
-from .fup_table import FupTable, FUP_TABLE_FILE, TEXT_FILE
+from .game import Game, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME
+from .fup_table import FupTable, FUP_TABLE_FILE
 from .state import State
 from .play import Play
 from .stats import Statistics
 from .gui import GameView
-from . import discard
 from . import start
-from . import player as plr # to avoid confusion with 'player' used as variable name
+from . import player as plr     # to avoid confusion with variable 'player'
 from . import rules
 
 # Screen title and size
@@ -52,7 +50,8 @@ SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 768
 SCREEN_TITLE = "Sh*thead"
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 def gui_start():
     """
     Play Shithead against 1..5 AIs using the GUI.
@@ -83,6 +82,7 @@ def gui_start():
     # of the current view:
     arcade.run()
 
+
 def load_state_from_file(config_file, state_file):
     '''
     Start a game from a logged state.
@@ -98,17 +98,19 @@ def load_state_from_file(config_file, state_file):
     try:
         # load configuration from json-file
         filename = config_file
-        with open(filename, 'r') as json_file:
+        with open(filename, 'r', encoding='utf-8') as json_file:
             config = json.load(json_file)
-    except OSError as exception:
+    except OSError as err:
+        print(err)
         print(f"### Error: couldn't load file {filename}")
         return
     try:
         # load state from json-file
         filename = state_file
-        with open(filename, 'r') as json_file:
+        with open(filename, 'r', encoding='utf-8') as json_file:
             state_info = json.load(json_file)
-    except OSError as exception:
+    except OSError as err:
+        print(err)
         print(f"### Error: couldn't load file {filename}")
         return
     # print the loaded configuration
@@ -136,6 +138,7 @@ def load_state_from_file(config_file, state_file):
     #   - apply this play to the game state to get the next game state.
     arcade.run()
 
+
 def play_round(players, shithead, fup_table=None, stats=None, auto=False):
     '''
     Play one round of shithead without GUI.
@@ -147,8 +150,9 @@ def play_round(players, shithead, fup_table=None, stats=None, auto=False):
     In a play with only AI players it's possible to get into a deadlock.
     In this case each of the AI players can use the 'ABORT' play to end the
     round without result, if a maximum number of turns has been reached.
-    Otherwise, play continues in a loop until only 1 player remains in the game.
-    The name of the shithead and the number of turns played is then returned.
+    Otherwise, play continues in a loop until only 1 player remains in the
+    game. The name of the shithead and the number of turns played is then
+    returned.
 
     :param players:     list of players => player specific rules.
     :type players:      list
@@ -175,7 +179,8 @@ def play_round(players, shithead, fup_table=None, stats=None, auto=False):
                 dealer = idx
                 break
         else:
-            raise Exception(f"Shithead {shithead} not found in list of players!")
+            raise ValueError(f"Shithead {shithead} not found in list of"
+                             " players!")
     else:
         # very first round => select dealer randomly
         dealer = -1
@@ -223,7 +228,7 @@ def play_round(players, shithead, fup_table=None, stats=None, auto=False):
                 print('--- play ---')
         # let the current player play one action
         player = state.players[state.player]
-        while(True):
+        while (True):
             play = player.play(state)
             if play is not None:
                 break
@@ -250,6 +255,7 @@ def play_round(players, shithead, fup_table=None, stats=None, auto=False):
     # return name of shithead (last player still in the game)
     return (state.players[0].name, state.players[0].turn_count)
 
+
 def fup_table_generator():
     '''
     Generates or updates the face up table.
@@ -275,10 +281,11 @@ def fup_table_generator():
     print('### Face Up Table Generator ###')
     # get number of players
     while True:
-        n = input('Enter number of players (>1): ' )
+        n = input('Enter number of players (>1): ')
         try:
             n_players = int(n)
-        except:
+        except ValueError as err:
+            print(err)
             print('Please enter an integer >1!')
             continue
         if n_players > 1:
@@ -286,17 +293,18 @@ def fup_table_generator():
 
     # get number of games
     while True:
-        n = input('Enter number games: ' )
+        n = input('Enter number games: ')
         try:
             n_games = int(n)
-        except:
+        except ValueError as err:
+            print(err)
             print('Please enter an integer >0!')
             continue
         if n_games > 0:
             break
 
     # create specified number of players with generic names
-    players =[]
+    players = []
     for i in range(0, n_players):
         # add players without face up table => random face up table cards.
         players.append(plr.CheapShit(f'Player{i}'))
@@ -314,7 +322,7 @@ def fup_table_generator():
             shithead = None
         elif shithead == 'ABORT':
             # round aborted because of AI deadlock => no result for this round
-            n_aborted +=1
+            n_aborted += 1
             shithead = None
         else:
             # finished round => count result, number of turns
@@ -329,19 +337,22 @@ def fup_table_generator():
 
         if n_finished % 100 == 0:
             # report every 100 finished rounds
-            print(f'finished:{n_finished:<10} aborted:{n_aborted:<3} turns:{n_turns:<12}')
+            print(f"finished:{n_finished:<10} aborted:{n_aborted:<3}"
+                  f" turns:{n_turns:<12}")
     if n_finished % 100 != 0:
         # final reporting for last rounds not already reported
-        print(f'finished:{n_finished:<10} aborted:{n_aborted:<3} turns:{n_turns:<12}')
+        print(f"finished:{n_finished:<10} aborted:{n_aborted:<3}"
+              f" turns:{n_turns:<12}")
     print()
     # print final statistics
     stats.print()
     print()
     # print face up table
     fup_table.print()
-    # write the table to new files to avoid inadvertably overwriting existing files.
+    # write table to new files to avoid overwriting of existing files.
     fup_table.save('face_up_table_new.json')
     fup_table.write_to_file('readable_fup_table_new.txt')
+
 
 def play_ai_evaluation_round(players, stats=None):
     '''
@@ -411,7 +422,7 @@ def play_ai_evaluation_round(players, stats=None):
         while len(state.players) > 1:
             # let the current player play one action
             player = state.players[state.player]
-            while(True):
+            while (True):
                 play = player.play(state)
                 if play is not None:
                     break
@@ -420,7 +431,7 @@ def play_ai_evaluation_round(players, stats=None):
 
             if play.action == 'ABORT':
                 Game.reset_result(state)    # no winners
-                n_aborted +=1
+                n_aborted += 1
                 break
 
             # apply this  action to the current state to get to the next state
@@ -429,7 +440,6 @@ def play_ai_evaluation_round(players, stats=None):
             # count number of turns till talon is empty
             if len(state.talon) == 0 and refill_turns < 0:
                 refill_turns = state.turn_count - 1
-#                print(f"talon: {talon_size} turns: {refill_turns} refills per turn: {talon_size / refill_turns}")
 
         if len(state.players) == 1:
             # shithead found
@@ -443,6 +453,7 @@ def play_ai_evaluation_round(players, stats=None):
             n_refills += refill_turns
 
     return (n_aborted, n_finished, n_turns, n_talon, n_refills)
+
 
 def ai_test():
     '''
@@ -463,9 +474,6 @@ def ai_test():
     n_talon = 0     # number of talon cards
     n_refills = 0   # number of refills
 
-    talon_cards = 0
-    talon_turns = 0
-
     # create face up table
     fup_table = FupTable()
 
@@ -477,53 +485,47 @@ def ai_test():
 
     print('### AI Test ###')
 
-    # create players with generic names
+    # create 6 players with different AIs
     players = []
-#    players.append(plr.ShitHappens('Player1', fup_table, False))
-#    players.append(plr.ShitHappens('Player2', fup_table, False))
-#    players.append(plr.CheapShit('Player1', fup_table, False))
-#    players.append(plr.CheapShit('Player2', fup_table, False))
-#    players.append(plr.CheapShit('Player3', fup_table, False))
-    players.append(plr.TakeShit('Player1', fup_table, False))
-    players.append(plr.TakeShit('Player2', fup_table, False))
-#    players.append(plr.TakeShit('Player3', fup_table, False))
-#    players.append(plr.TakeShit('Player4', fup_table, False))
-#    players.append(plr.TakeShit('Player5', fup_table, False))
-#    players.append(plr.TakeShit('Player6', fup_table, False))
-#    players.append(plr.BullShit('Player3', fup_table, False))
-#    players.append(plr.DeepShit('Player1', fup_table, False))
-#    players.append(plr.DeepShit('Player2', fup_table, False))
-    players.append(plr.DeeperShit('Player3', fup_table, False))
+    players.append(plr.ShitHappens('Happens', fup_table, False))
+    players.append(plr.CheapShit('Cheap', fup_table, False))
+    players.append(plr.TakeShit('Take', fup_table, False))
+    players.append(plr.BullShit('Bull', fup_table, False))
+    players.append(plr.DeepShit('Deep', fup_table, False))
+    players.append(plr.DeeperShit('Deeper', fup_table, False))
     n_players = len(players)
 
     # get number of games
     while True:
-        n = input('Enter number of games: ' )
+        n = input('Enter number of games: ')
         try:
             n_games = int(n)
-        except:
+        except ValueError as err:
+            print(err)
             print('Please enter an integer >0!')
             continue
         if n_games > 0:
             break
 
-    for i in range(n_games):
+    for _ in range(n_games):
         # play a round, don't update face up table, update player statistics
-        aborts, finished, turns, talon, refills = play_ai_evaluation_round(players, stats)
+        aborts, finished, turns, talon, refills = play_ai_evaluation_round(
+            players, stats)
         n_aborted += aborts
         n_finished += finished
         n_turns += turns
         n_talon += talon
         n_refills += refills
 
-
         # report every 10 finished games
         if n_finished % (10 * n_players) == 0:
-            print(f'finished:{n_finished:<10} aborted:{n_aborted:<3} turns:{n_turns:<12} refills/turn: {n_talon / n_refills}')
+            print(f"finished:{n_finished:<10} aborted:{n_aborted:<3}"
+                  f" turns:{n_turns:<12} refills/turn: {n_talon / n_refills}")
 
     # report remaining games
     if n_finished % (10 * n_players) != 0:
-        print(f'finished:{n_finished:<10} aborted:{n_aborted:<3} turns:{n_turns:<12} refills/turn: {n_talon / n_refills}')
+        print(f"finished:{n_finished:<10} aborted:{n_aborted:<3}"
+              f" turns:{n_turns:<12} refills/turn: {n_talon / n_refills}")
     print()
 
     # print final statistics
@@ -534,6 +536,7 @@ def ai_test():
 
     # save statistics to json file
     stats.save('ai_test_stats.json')
+
 
 def gameplay_test():
     '''
@@ -551,10 +554,11 @@ def gameplay_test():
     print('### Gameplay Test ###')
     # get number of players
     while True:
-        n = input('Enter number of players (>1): ' )
+        n = input('Enter number of players (>1): ')
         try:
             n_players = int(n)
-        except:
+        except ValueError as err:
+            print(err)
             print('Please enter an integer >1!')
             continue
         if n_players > 1:
@@ -575,6 +579,7 @@ def gameplay_test():
     if shithead != 'QUIT' and shithead != 'ABORT':
         print(f'{shithead} is the Shithead!!!')
 
+
 def test_state_copy():
     """
     Test copying a game state.
@@ -588,17 +593,14 @@ def test_state_copy():
 
     # load face up table from file in package
     fup_table.load(FUP_TABLE_FILE, True)
-    #fup_table.print()
-
-    # create statistics
-    stats = Statistics()
 
     # get number of players
     while True:
-        n = input('Enter number of players (2..6): ' )
+        n = input('Enter number of players (2..6): ')
         try:
             n_players = int(n)
-        except:
+        except ValueError as err:
+            print(err)
             print('Please enter an integer >1!')
             continue
         if n_players > 1 and n_players < 7:
@@ -606,17 +608,27 @@ def test_state_copy():
 
     # create specified number of players with generic names
     players = []
-    # The human player is always at index 0 (only as long as he's in the game!!!),
-    # TODO ask for name
-    # create a human player using gui
+
+    # The human player is always at index 0
+    # (but only as long as he's in the game!!!),
     players.append(plr.HumanPlayer('Wolfi', True))
     for i in range(1, n_players):
         name = f'Player{i}'
         # add AI player with fup_table => card swapping
         players.append(plr.DeepShit(name, fup_table))
 
-    # create state for these players
-    state = State(players, -1, 2)
+    # calculate the number of necessary card decks
+    n_decks = Game.calc_nof_decks(n_players)
+
+    # create the logging info
+    log_level = 'No Secrets'
+    log_to_file = False
+    log_debug = False
+    log_file = ''
+    log_info = (log_level, log_to_file, log_debug, log_file)
+
+    # create a state for these players (random dealer)
+    state = State(players, -1, n_decks, log_info)
     state.print()
     state = Game.next_state(state, Play('SHUFFLE'))
     state.print()
@@ -627,6 +639,7 @@ def test_state_copy():
     state = state.copy()
     state.print()
 
+
 def open_rules_window(filename):
     """
     Open a window with shithead rules.
@@ -636,14 +649,15 @@ def open_rules_window(filename):
     """
     # load parameters and texts from JSON-file
     try:
-        with open(filename, 'r') as json_file:
+        with open(filename, 'r', encoding='utf-8') as json_file:
             rls = json.load(json_file)
-    except OSError as exception:
+    except OSError as err:
+        print(err)
         print(f"### Warning: couldn't load rules from file {filename}")
 
     # open a window with predefined size and title
-    window = arcade.Window(rls['screen_width'], rls['screen_height'],
-                rls['screen_title'])
+    window = arcade.Window(
+        rls['screen_width'], rls['screen_height'], rls['screen_title'])
 
     # create a RulesView with texts from the specified file
     rules_view = rules.RulesView(rls)
@@ -654,6 +668,7 @@ def open_rules_window(filename):
 
     # start
     arcade.run()
+
 
 def play_end_game_generator_round(players, stats=None):
     '''
@@ -696,12 +711,11 @@ def play_end_game_generator_round(players, stats=None):
 
     # deal 3 face down, 3 face up, and 3 hand cards to each player
     state = Game.next_state(state, Play('DEAL'), None, stats)
-    talon_size = len(state.talon)
 
     while len(state.players) > 2:
         # let the current player play one action
         player = state.players[state.player]
-        while(True):
+        while True:
             play = player.play(state)
             if play is not None:
                 break
@@ -722,13 +736,14 @@ def play_end_game_generator_round(players, stats=None):
         # aborted game => return empty string
         return None
 
+
 def end_game_generator():
     '''
     Generates end game states saved as JSON files.
 
     Let 3 AIs play multiple fully automatic games.
     Whenever a game reaches the point where only 2 players are left, we store
-    the corresponding state to a JSON file, in order to use it for MTCS tests.
+    the corresponding state to a JSON file, in order to use it for MCTS tests.
     '''
     # create face up table
     fup_table = FupTable()
@@ -746,14 +761,14 @@ def end_game_generator():
     players.append(plr.TakeShit('Player1', fup_table, False))
     players.append(plr.TakeShit('Player2', fup_table, False))
     players.append(plr.TakeShit('Player3', fup_table, False))
-    n_players = len(players)
 
     # get number of games
     while True:
-        n = input('Enter number of games: ' )
+        n = input('Enter number of games: ')
         try:
             n_games = int(n)
-        except:
+        except ValueError as err:
+            print(err)
             print('Please enter an integer >0!')
             continue
         if n_games > 0:
@@ -763,8 +778,10 @@ def end_game_generator():
         # play a round, don't update face up table, update player statistics
         json_str = play_end_game_generator_round(players, stats)
         if json_str is not None:
-            with open('end_game_state_' + str(i) + '.json', 'w') as f:
+            with open('end_game_state_' + str(i) + '.json', 'w',
+                      encoding='utf-8') as f:
                 f.write(json_str)
+
 
 def end_game_evaluation(state_file):
     """
@@ -786,9 +803,10 @@ def end_game_evaluation(state_file):
     """
     try:
         # load state from json-file
-        with open(state_file, 'r') as json_file:
+        with open(state_file, 'r', encoding='utf-8') as json_file:
             state_info = json.load(json_file)
-    except OSError as exception:
+    except OSError as err:
+        print(err)
         print(f"### Error: couldn't load file {state_file}")
         return
     # print the loaded game state
@@ -823,7 +841,6 @@ def end_game_evaluation(state_file):
     # load face up table from file (in package)
     fup_table.load(FUP_TABLE_FILE, True)
 
-
     # get number of remaining players from loaded state (should be 2)
     n_players = len(state_info['players'])
 
@@ -834,16 +851,17 @@ def end_game_evaluation(state_file):
 
     # get number of games
     while True:
-        n = input('Enter number of games: ' )
+        n = input('Enter number of games: ')
         try:
             n_games = int(n)
-        except:
+        except ValueError as err:
+            print(err)
             print('Please enter an integer >0!')
             continue
         if n_games > 0:
             break
 
-    for i in range(n_games):
+    for _ in range(n_games):
         refill_turns = -1
 
         # create the initial game state for these players.
@@ -890,7 +908,7 @@ def end_game_evaluation(state_file):
         while len(state.players) > 1:
             # let the current player play one action
             player = state.players[state.player]
-            while(True):
+            while True:
                 play = player.play(state)
                 if play is not None:
                     break
@@ -899,16 +917,14 @@ def end_game_evaluation(state_file):
 
             if play.action == 'ABORT':
                 Game.reset_result(state)    # no winners
-                n_aborted +=1
+                n_aborted += 1
                 break
 
             # apply this  action to the current state to get to the next state
             state = Game.next_state(state, play, None, stats)
-#            print(f"talon: {len(state.talon)} turn: {state.turn_count}")
             # count number of turns till talon is empty
             if len(state.talon) == 0 and refill_turns < 0:
                 refill_turns = state.turn_count - 1
-#                print(f"talon: {talon_size} turns: {refill_turns} refills per turn: {talon_size / refill_turns}")
 
         if len(state.players) == 1:
             # shithead found
@@ -923,15 +939,18 @@ def end_game_evaluation(state_file):
 
         # report every 10 finished games
         if n_finished % (10 * n_players) == 0:
-            print(f'finished:{n_finished:<10} aborted:{n_aborted:<3} turns:{n_turns:<12} refills/turn: {n_talon / n_refills}')
+            print(f"finished:{n_finished:<10} aborted:{n_aborted:<3}"
+                  f" turns:{n_turns:<12} refills/turn: {n_talon / n_refills}")
 
     # report remaining games
     if n_finished % (10 * n_players) != 0:
-        print(f'finished:{n_finished:<10} aborted:{n_aborted:<3} turns:{n_turns:<12} refills/turn: {n_talon / n_refills}')
+        print(f"finished:{n_finished:<10} aborted:{n_aborted:<3}"
+              f" turns:{n_turns:<12} refills/turn: {n_talon / n_refills}")
     print()
 
     # print final statistics
     stats.print()
+
 
 def main():
     """
@@ -984,15 +1003,36 @@ def main():
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=False)
 
-    group.add_argument("-g", "--gen-fuptab", help="generate a lookup table for the face up table card swapping", action="store_true")
-    group.add_argument("-t", "--test-ai", help="run a number of games to test the AI players", action="store_true")
-    group.add_argument("-c", "--cli-game", help="play game with human player using the command line interface", action="store_true")
-    group.add_argument("-d", "--debugging", type=str, help="load a game state from a JSON-file written with log-level 'Debugging'")
-    group.add_argument("-r", "--rules", type=str, help="opens a window with shithead rules loaded from the specified JSON-file'")
-    group.add_argument("-e", "--end-game-generator", help="run a number of games to generate end game states", action="store_true")
-    group.add_argument("-v", "--end-game-evaluation", type=str, help="Run multiple games from same end game state")
-
-    parser.add_argument("-f", "--filename", type=str, help="config file used when state was written with log-level 'Debugging'")
+    group.add_argument("-g", "--gen-fuptab",
+                       help=("generate a lookup table for the face up table"
+                             " card swapping"),
+                       action="store_true")
+    group.add_argument("-t", "--test-ai",
+                       help=("run a number of games to test the AI players"),
+                       action="store_true")
+    group.add_argument("-c", "--cli-game",
+                       help=("play game with human player using the command"
+                             " line interface"),
+                       action="store_true")
+    group.add_argument("-d", "--debugging",
+                       type=str,
+                       help=("load a game state from a JSON-file written with"
+                             " log-level 'Debugging'"))
+    group.add_argument("-r", "--rules",
+                       type=str,
+                       help=("opens a window with shithead rules loaded from"
+                             " the specified JSON-file'"))
+    group.add_argument("-e", "--end-game-generator",
+                       help=("run a number of games to generate end game"
+                             " states"),
+                       action="store_true")
+    group.add_argument("-v", "--end-game-evaluation",
+                       type=str,
+                       help=("Run multiple games from same end game state"))
+    parser.add_argument("-f", "--filename",
+                        type=str,
+                        help=("config file used when state was written with"
+                              " log-level 'Debugging'"))
 
     args = parser.parse_args()
 
@@ -1004,7 +1044,8 @@ def main():
         gameplay_test()
     elif args.debugging:
         if args.filename is None:
-            raise Exception(f"Specify config file used with this debugging state with option '-f'!")
+            raise ValueError("Specify config file used with this debugging"
+                             " state with option '-f'!")
         load_state_from_file(args.filename, args.debugging)
     elif args.rules:
         open_rules_window(args.rules)
@@ -1016,7 +1057,8 @@ def main():
     else:
         gui_start()
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
     main()
-    #test_state_copy()
+#    test_state_copy()
