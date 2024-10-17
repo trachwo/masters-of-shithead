@@ -18,18 +18,15 @@ creating alternative game states used to simulate possible outcomes of a play.
 23.08.2022  Wolfgang Trachsler
 '''
 
-#from cards_sh import Card, Deck, Hand, Discard
-#from play_sh import Play
 from math import comb
 from random import randrange
 import json
-import sys
 
 # local imports (modules in same package)
 from .cards import Deck
 from .discard import Discard
 
-# class representing a Shithead game state
+
 class State:
     '''
     Class representing a State of the shithead game.
@@ -54,7 +51,8 @@ class State:
         Note, that we make actual copies of players, talon, discard, etc.,
         i.e. if we change the state, the structures outside are not changed.
         E.g. after removing a player from self.players because he is out of the
-        game, does not affect the list of players used to initialize this state.
+        game, does not affect the list of players used to initialize this
+        state.
 
         :param players: list of shithead players.
         :type players:  list
@@ -67,15 +65,13 @@ class State:
         '''
         # we don't want to change the original player list (e.g. when a player
         # went out), therefore we make a copy
+        # NOTE: deepcopy() doesn't work in threads !!!
+        # => TypeErrTypeError: cannot pickle '_thread.lock' object
         self.players = []
         for player in players:
             self.players.append(player.copy())
 
-        #self.players = deepcopy(players)
-        # deepcopy() doesn't work in threads !!!
-        # => TypeErrTypeError: cannot pickle '_thread.lock' object
         # get the number of players
-
         n_players = len(players)
 
         # set the dealer of this round
@@ -104,7 +100,7 @@ class State:
         self.n_burnt = len(self.burnt)
 
         # create empty removed cards pile
-        self.killed   = Deck(empty=True)
+        self.killed = Deck(empty=True)
 
         # the initial direction is clockwise
         self.direction = True   # CLOCKWISE
@@ -112,7 +108,8 @@ class State:
         # supposed direction next turn (i.e. no 'K's) is also clockwise
         self.next_direction = True  # => CLOCKWISE
 
-        # supposed player next turn (i.e. no '8's) is the player after the current player
+        # supposed player next turn (i.e. no '8's) is the player after the
+        # current player
         self.next_player = (self.player + 1) % n_players
 
         # number of cards played this turn
@@ -128,15 +125,18 @@ class State:
         self.turn_count = 0
 
         # game phases (SWAPPING_CARDS, FIND_STARTER, PLAY_GAME, SHITHEAD_FOUND)
-        self.game_phase = 0 # => SWAPPING_CARDS
+        self.game_phase = 0  # => SWAPPING_CARDS
 
         # card which must be shown to get starting player
         self.starting_card = 0  # => 4 of clubs
 
-        # list of players (index into players) still in the starting player auction
-        self.auction_members = [(self.player + i) % n_players for i in range(n_players)]
+        # list of players (index into players) still in the starting player
+        # auction
+        self.auction_members = [(self.player + i) % n_players
+                                for i in range(n_players)]
 
-        # list of players (index into players) which have shown the requested card.
+        # list of players (index into players) which have shown the requested
+        # card.
         self.shown_starting_card = []
 
         # score and turn count per player for this round of the game
@@ -155,7 +155,6 @@ class State:
 
         # game history = list of plays leading up to this state
         self.history = []
-
 
     def get_unknown_cards(self):
         '''
@@ -180,8 +179,8 @@ class State:
                     # are unknown
                     unknown.add_card(card)
             for card in player.face_down:
-                    # all face down table cards are unknown
-                    unknown.add_card(card)
+                # all face down table cards are unknown
+                unknown.add_card(card)
         unknown.sort()
         return unknown
 
@@ -236,7 +235,6 @@ class State:
         n_turns = 0     # turn counter
         n_draws = 0     # number of draws by current player
         while n_talon > 0:
-#            print(f"n_turns: {n_turns} player: {n_turns % n_players} hands: {hands} n_talon: {n_talon}")
             if hands[n_turns % n_players] > 3:
                 # don't refill from talon
                 hands[n_turns % n_players] -= 1
@@ -249,7 +247,6 @@ class State:
             # next turn
             n_turns += 1
 
-#        print(f"### n_turns: {n_turns} n_draws: {n_draws} n_hands: {hands[0]}")
         return (n_turns, n_draws, hands[0])
 
     def log_one_line(self, turn_count):
@@ -287,11 +284,11 @@ class State:
         card = f'{self.log_card:<3}'
         # add turn count, direction, talon size, player name, action, card
         # and discard pile size to string
-        log_msg = f'{turn}   {dir}   {talon}   {player} {action} {card}   {discard}    '
+        log_msg = (f"{turn}   {dir}   {talon}   {player} {action} {card}"
+                   f"   {discard}    ")
         # add top cards of discard pile to string
         log_msg += self.discard.get_top_string()
         return log_msg
-
 
     def log_no_secrets(self, turn_count):
         '''
@@ -358,7 +355,8 @@ class State:
             log_msg += '\u21ba   '
         log_msg += f'{self.log_player}: {self.log_action} {self.log_card}\n'
 
-        # add unknown cards size, talon size, discard pile size, and top discard pile cards.
+        # add unknown cards size, talon size, discard pile size,
+        # and top discard pile cards.
         unknown = self.get_unknown_cards()
         log_msg += f'Unknown: {len(unknown):>3}   '
         log_msg += f'Talon:   {len(self.talon):>3}   '
@@ -456,7 +454,8 @@ class State:
             turn_count = 0
 
         # seperator line for multi-line logs
-        sep = '------------------------------------------------------------------------------\n'
+        sep = ("--------------------------------------------------------------"
+               "----------------\n")
 
         # get the log_level from log_info
         log_level = self.log_info[0]
@@ -480,18 +479,13 @@ class State:
         # print the log message to the terminal
         print(log_msg)
 
-        if self.log_info[1]:                                # log-to-file selected
-            if self.log_info[2]:                            # log debugging to file
-                # log JSON string of info necessary for game state reconstruction
+        if self.log_info[1]:        # log-to-file selected
+            if self.log_info[2]:    # log debugging to file
+                # log JSON string of info for game state reconstruction
                 log_msg = sep + self.log_debugging()
 
-            with open(self.log_info[3], 'a') as log_file:   # open log-file for appending
-                log_file.write(log_msg + '\n')              # add log-message to log-file
-
-#        print(f'### n_played: {self.n_played}')
-#        print(f'### get_fup: {self.players[self.player].get_fup}')
-#        print(f'### get_fup_rank: {self.players[self.player].get_fup_rank}')
-
+            with open(self.log_info[3], 'a', encoding='utf-8') as log_file:
+                log_file.write(log_msg + '\n')  # add log-message to log-file
 
     def hash(self):
         '''
@@ -505,7 +499,7 @@ class State:
         :return:    hash unambiguously identifying this state.
         :rtype:     str
         '''
-        return  ''.join(self.history)
+        return ''.join(self.history)
 
     def copy(self):
         '''
@@ -514,8 +508,9 @@ class State:
         :return:        copy of shithead state (not just reference).
         :rtype:         State
         '''
-        #create a new state for the current list of players
-        new_state = State(self.players, self.dealer, self.n_decks, self.log_info)
+        # create a new state for the current list of players
+        new_state = State(self.players, self.dealer, self.n_decks,
+                          self.log_info)
 
         # but this creates a talon containing n_decks
         # => we have to replace it with the original talon
@@ -610,7 +605,7 @@ class State:
                 unknown = [card for card in player.hand if not card.seen]
                 n_hand = len(unknown)
                 for card in unknown:
-                    sim.talon.add_card(player.remove_card('HAND',card))
+                    sim.talon.add_card(player.remove_card('HAND', card))
 
             # put player's face down table cards back to talon
             unknown = [card for card in player.face_down]
@@ -645,17 +640,18 @@ class State:
         We count the total number of unknown cards (uk_tot) and the number of
         unknown hand cards (uk_hand) and unknown face down table cards
         (uk_fdown) per player.
-        Next we calculate the number of possible hands and face down sets for the 1st player:
-            n_hands1 = comb(uk_tot, uk_hand1)
-            n_fdowns1 = comb(uk_tot - uk_hand1, uk_fdown1)
+        Next we calculate the number of possible hands and face down sets for
+        the 1st player:
+          n_hands1 = comb(uk_tot, uk_hand1)
+          n_fdowns1 = comb(uk_tot - uk_hand1, uk_fdown1)
 
         and for the 2nd player:
-            n_hands2 = comb(uk_tot - uk_hand1 - uk_fdown1, uk_hand2)
-            n_fdown2 = comb(uk_tot - uk_hand1 - uk_fdown1 - uk_hand2, uk_fdown2)
+          n_hands2 = comb(uk_tot - uk_hand1 - uk_fdown1, uk_hand2)
+          n_fdown2 = comb(uk_tot - uk_hand1 - uk_fdown1 - uk_hand2, uk_fdown2)
 
         and so on.
         The total number of possible redistributions is the product
-            n_sim_states = n_hands1 * n_fdowns1 * n_hands2 * n_fdowns2 * ...
+          n_sim_states = n_hands1 * n_fdowns1 * n_hands2 * n_fdowns2 * ...
 
         :param state:   original shithead game state.
         :type state:    State
@@ -664,7 +660,8 @@ class State:
         '''
         # count number of burnt cards in original state
         uk_tot = len(state.burnt)
-        uk_pl = []  # list for number of uknown player hand and face down table cards
+        # list for number of uknown player hand and face down table cards
+        uk_pl = []
 
         # the current player is different, he knows all his hand cards.
         current_player = state.players[state.player]
@@ -682,9 +679,6 @@ class State:
             uk_fdown = len(player.face_down)
             uk_tot += uk_fdown
             uk_pl.append(uk_fdown)
-
-        #print(f'### total unknown: {uk_tot}')
-        #print(uk_pl)
 
         # calculate the number of possible redistributions
         n_sim_states = 1    # all player cards known
