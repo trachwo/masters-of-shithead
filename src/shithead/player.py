@@ -139,7 +139,6 @@ class Player:
         raise NotImplementedError("This method must be implemented in the"
                                   " subclass")
 
-
     def deal(self, card):
         '''
         Deal a card to this player.
@@ -2018,7 +2017,7 @@ class BullShit(AiPlayer):
                     return Play('END')
                 else:
                     raise ValueError("Neither 'REFILL', 'KILL', nor 'END' in"
-                                    " legal plays")
+                                     " legal plays")
         else:
             # play a hand or face up table card
             play = self.rank_to_play(best_combi.seq[0], plays)
