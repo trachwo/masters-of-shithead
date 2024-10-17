@@ -125,6 +125,22 @@ class Player:
         self.get_fup = False    # True => take face up table card as 2nd play
         self.get_fup_rank = None  # rank of face up table card taken on hand
         self.is_human = False   # True => human player
+        self.fup_table = None       # human player never uses FUP table.
+
+    def select_swap(self, plays):
+        '''
+        Select play during card swapping.
+
+        Just a dummy function to avoid, that calling select_swap() in
+        select_simulated_play() is marked as error.
+
+        :param plays:   possible plays.
+        :type plays:    list
+        :return:        plays GET-0, GET-0, GET-0, PUT-x, PUT-y, PUT-z, END
+        :rtype:         Play
+        '''
+        return Play('END')
+
 
     def deal(self, card):
         '''
@@ -1009,6 +1025,21 @@ class HumanPlayer(Player):
         self.auto_end = auto_end    # True => automatically return 'END' play
         self.clicked_play = None    # play selected by mouse click.
         self.is_human = True        # True => human player
+        self.fup_table = None       # human player never uses FUP table.
+
+    def select_swap(self, plays):
+        '''
+        Select play during card swapping.
+
+        Just a dummy function to avoid, that calling select_swap() in
+        select_simulated_play() is marked as error.
+
+        :param plays:   possible plays.
+        :type plays:    list
+        :return:        plays GET-0, GET-0, GET-0, PUT-x, PUT-y, PUT-z, END
+        :rtype:         Play
+        '''
+        return Play('END')
 
     def set_clicked_play(self, play):
         '''
