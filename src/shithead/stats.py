@@ -179,7 +179,7 @@ class Statistics():
         :param filename:    name of json file.
         :type filename:     str
         '''
-        with open(filename, 'w') as json_file:
+        with open(filename, 'w', encoding='utf-8') as json_file:
             json.dump(self.table, json_file, indent=4)
 
     def load(self, filename):
@@ -193,7 +193,7 @@ class Statistics():
         :type filename:     str
         '''
         try:
-            with open(filename, 'r') as json_file:
+            with open(filename, 'r', encoding='utf-8') as json_file:
                 _table = json.load(json_file)
                 self.table = defaultdict(self.default_val, _table)
         except OSError as err:
