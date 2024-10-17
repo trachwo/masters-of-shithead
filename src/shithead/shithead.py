@@ -228,7 +228,7 @@ def play_round(players, shithead, fup_table=None, stats=None, auto=False):
                 print('--- play ---')
         # let the current player play one action
         player = state.players[state.player]
-        while (True):
+        while True:
             play = player.play(state)
             if play is not None:
                 break
@@ -422,7 +422,7 @@ def play_ai_evaluation_round(players, stats=None):
         while len(state.players) > 1:
             # let the current player play one action
             player = state.players[state.player]
-            while (True):
+            while True:
                 play = player.play(state)
                 if play is not None:
                     break
@@ -575,7 +575,7 @@ def gameplay_test():
     # no shithead yet => select dealer randomly
     shithead = None
 
-    shithead, turns = play_round(players, shithead)
+    shithead, _ = play_round(players, shithead)
     if shithead != 'QUIT' and shithead != 'ABORT':
         print(f'{shithead} is the Shithead!!!')
 
@@ -1008,7 +1008,7 @@ def main():
                              " card swapping"),
                        action="store_true")
     group.add_argument("-t", "--test-ai",
-                       help=("run a number of games to test the AI players"),
+                       help="run a number of games to test the AI players",
                        action="store_true")
     group.add_argument("-c", "--cli-game",
                        help=("play game with human player using the command"
@@ -1028,7 +1028,7 @@ def main():
                        action="store_true")
     group.add_argument("-v", "--end-game-evaluation",
                        type=str,
-                       help=("Run multiple games from same end game state"))
+                       help="Run multiple games from same end game state")
     parser.add_argument("-f", "--filename",
                         type=str,
                         help=("config file used when state was written with"
