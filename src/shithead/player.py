@@ -926,8 +926,9 @@ class Player:
             elif (play.action == 'GET'
                   and self.face_up[play.index].rank == rank):
                 return play
-        else:
-            return None
+
+        # if we get here, there's no match
+        return None
 
     def select_play(self, plays, state):
         '''
@@ -1096,7 +1097,8 @@ class HumanPlayer(Player):
             s = input(f'\nSelect Play (0-{len(plays)-1}):')
             try:
                 sel = int(s)
-            except:
+            except ValueError as err:
+                print(err)
                 print(f'Please enter an integer between 0 and {len(plays)-1}!')
                 continue
             if sel < len(plays):
