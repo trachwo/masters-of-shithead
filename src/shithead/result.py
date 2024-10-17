@@ -74,6 +74,9 @@ EXIT_STATE = 2  # 'EXIT_GAME' button pressed
 
 
 class ResultLine:
+    """
+    Result table line class.
+    """
 
     def __init__(self, upper_left, height, color, border, fields):
         """
@@ -134,6 +137,9 @@ class ResultLine:
             x += width / 2
 
     def draw(self):
+        """
+        Draw result table line to the screen.
+        """
         # draw line frames
         for frame in self.frames:
             frame.draw()
@@ -143,6 +149,9 @@ class ResultLine:
 
 
 class ResultTable:
+    """
+    Result table class.
+    """
 
     def __init__(self, upper_left, stats, shithead):
         """
@@ -199,6 +208,9 @@ class ResultTable:
             self.lines.append(line)
 
     def draw(self):
+        """
+        Draw result table to the screen.
+        """
         for line in self.lines:
             line.draw()
 
@@ -220,9 +232,12 @@ class ResultView(arcade.View):
         self.dealer = None          # last known shithead
         self.table = None           # result table
         self.next = None            # next game button
+        self.next_text = None       # next button label
         self.exit = None            # exit game button
+        self.exit_text = None       # exit button label
         self.button_list = None     # sprite list for buttons
         self.state = IDLE_STATE     # no button pressed
+        self.result_table = None    # result table.
 
         # set the background color to amazon green.
         arcade.set_background_color(arcade.color.AMAZON)
@@ -273,7 +288,7 @@ class ResultView(arcade.View):
             anchor_x='center',
             anchor_y='center')
 
-    def setup(self, stats, shithead, config):
+    def setup(self, stats, shithead, conf):
         """
         Setup the result view.
 
@@ -284,11 +299,11 @@ class ResultView(arcade.View):
         :type stats:        Statistics
         :param shithead;    shithead of the last game => marked red in result.
         :type shithead:     str
-        :param config:      game configuration.
-        :type config:       dict.
+        :param conf:        game configuration.
+        :type conf:         dict.
         """
         # store the configuration => necessary to start the next game
-        self.config = config
+        self.config = conf
         # set statistics => result table
         self.stats = stats
         # set last known shithead as dealer of the next game
@@ -314,7 +329,7 @@ class ResultView(arcade.View):
         # create the 'EXIT GAME' button.
         self.setup_exit_button()
 
-    def on_mouse_press(self, x, y, button, key_modifiers):
+    def on_mouse_press(self, x, y, button, modifiers):
         """
         Mouse button pressed event callback function.
 
@@ -329,8 +344,8 @@ class ResultView(arcade.View):
         :type y:                float
         :param button:          the mouse button which was pressed.
         :type button:           int
-        :param key_modifiers:   TODO
-        :type key_modifiers:    int
+        :param modifiers:       key modifiers (SHIFT, ALT, etc.)
+        :type modifiers:        int
         """
         # check if we have pressed the button
         button = arcade.get_sprites_at_point((x, y), self.button_list)
@@ -348,7 +363,7 @@ class ResultView(arcade.View):
             # none of the buttons clicked
             self.state = IDLE_STATE
 
-    def on_mouse_release(self, x, y, button, key_modifiers):
+    def on_mouse_release(self, x, y, button, modifiers):
         """
         Mouse button released event callback function.
 
@@ -360,8 +375,8 @@ class ResultView(arcade.View):
         :type y:                float
         :param button:          the mouse button which was released.
         :type button:           int
-        :param key_modifiers:   TODO
-        :type key_modifiers:    int
+        :param modifiers:       key modifiers (SHIFT, ALT, etc.)
+        :type modifiers:        int
         """
         # load the released button image into both button sprites
         self.next.texture = arcade.load_texture(BUTTON_RELEASED)
@@ -393,6 +408,9 @@ class ResultView(arcade.View):
 
 
 def main():
+    """
+    Result table tests.
+    """
     # test creating the title line specification
     title_specs = zip(TITLE_WIDTHS, TITLE_ALIGNS, TITLE_TEXTS)
     for spec in title_specs:
@@ -412,8 +430,8 @@ def main():
     # and make it the view shown in the window
     window.show_view(result_view)
     # setup the result view for the current statistics and the last shithead
-    config = {}     # dummy config
-    result_view.setup(stats, 'Player1', config)
+    conf = {}       # dummy config
+    result_view.setup(stats, 'Player1', conf)
 
     # start
     arcade.run()
