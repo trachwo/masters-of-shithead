@@ -19,13 +19,14 @@ corresponding json file.
 23.04.2023 Wolfgang Trachsler
 """
 
-import arcade
 import subprocess
 import json
 import pkgutil
 import os
 import sys
 import platform
+
+import arcade
 
 # local imports (modules in same package)
 from .cards import Deck
@@ -121,13 +122,6 @@ class StartView(arcade.View):
             'Masters of', start_x, start_y, arcade.color.BRIGHT_GREEN,
             DEFAULT_FONT_SIZE * 2, width=SCREEN_WIDTH, align='center')
         self.text_list.append(text)
-
-#        # 'SHITHEAD' text object, replaced with card sprites
-#        start_y = text.bottom - DEFAULT_LINE_HEIGHT * 10
-#        text = arcade.Text('SHITHEAD', start_x, start_y,
-#                arcade.color.CINNABAR, DEFAULT_FONT_SIZE * 12,
-#                width=SCREEN_WIDTH, align='center')
-#        self.text_list.append(text)
 
         # create version text object
         start_y = VERSION_Y
@@ -267,6 +261,9 @@ class StartView(arcade.View):
         self.text_list.append(text)
 
     def setup(self):
+        """
+        Setup start window.
+        """
         # setup the cards for the main title
         self.setup_main_title()
         # setup the text objects
@@ -276,7 +273,7 @@ class StartView(arcade.View):
         self.setup_german_rules_button()
         self.setup_continue_button()
 
-    def on_mouse_press(self, x, y, button, key_modifiers):
+    def on_mouse_press(self, x, y, button, modifiers):
         """
         Mouse button pressed event callback function.
 
@@ -291,8 +288,8 @@ class StartView(arcade.View):
         :type y:                float
         :param button:          the mouse button which was pressed.
         :type button:           int
-        :param key_modifiers:   TODO
-        :type key_modifiers:    int
+        :param modifiers:       key modifiers (SHIFT, ALT, etc.)
+        :type modifiers:        int
         """
         # check if we have pressed the button
         button = arcade.get_sprites_at_point((x, y), self.button_list)
@@ -314,7 +311,7 @@ class StartView(arcade.View):
             # none of the buttons clicked
             self.state = IDLE_STATE
 
-    def on_mouse_release(self, x, y, button, key_modifiers):
+    def on_mouse_release(self, x, y, button, modifiers):
         """
         Mouse button released event callback function.
 
@@ -326,11 +323,11 @@ class StartView(arcade.View):
         :type y:                float
         :param button:          the mouse button which was released.
         :type button:           int
-        :param key_modifiers:   TODO
-        :type key_modifiers:    int
+        :param modifiers:       key modifiers (SHIFT, ALT, etc.)
+        :type modifiers:        int
         """
         # HACK to get paths to rules.py, rules_eng.json, and rules_ger.json
-        # TODO find a better way
+        # find a better way
         rules_dir = os.path.dirname(rules.__file__)
         rules_prg = os.path.join(rules_dir, 'rules.py')
         if platform.system() == 'Linux':
@@ -382,7 +379,6 @@ class StartView(arcade.View):
             self.window.show_view(config_view)
         else:
             pass
-#            print("None of the buttons pressed")
 
     def on_draw(self):
         """
@@ -420,6 +416,8 @@ class StartView(arcade.View):
         self.title.draw()
 
 
+# because of relative imports, call main with
+# python -m shithead.start
 def main():
     """
     Test start window.
