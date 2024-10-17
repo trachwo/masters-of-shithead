@@ -266,11 +266,11 @@ class State:
 
         turn = f'{turn_count:>3}'
         if self.next_direction:
-            # dir = '\u27f3'    # clockwise (closed)
-            dir = '\u21bb'      # clockwise (open)
+            # pdir = '\u27f3'    # clockwise (closed)
+            pdir = '\u21bb'      # clockwise (open)
         else:
-            # dir = '\u27f2'    # counterclockwise (closed)
-            dir = '\u21ba'      # counterclockwise (open)
+            # pdir = '\u27f2'    # counterclockwise (closed)
+            pdir = '\u21ba'      # counterclockwise (open)
         talon = f'Talon:{len(self.talon):>3}'
         discard = f'Discard:{len(self.discard):>3}'
         player = f'{self.log_player}:'
@@ -284,7 +284,7 @@ class State:
         card = f'{self.log_card:<3}'
         # add turn count, direction, talon size, player name, action, card
         # and discard pile size to string
-        log_msg = (f"{turn}   {dir}   {talon}   {player} {action} {card}"
+        log_msg = (f"{turn}   {pdir}   {talon}   {player} {action} {card}"
                    f"   {discard}    ")
         # add top cards of discard pile to string
         log_msg += self.discard.get_top_string()
@@ -321,7 +321,7 @@ class State:
         # add one line per player to the string
         cur = self.players[self.player]
         nxt = self.players[self.next_player]
-        for idx, player in enumerate(self.players):
+        for player in self.players:
             # add current/next indicator
             if player == cur and player == nxt:
                 log_msg += 'current/next ---> '
@@ -366,7 +366,7 @@ class State:
         # add one line per player to the string
         cur = self.players[self.player]
         nxt = self.players[self.next_player]
-        for idx, player in enumerate(self.players):
+        for player in self.players:
             # add current/next indicator
             if player == cur and player == nxt:
                 log_msg += 'current/next ---> '
@@ -535,8 +535,8 @@ class State:
         new_state.shown_starting_card = self.shown_starting_card[:]
         # score and turn count per player for this round of the game
         new_state.result = {}
-        for key in self.result.keys():
-            new_state.result[key] = self.result[key]
+        for key, val in self.result.items():
+            new_state.result[key] = val
         # copy the log info
         new_state.log_info = self.log_info
         # copy the play history
@@ -589,7 +589,7 @@ class State:
         # remember number of burnt cards in original game
         n_burnt = len(sim.burnt)
         # remove cards from burnt cards and put them back to the talon
-        for i in range(n_burnt):
+        for _ in range(n_burnt):
             sim.talon.add_card(sim.burnt.pop_card())
 
         # the simulated player is different, he knows all his hand cards.
@@ -619,16 +619,16 @@ class State:
         sim.talon.shuffle()
 
         # remove burnt cards from talon
-        for i in range(n_burnt):
+        for _ in range(n_burnt):
             sim.burnt.add_card(sim.talon.pop_card())
 
         # refill hand and facedown table cards of players
         for player in sim.players:
             # refill hand with n_hand cards
-            for i in range(n_players[player.name][0]):
+            for _ in range(n_players[player.name][0]):
                 player.take_card('HAND', sim.talon.pop_card())
             # refill face down table cards with n_fdown cards
-            for i in range(n_players[player.name][1]):
+            for _ in range(n_players[player.name][1]):
                 player.take_card('FDOWN', sim.talon.pop_card())
         return sim
 
