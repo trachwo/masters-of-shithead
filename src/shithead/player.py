@@ -131,15 +131,13 @@ class Player:
         '''
         Select play during card swapping.
 
-        Just a dummy function to avoid, that calling select_swap() in
-        select_simulated_play() is marked as error.
-
         :param plays:   possible plays.
         :type plays:    list
         :return:        plays GET-0, GET-0, GET-0, PUT-x, PUT-y, PUT-z, END
         :rtype:         Play
         '''
-        return Play('END')
+        raise NotImplementedError("This method must be implemented in the"
+                                  " subclass")
 
 
     def deal(self, card):
@@ -1032,7 +1030,7 @@ class HumanPlayer(Player):
         Select play during card swapping.
 
         Just a dummy function to avoid, that calling select_swap() in
-        select_simulated_play() is marked as error.
+        select_simulated_play() is marked as error by pylint.
 
         :param plays:   possible plays.
         :type plays:    list
