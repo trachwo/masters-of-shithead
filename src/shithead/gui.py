@@ -2898,8 +2898,9 @@ class GameView(arcade.View):
         place, which results in a legal play. As long as the human player has
         not made a valid choice we immediatly return None.
         The AI player usually immediately answers with a valid play, but
-        DeepShit may start a thread to find the best play. In this case it's
-        also possible, that None is returned if DeepShit is not ready yet.
+        DeepShit and DeeperShit may start a thread to find the best play.
+        In this case it's also possible, that None is returned if
+        DeepShit/DeeperShit is not ready yet.
 
         :return:    legal play, None => not ready yet.
         :rtype:     Play

@@ -18,7 +18,6 @@ from .state import State
 from .play import Play
 from .monte_carlo_node import MonteCarloNode
 from .fup_table import FupTable, FUP_TABLE_FILE
-from . import player as plr     # to avoid confusion with variable 'player'
 
 MAX_SIMULATION_TURNS = 1000
 
@@ -572,6 +571,10 @@ def restore_end_game_state(filename, verbose=False, first='ShitHappens',
     :rtype:             State
     """
     state_file = filename
+
+    # put here to avoid circular import error when calling main() in player.py.
+    # it's only used for testing.
+    from . import player as plr
 
     # map name of AI to class
     ai_map = {'ShitHappens': plr.ShitHappens,
