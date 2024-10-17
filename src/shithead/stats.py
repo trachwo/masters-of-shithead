@@ -23,7 +23,11 @@ SCORE = 1       # total score
 GAMES = 2       # number of games played
 TURNS = 3       # total number of turns played
 
+
 class Statistics():
+    """
+    Statistics class for shithead game.
+    """
 
     def default_val(self):
         '''
@@ -50,8 +54,9 @@ class Statistics():
 
         :param name:    name of player.
         :type name:     str
-        :param score:   number of players still in the game when this player went out,
-                        e.g. for  3 players: 1st => 2, 2nd => 1, 3rd (= shithead) => 0.
+        :param score:   number of players still in the game when this player
+                        went out, e.g. for  3 players: 1st => 2, 2nd => 1,
+                        3rd (= shithead) => 0.
         :type score:    int
         :param turns:   number of turns played this game.
         :type turns:    int
@@ -63,7 +68,7 @@ class Statistics():
 
         # a score of 0 means the player was shithead
         if score == 0:
-            self.table[name][SH_COUNT] += 1 # increment the shit count
+            self.table[name][SH_COUNT] += 1  # increment the shit count
             self.shithead = name
 
     def set_stats(self, name, counters):
@@ -96,8 +101,9 @@ class Statistics():
 
         :param name:    name of player.
         :type name:     str
-        :param score:   number of players still in the game when this player went out,
-                        e.g. for  3 players: 1st => 2, 2nd => 1, 3rd (= shithead) => 0.
+        :param score:   number of players still in the game when this player
+                        went out, e.g. for  3 players: 1st => 2, 2nd => 1,
+                        3rd (= shithead) => 0.
         :type score:    int
         :param turns:   number of turns played this game.
         :type turns:    int
@@ -105,9 +111,6 @@ class Statistics():
         self.table[name][SCORE] -= score   # total score
         self.table[name][TURNS] -= turns   # total number of turns
         self.table[name][GAMES] -= 1       # number of games played
-
-
-
 
     def get_stats(self, name):
         '''
@@ -134,15 +137,17 @@ class Statistics():
         total_avg_turns = 0
         # sort the list of table items (= key,value tuples)
         # by value (x[1]) in normal order.
-        sorted_table = sorted(self.table.items(), key=lambda x:x[1][SH_COUNT], reverse=False)
-        for name,value in sorted_table:
+        sorted_table = sorted(self.table.items(), key=lambda x: x[1][SH_COUNT],
+                              reverse=False)
+        for name, value in sorted_table:
             sh_percent = 0
             avg_turns = 0
             if value[GAMES] > 0:
                 sh_percent = value[SH_COUNT] / value[GAMES] * 100
                 avg_turns = value[TURNS] / value[GAMES]
             entry = [name, f'{value[SH_COUNT]}', f'{sh_percent:.1f}%',
-                    f'{value[SCORE]}', f'{value[GAMES]}', f'{value[TURNS]}', f'{avg_turns:.1f}']
+                     f'{value[SCORE]}', f'{value[GAMES]}', f'{value[TURNS]}',
+                     f'{avg_turns:.1f}']
             table.append(entry)
             total_sh_count += value[SH_COUNT]
             total_sh_percent += sh_percent
@@ -153,8 +158,8 @@ class Statistics():
             total_avg_turns = total_turns / total_games
         # add entry with totals
         entry = [f'{len(sorted_table)}', f'{total_sh_count}',
-                f'{total_sh_percent:.1f}%', f'{total_score}', f'{total_games}',
-                f'{total_turns}', f'{total_avg_turns:.1f}']
+                 f'{total_sh_percent:.1f}%', f'{total_score}',
+                 f'{total_games}', f'{total_turns}', f'{total_avg_turns:.1f}']
         table.append(entry)
         return table
 
@@ -181,7 +186,8 @@ class Statistics():
         '''
         Loads statistics from json file.
 
-        If file is not present, issues a warning and continues with empty table.
+        If file is not present, issues a warning and continues with empty
+        table.
 
         :param filename:    name of json file.
         :type filename:     str
@@ -190,8 +196,10 @@ class Statistics():
             with open(filename, 'r') as json_file:
                 _table = json.load(json_file)
                 self.table = defaultdict(self.default_val, _table)
-        except OSError as exception:
-            print(f"### Warning: couldn't load file {filename}, continue with empty statistic")
+        except OSError as err:
+            print(err)
+            print(f"### Warning: couldn't load file {filename},"
+                  " continue with empty statistic")
             self.table = defaultdict(self.default_val)
 
     def print(self):
@@ -200,34 +208,44 @@ class Statistics():
         '''
         # sort the list of table items (= key,value tuples)
         # by value (x[1]) in normal order.
-        sorted_table = sorted(self.table.items(), key=lambda x:x[1][SH_COUNT], reverse=False)
+        sorted_table = sorted(self.table.items(), key=lambda x: x[1][SH_COUNT],
+                              reverse=False)
         total_games = 0
         total_score = 0
         total_turns = 0
         total_sh_count = 0
         total_sh_percent = 0
         total_avg_turns = 0
-        #print sorted table
-        print('+--------------------+--------------------+----------+----------+----------+------------+')
-        print('| Player             |       Shithead     |    Score |    Games |    Turns | Turns/Game |')
-        print('+--------------------+-----------+--------+----------+----------+----------+------------+')
-        for name,value in sorted_table:
+        print("+--------------------+--------------------+----------+---------"
+              "-+----------+------------+")
+        print("| Player             |       Shithead     |    Score |    Games"
+              " |    Turns | Turns/Game |")
+        print("+--------------------+-----------+--------+----------+---------"
+              "-+----------+------------+")
+        for name, value in sorted_table:
             sh_percent = 0
             avg_turns = 0
             if value[GAMES] > 0:
                 sh_percent = value[SH_COUNT] / value[GAMES] * 100
                 avg_turns = value[TURNS] / value[GAMES]
-            print(f'| {name:<19}|{value[SH_COUNT]:>10} |{sh_percent:>6.1f}% |{value[SCORE]:>9} |{value[GAMES]:>9} |{value[TURNS]:>9} |{avg_turns:11.2f} |')
-            total_games = value[GAMES] # don't sum up
+            print(f"| {name:<19}|{value[SH_COUNT]:>10} |{sh_percent:>6.1f}%"
+                  f" |{value[SCORE]:>9} |{value[GAMES]:>9} |{value[TURNS]:>9}"
+                  f" |{avg_turns:11.2f} |")
+            total_games = value[GAMES]  # don't sum up
             total_score += value[SCORE]
             total_turns += value[TURNS]
             total_sh_count += value[SH_COUNT]
             total_sh_percent += sh_percent
         if total_games > 0:
             total_avg_turns = total_turns / total_games
-        print('+--------------------+-----------+--------+----------+----------+----------+------------+')
-        print(f"| {len(sorted_table):<19}|{total_sh_count:>10} |{total_sh_percent:>6.1f}% |{total_score:>9} |{total_games:>9} |{total_turns:>9} |{total_avg_turns:>11.2f} |")
-        print('+--------------------+-----------+--------+----------+----------+----------+------------+')
+        print("+--------------------+-----------+--------+----------+---------"
+              "-+----------+------------+")
+        print(f"| {len(sorted_table):<19}|{total_sh_count:>10}"
+              f" |{total_sh_percent:>6.1f}% |{total_score:>9}"
+              f" |{total_games:>9} |{total_turns:>9}"
+              f" |{total_avg_turns:>11.2f} |")
+        print("+--------------------+-----------+--------+----------+---------"
+              "-+----------+------------+")
         print()
 
     def write_to_file(self, filename):
@@ -239,7 +257,8 @@ class Statistics():
         '''
         # sort the list of table items (= key,value tuples)
         # by value (x[1]) in normal order.
-        sorted_table = sorted(self.table.items(), key=lambda x:x[1][SH_COUNT], reverse=False)
+        sorted_table = sorted(self.table.items(), key=lambda x: x[1][SH_COUNT],
+                              reverse=False)
         total_games = 0
         total_score = 0
         total_turns = 0
@@ -247,17 +266,23 @@ class Statistics():
         total_sh_percent = 0
         total_avg_turns = 0
         # write sorted table to file
-        with open(filename, 'w') as f:
-            f.write('+--------------------+--------------------+----------+----------+----------+------------+\n')
-            f.write('| Player             |       Shithead     |    Score |    Games |    Turns | Turns/Game |\n')
-            f.write('+--------------------+-----------+--------+----------+----------+----------+------------+\n')
-            for name,value in sorted_table:
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write("+--------------------+--------------------+----------+---"
+                    "-------+----------+------------+\n")
+            f.write("| Player             |       Shithead     |    Score |   "
+                    " Games |    Turns | Turns/Game |\n")
+            f.write("+--------------------+-----------+--------+----------+---"
+                    "-------+----------+------------+\n")
+            for name, value in sorted_table:
                 sh_percent = 0
                 avg_turns = 0
                 if value[GAMES] > 0:
                     sh_percent = value[SH_COUNT] / value[GAMES] * 100
                     avg_turns = value[TURNS] / value[GAMES]
-                f.write(f'| {name:<19}|{value[SH_COUNT]:>10} |{sh_percent:>6.1f}% |{value[SCORE]:>9} |{value[GAMES]:>9} |{value[TURNS]:>9} |{avg_turns:11.2f} |\n')
+                f.write(f"| {name:<19}|{value[SH_COUNT]:>10}"
+                        f" |{sh_percent:>6.1f}% |{value[SCORE]:>9}"
+                        f" |{value[GAMES]:>9} |{value[TURNS]:>9}"
+                        f" |{avg_turns:11.2f} |\n")
                 total_games = value[GAMES]  # don't sum up
                 total_score += value[SCORE]
                 total_turns += value[TURNS]
@@ -265,9 +290,14 @@ class Statistics():
                 total_sh_percent += sh_percent
             if total_games > 0:
                 total_avg_turns = total_turns / total_games
-            f.write('+--------------------+-----------+--------+----------+----------+----------+------------+\n')
-            f.write(f"| {len(sorted_table):<19}|{total_sh_count:>10} |{total_sh_percent:>6.1f}% |{total_score:>9} |{total_games:>9} |{total_turns:>9} |{total_avg_turns:>11.2f} |\n")
-            f.write('+--------------------+-----------+--------+----------+----------+----------+------------+\n')
+            f.write("+--------------------+-----------+--------+----------+---"
+                    "-------+----------+------------+\n")
+            f.write(f"| {len(sorted_table):<19}|{total_sh_count:>10}"
+                    f" |{total_sh_percent:>6.1f}% |{total_score:>9}"
+                    f" |{total_games:>9} |{total_turns:>9}"
+                    f" |{total_avg_turns:>11.2f} |\n")
+            f.write("+--------------------+-----------+--------+----------+---"
+                    "-------+----------+------------+\n")
 
 
 if __name__ == '__main__':
@@ -280,4 +310,3 @@ if __name__ == '__main__':
     stats.print()
     tab = stats.get_table()
     print(tab)
-
