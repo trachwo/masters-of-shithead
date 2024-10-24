@@ -35,9 +35,9 @@ import arcade
 
 # local imports (modules in same package)
 from .cards import Card
-from .game import Game, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME
+from .game import Game
 from .fup_table import FupTable, FUP_TABLE_FILE
-from .state import State
+from .state import State, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME
 from .play import Play
 from .stats import Statistics
 from .gui import GameView

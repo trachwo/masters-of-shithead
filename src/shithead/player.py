@@ -48,17 +48,11 @@ from collections import Counter
 
 # local imports (modules in same package)
 from .cards import Card, Deck
-from .state import State
+from .state import State, SWAPPING_CARDS, FIND_STARTER
 from .play import Play
 from .game import Game
 from .monte_carlo import MonteCarlo
 from . import analyzer
-
-
-# 3 phases of the game:
-SWAPPING_CARDS = 0      # players may swap face up vs. hand cards.
-FIND_STARTER = 1        # player with lowest card on hand starts
-PLAY_GAME = 2           # play till only one player is left
 
 # card ranks for starting player auction from worst to best
 STARTING_RANKS = ['4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A', '10', '2',

@@ -16,35 +16,15 @@ from random import randint
 
 # local imports (modules in same package)
 from .cards import Card
-from .state import State
+from .state import State, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME
+from .state import SHITHEAD_FOUND, ABORTED
 from .discard import Discard
 
 # uncomment this import if you want to run initial_tests()
 # but you'll get a cirular init error when running other stuff !!!
 
-CLOCKWISE = True            # game is played in clockwise direction (default)
-COUNTERCLOCKWISE = False    # game is played in counterclockwise direction
-
 CARDS_PER_PLAYER = 17       # to calculate the number of decks needed
 CARDS_PER_DECK = 52         # number of cards in a deck
-
-# phases of the game:
-SWAPPING_CARDS = 0      # players may swap face up vs. hand cards.
-FIND_STARTER = 1        # player with lowest card on hand starts
-PLAY_GAME = 2           # play till only one player is left
-SHITHEAD_FOUND = 3      # only 1 player left => he's the SHITHEAD
-ABORTED = 4             # too many turns (AI deadlock) => game aborted.
-
-# only used for hand evaluation, should be removed when hand evaluation
-# is moved to Player class (it's not used anyhow)
-# rank to value mapping.
-# value of a card according to it's rank.
-# 4,5,6,7,8,9,J,Q,K,A => the higher the better.
-# 10 => can be played on every card except 7.
-# 2 => can be played on every card, but next player can also play every card.
-# 3 => can be played on every card, but next player must match last non-3 card.
-RANK_TO_VALUE = {'4': 0, '5': 1, '6': 2, '7': 3, '8': 4, '9': 5, 'J': 6,
-                 'Q': 7, 'K': 8, 'A': 9, '10': 10, '2': 11, '3': 12}
 
 
 # -----------------------------------------------------------------------------

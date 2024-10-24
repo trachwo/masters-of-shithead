@@ -26,6 +26,16 @@ import json
 from .cards import Deck
 from .discard import Discard
 
+# direction of play
+CLOCKWISE = True
+COUNTERCLOCKWISE = False
+
+# phases of the game:
+SWAPPING_CARDS = 0      # players may swap face up vs. hand cards.
+FIND_STARTER = 1        # player with lowest card on hand starts
+PLAY_GAME = 2           # play till only one player is left
+SHITHEAD_FOUND = 3      # only 1 player left => he's the SHITHEAD
+ABORTED = 4             # too many turns (AI deadlock) => game aborted.
 
 class State:
     '''
@@ -103,10 +113,10 @@ class State:
         self.killed = Deck(empty=True)
 
         # the initial direction is clockwise
-        self.direction = True   # CLOCKWISE
+        self.direction = CLOCKWISE
 
         # supposed direction next turn (i.e. no 'K's) is also clockwise
-        self.next_direction = True  # => CLOCKWISE
+        self.next_direction = CLOCKWISE
 
         # supposed player next turn (i.e. no '8's) is the player after the
         # current player

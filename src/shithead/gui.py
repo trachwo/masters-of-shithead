@@ -193,9 +193,9 @@ from .discard import Discard
 from .fup_table import FupTable, FUP_TABLE_FILE
 from . import player as plr  # to avoid confusion with 'player'
 from .stats import Statistics
-from .game import (Game, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME,
+from .game import Game
+from .state import (State, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME,
                    SHITHEAD_FOUND, ABORTED)
-from .state import State
 from .play import Play
 from . import result
 
