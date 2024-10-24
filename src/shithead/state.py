@@ -37,6 +37,12 @@ PLAY_GAME = 2           # play till only one player is left
 SHITHEAD_FOUND = 3      # only 1 player left => he's the SHITHEAD
 ABORTED = 4             # too many turns (AI deadlock) => game aborted.
 
+# card ranks for starting player auction from worst to best
+STARTING_RANKS = ['4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A', '10', '2',
+                  '3']
+# card suits for starting player auction from worst to best
+STARTING_SUITS = ['Clubs', 'Spades', 'Hearts', 'Diamonds']
+
 class State:
     '''
     Class representing a State of the shithead game.

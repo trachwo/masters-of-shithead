@@ -49,16 +49,11 @@ from collections import Counter
 # local imports (modules in same package)
 from .cards import Card, Deck
 from .state import State, SWAPPING_CARDS, FIND_STARTER
+from .state import STARTING_SUITS, STARTING_RANKS
 from .play import Play
 from .game import Game
 from .monte_carlo import MonteCarlo
 from . import analyzer
-
-# card ranks for starting player auction from worst to best
-STARTING_RANKS = ['4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A', '10', '2',
-                  '3']
-# card suits for starting player auction from worst to best
-STARTING_SUITS = ['Clubs', 'Spades', 'Hearts', 'Diamonds']
 
 # rank to value mapping.
 # value of a card according to it's rank.

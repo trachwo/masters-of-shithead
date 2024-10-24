@@ -196,6 +196,7 @@ from .stats import Statistics
 from .game import Game
 from .state import (State, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME,
                    SHITHEAD_FOUND, ABORTED)
+from .state import STARTING_SUITS, STARTING_RANKS
 from .play import Play
 from . import result
 
@@ -2473,8 +2474,8 @@ class GameView(arcade.View):
 
         elif phase == FIND_STARTER:
             # player didn't show starting card
-            suit = plr.STARTING_SUITS[self.state.starting_card % 4]
-            rank = plr.STARTING_RANKS[self.state.starting_card // 4]
+            suit = STARTING_SUITS[self.state.starting_card % 4]
+            rank = STARTING_RANKS[self.state.starting_card // 4]
             card = Card(0, suit, rank)
             # don't stop if player couldn't show starter card, just wait 1s
             self.set_message('DOES_NOT_SHOW', 0, player.name, '', card)
@@ -2917,8 +2918,8 @@ class GameView(arcade.View):
             # check if human player can show the starter card
             if len(player.get_legal_plays(self.state)) > 1:
                 # instruction for human player
-                suit = plr.STARTING_SUITS[self.state.starting_card % 4]
-                rank = plr.STARTING_RANKS[self.state.starting_card // 4]
+                suit = STARTING_SUITS[self.state.starting_card % 4]
+                rank = STARTING_RANKS[self.state.starting_card // 4]
                 card = Card(0, suit, rank)
                 self.set_message('SHOW_OR_SKIP', 0, player.name, '', card)
                 # human player decides interactively

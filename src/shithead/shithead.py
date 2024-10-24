@@ -38,6 +38,7 @@ from .cards import Card
 from .game import Game
 from .fup_table import FupTable, FUP_TABLE_FILE
 from .state import State, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME
+from .state import STARTING_SUITS, STARTING_RANKS
 from .play import Play
 from .stats import Statistics
 from .gui import GameView
@@ -218,8 +219,8 @@ def play_round(players, shithead, fup_table=None, stats=None, auto=False):
             if not auto:
                 print('--- swap face up table with hand cards ---')
         elif state.game_phase == FIND_STARTER:
-            suit = plr.STARTING_SUITS[state.starting_card % 4]
-            rank = plr.STARTING_RANKS[state.starting_card // 4]
+            suit = STARTING_SUITS[state.starting_card % 4]
+            rank = STARTING_RANKS[state.starting_card // 4]
             card = Card(0, suit, rank)
             if not auto:
                 print(f'--- show {card} to start the game ---')
