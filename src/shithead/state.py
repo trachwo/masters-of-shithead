@@ -451,7 +451,7 @@ class State:
 
         return plays
 
-    def get_unknown_cards(self):
+    def get_unknown_cards(self, name=None):
         '''
         Returns list of unknown cards.
 
@@ -459,27 +459,29 @@ class State:
         This is used to generate possible states for play selection by
         simulation (i.e. the AI makes assumptions about the card distribution).
 
-        :return:    unknown cards.
+        :param name:    name of player for which we get unknown cards.
+        :type name:     str
+        :return:        unknown cards.
         :rtype:         Deck
         '''
-
         unknown = Deck(empty=True)
         # talon and burnt cards are unknown
         unknown += self.talon
         unknown += self.burnt
         for player in self.players:
-            for card in player.hand:
-                if not card.seen:
-                    # player's hand cards which have never been seen face up
-                    # are unknown
-                    unknown.add_card(card)
+            if name is None or name != player.name:
+                for card in player.hand:
+                    if not card.seen:
+                        # player's hand cards which have never been seen
+                        # face up are unknown
+                        unknown.add_card(card)
             for card in player.face_down:
                 # all face down table cards are unknown
                 unknown.add_card(card)
         unknown.sort()
         return unknown
 
-    def get_seen_cards(self):
+    def get_seen_cards(self, name):
         """
         Get a list of cards we know are in the opponent hands.
 
@@ -488,14 +490,28 @@ class State:
         the hands of opponents, because they have been face up during the game,
         because they were swapped or taken with the discard pile.
 
-        :return:    opponent hand cards which have been face up.
-        :rtype:     list
+        :param name:    name of player for which we get seen cards.
+        :type name:     str
+        :return:        opponent hand cards which have been face up.
+        :rtype:         list
         """
         seen_cards = []
+        name_found = False
         for player in self.players:
-            if player != self.players[self.player]:
+            if player.name != name:
                 # not the current player => opponent of current player
-                seen_cards += [card for card in player.hand if card.seen]
+                if len(player.hand) > 0:
+                    # player still plays from hand
+                    seen_cards += [card for card in player.hand if card.seen]
+                else:
+                    # player plays face up or face down table cards
+                    # NOTE the face down table cards are counted as unknown
+                    seen_cards += [card for card in player.face_up]
+            else:
+                # the specified player is in the list of players.
+                name_found = True
+        if not name_found:
+            raise ValueError(f"{name} is not in the list of active players!")
 
         return seen_cards
 
