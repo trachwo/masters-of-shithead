@@ -195,7 +195,7 @@ from . import player as plr  # to avoid confusion with 'player'
 from .stats import Statistics
 from .game import Game
 from .state import (State, SWAPPING_CARDS, FIND_STARTER, PLAY_GAME,
-                   SHITHEAD_FOUND, ABORTED)
+                    SHITHEAD_FOUND, ABORTED)
 from .state import STARTING_SUITS, STARTING_RANKS
 from .play import Play
 from . import result
@@ -2020,7 +2020,7 @@ class GameView(arcade.View):
             return  # not human player or dealing cards
 
         # get legal plays for current player
-        plays = player.get_legal_plays(state)
+        plays = state.get_legal_plays()
         for play in plays:
             if play.action == 'REFILL':
                 self.mark_talon()
@@ -2638,8 +2638,6 @@ class GameView(arcade.View):
             # not the human player's turn
             # => reset selected play to None
             self.state.players[0].set_clicked_play(None)
-            # TODO acknowledge an opponent action
-#            self.ack = True
 
     def pull_to_top(self, card: arcade.Sprite):
         """
@@ -2680,7 +2678,7 @@ class GameView(arcade.View):
         """
         tips = ['', '', '']
         if play:
-            legal_plays = self.state.players[0].get_legal_plays(self.state)
+            legal_plays = self.state.get_legal_plays()
             # turn into a list of strings
             legal_plays = [str(p) for p in legal_plays]
             # check selected play is legal
@@ -2916,7 +2914,7 @@ class GameView(arcade.View):
         # skip human player during starter auction if he cannot show the card
         if human and phase == FIND_STARTER:
             # check if human player can show the starter card
-            if len(player.get_legal_plays(self.state)) > 1:
+            if len(self.state.get_legal_plays()) > 1:
                 # instruction for human player
                 suit = STARTING_SUITS[self.state.starting_card % 4]
                 rank = STARTING_RANKS[self.state.starting_card // 4]

@@ -68,10 +68,8 @@ class MonteCarlo:
         :type state:    State
         '''
         if state.hash() not in self.nodes:
-            # get the current player in this state
-            player = state.players[state.player]
-            # get list of legal plays for this player in this state
-            unexpanded_plays = player.get_legal_plays(state)
+            # get list of legal plays for current player in this state
+            unexpanded_plays = state.get_legal_plays()
             # create a new node for this state (no parent, no play)
             # and add it to the nodes list
             self.nodes[state.hash()] = MonteCarloNode(None, None, state,
@@ -145,10 +143,8 @@ class MonteCarlo:
         child_state = node.state.copy()
         # apply selected play to change into the state of the child node
         child_state = self.game.next_state(child_state, play)
-        # get the current player in child's state
-        player = child_state.players[child_state.player]
-        # get list of legal plays for this player in child's state
-        child_unexpanded_plays = player.get_legal_plays(child_state)
+        # get list of legal plays for current player in child's state
+        child_unexpanded_plays = child_state.get_legal_plays()
         # create the child node
         child_node = node.expand(play, child_state, child_unexpanded_plays)
         if verbose:
@@ -190,10 +186,8 @@ class MonteCarlo:
         # loop till we have found a loser (Shithead)
         while loser is None and turns < MAX_SIMULATION_TURNS:
             turns += 1
-            # get the current player in this state
-            player = state.players[state.player]
-            # get list of legal plays for this player in this state
-            plays = player.get_legal_plays(state)
+            # get list of legal plays for current player in this state
+            plays = state.get_legal_plays()
             # randomly select a play from this list
             play = plays[randrange(len(plays))]
             if verbose:
@@ -700,7 +694,7 @@ def run_first_step(filename):
     print(f'\n### End game state loaded from {filename}')
     state.print()
 
-    legal_plays = state.players[state.player].get_legal_plays(state)
+    legal_plays = state.get_legal_plays()
     print('\n### Legal plays from this state:')
     for play in legal_plays:
         print(f'\t{str(play)}')
@@ -762,7 +756,7 @@ def test_mcts(filename, timeout=3.0):
     state.print()
 
     # list the legal plays available in this state
-    legal_plays = state.players[state.player].get_legal_plays(state)
+    legal_plays = state.get_legal_plays()
     print('\n### Legal plays from this state:')
     for play in legal_plays:
         print(f'\t{str(play)}')
@@ -785,7 +779,7 @@ def test_mcts(filename, timeout=3.0):
     state.print()
 
     # list the legal plays available in this state
-    legal_plays = state.players[state.player].get_legal_plays(state)
+    legal_plays = state.get_legal_plays()
     print('\n### Legal plays from this state:')
     for play in legal_plays:
         print(f'\t{str(play)}')
