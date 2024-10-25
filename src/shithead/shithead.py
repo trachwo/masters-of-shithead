@@ -437,7 +437,6 @@ def play_ai_evaluation_round(players, stats=None):
 
             # apply this  action to the current state to get to the next state
             state = Game.next_state(state, play, None, stats)
-#            print(f"talon: {len(state.talon)} turn: {state.turn_count}")
             # count number of turns till talon is empty
             if len(state.talon) == 0 and refill_turns < 0:
                 refill_turns = state.turn_count - 1
@@ -452,6 +451,9 @@ def play_ai_evaluation_round(players, stats=None):
             n_turns += turns
             n_talon += talon_size
             n_refills += refill_turns
+            print(f"|{n_finished:^10}|{n_aborted:^9}"
+                  f"|{n_turns:^9}|{n_refills:^9}"
+                  f"|                                    |", end='\r')
 
     return (n_aborted, n_finished, n_turns, n_talon, n_refills)
 
@@ -484,21 +486,27 @@ def ai_test():
     # load face up table from file (in package)
     fup_table.load(FUP_TABLE_FILE, True)
 
-    print('### AI Test ###')
+    print('### AI Test ###\n')
 
     # create 6 players with different AIs
     players = []
-    players.append(plr.ShitHappens('Happens', fup_table, False))
-    players.append(plr.CheapShit('Cheap', fup_table, False))
+#    players.append(plr.ShitHappens('Happens', fup_table, False))
+    players.append(plr.CheapShit('Cheap1', fup_table, False))
+    players.append(plr.CheapShit('Cheap2', fup_table, False))
     players.append(plr.TakeShit('Take', fup_table, False))
-    players.append(plr.BullShit('Bull', fup_table, False))
+#    players.append(plr.BullShit('Bull', fup_table, False))
     players.append(plr.DeepShit('Deep', fup_table, False))
     players.append(plr.DeeperShit('Deeper', fup_table, False))
-    n_players = len(players)
+
+    # creat list of players in original order
+    names = [player.name for player in players]
+    for idx, name in enumerate(names):
+        print(f"{str(idx)}={name}", end=' ')
+    print("\n")
 
     # get number of games
     while True:
-        n = input('Enter number of games: ')
+        n = input('Enter number of rounds: ')
         try:
             n_games = int(n)
         except ValueError as err:
@@ -507,6 +515,14 @@ def ai_test():
             continue
         if n_games > 0:
             break
+
+    # print test log header
+    print("\n| finished | aborted |  turns  | refills "
+          "|             shitheads              |")
+    print("|          |         |         |         "
+          "|  0  |  1  |  2  |  3  |  4  |  5   |")
+    print("+----------+---------+---------+---------"
+          "+-----+-----+-----+-----+-----+------+")
 
     for _ in range(n_games):
         # play a round, don't update face up table, update player statistics
@@ -518,18 +534,22 @@ def ai_test():
         n_talon += talon
         n_refills += refills
 
-        # report every 10 finished games
-        if n_finished % (10 * n_players) == 0:
-            print(f"finished:{n_finished:<10} aborted:{n_aborted:<3}"
-                  f" turns:{n_turns:<12} refills/turn: {n_talon / n_refills}")
+        # create string with shitcount per player
+        sh_cnt_str = ''
+        for idx, name in enumerate(names):
+            sh_cnt, _, _, _ = stats.get_stats(name)
+            sh_cnt_str += f"{sh_cnt: ^5} "
+        # add spaces for unused players
+        if len(names) < 6:
+            sh_cnt_str += (6 - len(names)) * 6 * ' '
 
-    # report remaining games
-    if n_finished % (10 * n_players) != 0:
-        print(f"finished:{n_finished:<10} aborted:{n_aborted:<3}"
-              f" turns:{n_turns:<12} refills/turn: {n_talon / n_refills}")
-    print()
+        # report round result (every player played once with each set of cards)
+        print(f"|{n_finished:^10}|{n_aborted:^9}"
+              f"|{n_turns:^9}|{n_refills:^9}"
+              f"|{sh_cnt_str}|")
 
     # print final statistics
+    print()
     stats.print()
 
     # write statistics to human readable file
