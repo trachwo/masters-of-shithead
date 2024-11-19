@@ -85,9 +85,10 @@ class Analyzer:
         self.seen = []
         self.unknown_str = ''
         self.seen_str = ''
-        self.playabs = {}       # playabilities per rank
-        self.play_seq = []      # list of ranks in play order
-        self.n_turns = 0        # number of turns 
+        self.playabs = {}           # playabilities per rank
+        self.play_seq = []          # list of ranks in play order
+        self.n_turns = 0            # number of turns
+        self.play_from_hand = True  # True => hand cards played
 
         # only if specified player is still in the game
         if self.player is not None:
@@ -226,12 +227,12 @@ class Analyzer:
 
         return avg
 
-    def calc_avg_playability(self, verbose=False):
+    def get_play_sequence(self, verbose=False):
         """
-        Calculate the average playability for hand or face up table cards.
+        Get the play sequence for the hand or face up table cards.
 
-        For 3 or less cards we just return the average playability and and
-        assume that we need 1 turn per card.
+        For 3 or less cards we just return the ranks in the hand or face up
+        table cards as they are.
         Hands with more than 3 cards are sorted in a way, that playing it in
         sequence from 1st to last card yields the best probability to get rid
         of all cards. We first sort all cards according to the playability of
@@ -248,35 +249,11 @@ class Analyzer:
         with the worst playability, but with the possibility to play 4 'Q's in
         a row and only 1 other rank left, it is preferable to play the 'Q's
         first.
-        From the found play sequence we can determine the minimum number of
-        turns necessary to get rid of these cards.
-        We can also reduce this play sequence to the effective play sequence,
-        by 1st removing all continues sequences of low ranks ('4', '5', '6',
-        '8', '9', 'J') following 'Q', '10', or another sequence of >=4 cards
-        with same rank (=> low cards which can be played for free do not reduce
-        the average playability of the hand). The remaining sequences of low
-        ranks are each replaced with a single occurance of this rank (=> all
-        cards of same low rank can be played in 1 turn and have therefore less
-        impact on the average playability). Note that sequences of '2', '3',
-        'Q', 'K', and 'A' are left intact to maximize their impact on the
-        average playability.
-        The resulting effective play sequence is then used to calculate the
-        average playability of the hand cards.
 
         :param verbose:     True => print play sequence
         :type verbose:      bool
-        :return:            average playability
-        :rtype:             float
         """
         self.play_seq = []  # found play sequence
-        eff_seq = []        # effective play sequence (ignored cards removed)
-        avg = 0             # average playability for hand/fup cards
-        bonus = 0.0         # bonus for empty hand or empty face up table cards
-
-        # player is already out
-        if self.player is None:
-            # best possible outcome => return playability 10.0
-            return 10.0
 
         # make sure the rank playabilities have been calculated
         if len(self.playabs) == 0:
@@ -288,35 +265,24 @@ class Analyzer:
         if len(self.player.hand) > 0:
             # get a list of ranks in player's hand cards
             ranks = ([card.rank for card in self.player.hand])
+            self.play_from_hand = True
         elif len(self.player.face_up) > 0:
             # get a list of ranks in player's face up table cards
             ranks = ([card.rank for card in self.player.face_up])
-            bonus = 1.0     # playability bonus for empty hand
+            self.play_from_hand = False     # add bonus
         else:
             # only face down table cards left => nothing to do
-            ranks = []
-            bonus = 5.0     # playability bonus for empty hand/fup cards
+            ranks = []      # add bonus
 
-        # 3 or less cards => calculate average + bonus
+        # 3 or less cards
         if len(ranks) <= 3:
             self.play_seq = ranks[:]
-            avg = self.calc_seq_playability(ranks, verbose) + bonus
-            self.n_turns = len(ranks)
-            if verbose:
-                print(f"### average playability: {avg:.2f}"
-                      f" turns: {self.n_turns}")
-            return avg
+            return      # nothing more to do
 
         # >3 cards on hand => find best play sequence
         # default rank order
         rank_order = ['3', '2', '10', 'A', 'K', 'Q', 'J', '9', '8', '7',
                            '6', '5', '4', '0']
-
-        # cards with high playability
-        # => never ignore when calculating the average playability
-        # all other ranks ignore when played after 'Q', killed discard pile
-        # or previously played card of same rank.
-        good_ranks = ['3', '2', '10', 'A', 'K', 'Q']
 
         # sorting key function => gets playability per rank
         def get_rank_playability(rank):
@@ -338,8 +304,6 @@ class Analyzer:
 
         # play rank with highest playability first
         self.play_seq.append(ranks.pop(0))
-        eff_seq.append(self.play_seq[-1])
-        self.n_turns = 1        # 1st turn
         same_rank_count = 1     # played 1 card of this rank
         play_best = True        # => play best ranks first
 
@@ -350,8 +314,6 @@ class Analyzer:
                 # => we can play any card,
                 # i.e. play the one with the worst playability next
                 self.play_seq.append(ranks.pop(-1))
-                if self.play_seq[-1] in good_ranks:
-                    eff_seq.append(self.play_seq[-1])
                 play_best = False       # => play from end of list
                 same_rank_count = 1     # reset same rank counter
 
@@ -368,30 +330,22 @@ class Analyzer:
                         if len(count) <= 2:
                             # play another 'Q'
                             self.play_seq.append(ranks.pop(0))
-                            if self.play_seq[-1] in good_ranks:
-                                eff_seq.append(self.play_seq[-1])
                             same_rank_count += 1
                         else:
                             # better play cards with worse playability first
                             self.play_seq.append(ranks.pop(-1))
-                            if self.play_seq[-1] in good_ranks:
-                                eff_seq.append(self.play_seq[-1])
                             play_best = False       # => play from end of list
                             same_rank_count = 1     # reset same rank counter
                     else:
                         # no more 'Q's or less than 4 'Q's in total
                         # => play card with worser playability first
                         self.play_seq.append(ranks.pop(-1))
-                        if self.play_seq[-1] in good_ranks:
-                            eff_seq.append(self.play_seq[-1])
                         play_best = False       # => play from end of list
                         same_rank_count = 1     # reset same rank counter
                 else:
                     # 'Q' has been played from end of list
                     # => keep playing from end of list 'Q' or next worse rank
                     self.play_seq.append(ranks.pop(-1))
-                    if self.play_seq[-1] in good_ranks:
-                        eff_seq.append(self.play_seq[-1])
                     if self.play_seq[-1] == 'Q':
                         same_rank_count += 1    # 1 more 'Q' played
                     else:
@@ -406,8 +360,6 @@ class Analyzer:
                 else:
                     # play from end of list
                     self.play_seq.append(ranks.pop(-1))
-                if self.play_seq[-1] in good_ranks:
-                    eff_seq.append(self.play_seq[-1])
             else:
                 # no more cards with same rank
                 # => check if we have played 4 or more cards of same rank
@@ -416,39 +368,22 @@ class Analyzer:
                     play_best = False
                     # play card with bad playability from the end of the list
                     self.play_seq.append(ranks.pop(-1))
-                    if self.play_seq[-1] in good_ranks:
-                        eff_seq.append(self.play_seq[-1])
                 else:
                     # play the next rank with best playability
                     self.play_seq.append(ranks.pop(0))
-                    eff_seq.append(self.play_seq[-1])
                     play_best = True    # play from begin of list
-                    self.n_turns += 1
                 # next rank => reset same rank count
                 same_rank_count = 1
 
-        # calculate average playability for effective play sequence 
-        avg = self.calc_seq_playability(eff_seq, verbose)
-
         if verbose:
             print(f"### play sequence: {' '.join(self.play_seq)}")
-            print(f"### effective play sequence: {' '.join(eff_seq)}")
-
-        # calculate average playability for effective play sequence 
-        avg = self.calc_seq_playability(eff_seq, verbose)
-
-        if verbose:
-            print(f"### average playability: {avg:.2f} turns: {self.n_turns}")
-
-        return avg
 
     def get_number_of_turns(self, verbose=False):
         """
-        Get the number of turns to play hand/fup cards.
+        Determine the number of turns to play from the play sequence.
 
-        Returns the minimum number of turns to play the hand or face up table
-        cards as determined when calculating the average playability of these
-        cards.
+        Determines the minimum number of turns to play the hand or face up
+        table cards from the play sequence found during get_play_sequence().
 
         :param verbose:     True => print play sequence
         :type verbose:      bool
@@ -456,10 +391,159 @@ class Analyzer:
         :rtype:             int
         """
         # make sure that average playability has been calculated.
-        if self.n_turns == 0:
-            self.calc_avg_playability(verbose)
+        if len(self.play_seq) == 0:
+            self.get_play_sequence(verbose)
 
-        return self.n_turns
+        # make sure play sequence is not empty.
+        if len(self.play_seq) == 0:
+            return 0
+
+        # 1st rank
+        n_turns = 0
+        same_rank_count = 0
+
+        for idx, rank in enumerate(self.play_seq):
+            if idx == 0:
+                # 1st card => initialize counters
+                n_turns = 1
+                same_rank_count = 1
+            else:
+                if rank == self.play_seq[idx - 1]:
+                    # same rank as previous card
+                    same_rank_count += 1
+                else:
+                    # change of rank
+                    if (same_rank_count < 4
+                        and self.play_seq[idx - 1] != '10'
+                        and self.play_seq[idx - 1] != 'Q'):
+                        # discard not killed and not played on 'Q'
+                        # => increment turn counter
+                        n_turns += 1
+                    # reset same rank counter
+                    same_rank_count = 1
+        if verbose:
+            print(f"### number of turns: {n_turns}")
+
+        return n_turns
+
+    def get_effective_seq(self, verbose=False):
+        """
+        Determine the effective play sequence.
+
+        The play sequence found with get_play_sequence() can be reduced by 1st
+        removing all continues sequences of low ranks ('4', '5', '6', '8', '9',
+        'J') following 'Q', '10', or another sequence of >=4 cards with same
+        rank (=> low cards which can be played for free do not reduce the
+        average playability of the hand). The remaining sequences of low ranks
+        are each replaced with a single occurance of this rank (=> all cards of
+        same low rank can be played in 1 turn and have therefore less impact
+        on the average playability). Note that sequences of '2', '3', 'Q', 'K',
+        and 'A' are left intact to maximize their impact on the average
+        playability.
+
+        :param verbose:     True => print play sequence
+        :type verbose:      bool
+        :return:            number of turns.
+        :rtype:             int
+        """
+        # make sure that average playability has been calculated.
+        if len(self.play_seq) == 0:
+            self.get_play_sequence(verbose)
+
+        # make sure play sequence is not empty.
+        if len(self.play_seq) == 0:
+            return []
+
+        eff_seq = []
+        good_ranks = ('3', '2', '10', 'A', 'K', 'Q')
+
+        # 1st rank
+        same_rank_count = 0
+
+        for idx, rank in enumerate(self.play_seq):
+            if idx == 0:
+                # 1st card => initialize counters
+                eff_seq.append(rank)
+                same_rank_count = 1
+            else:
+                if rank == self.play_seq[idx - 1]:
+                    # same rank as previous card
+                    same_rank_count += 1
+                    if rank in good_ranks:
+                        eff_seq.append(rank)
+                else:
+                    # change of rank
+                    if (same_rank_count < 4
+                        and self.play_seq[idx - 1] != '10'
+                        and self.play_seq[idx - 1] != 'Q'):
+                        # discard not killed and not played on 'Q'
+                        # => increment turn counter
+                        eff_seq.append(rank)
+                    else:
+                        if rank in good_ranks:
+                            eff_seq.append(rank)
+                    # reset same rank counter
+                    same_rank_count = 1
+        if verbose:
+            print(f"### eff_seq: {' '.join(eff_seq)}")
+
+        return eff_seq
+
+    def calc_avg_playability(self, verbose=False):
+        """
+        Calculate the average playability for hand or face up table cards.
+
+        If this player is out of the game (no cards left), we return 10.0 to
+        indicate that the best possible outcome has been reached.
+        If only face down table cards are left, we return 5.0 to indicate, that
+        the 2nd best outcome has been reached.
+        If only face up and face down table cards are left, we calculate the
+        average playability of the face up table cards and add 1.0 to make this
+        a better outcome than any hand cards playability.
+        For 3 or less hand cards we just return their average playability.
+        For hand with more than 3 cards we calculate the average playability of
+        the corresponding effective play sequence.
+
+        :param verbose:     True => print play sequence
+        :type verbose:      bool
+        :return:            average playability
+        :rtype:             float
+        """
+        avg = 0             # average playability for hand/fup cards
+
+        # player is already out
+        if self.player is None:
+            return 10.0     # best possible outcome
+
+        # make sure the rank playabilities have been calculated
+        if len(self.playabs) == 0:
+            self.calc_rank_playabilities(verbose)
+        # make sure the average refill playability has been calculated
+        if len(self.playabs) == len(CARD_RANKS):
+            self.calc_refill_playability(verbose)
+        # make sure the play sequence has been determined
+        if len(self.play_seq) == 0:
+            self.get_play_sequence(verbose)
+
+        if len(self.play_seq) == 0:
+            # no hand or face up table cards left
+            return 5.0      # 2nd best possible outcome
+
+        if len(self.play_seq) <= 3:
+            avg = self.calc_seq_playability(self.play_seq, verbose)
+            if not self.play_from_hand:
+                # playing face up table cards
+                avg += 1.0  # add bonus
+        else:
+            # >3 cards in play sequence => get effective play sequence
+            eff_seq = self.get_effective_seq(verbose)
+            # calculate average playability for effective play sequence 
+            avg = self.calc_seq_playability(eff_seq, verbose)
+
+        if verbose:
+            print(f"### average playability: {avg:.2f}")
+
+        return avg
 
 
 def restore_game_state(filename, verbose=False):
@@ -635,7 +719,6 @@ def main():
     analyzer = Analyzer(state, 'Player1')
     print("\n### calculate hand playabilities with  1 dummy ### ")
     analyzer.calc_avg_playability(True)
-
 
     # Wolbert large hand 
     filename = 'shithead/analyzer_games/wolbert_turn22.json'
