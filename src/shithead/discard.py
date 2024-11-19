@@ -200,6 +200,11 @@ class Discard(Deck):
         :return:        True => can be played, False => cannot be played.
         :rtype:         bool
         '''
+        # We can create dummy cards with a rank outside the usual ranks
+        # => can never be played on the discard pile
+        if card.rank not in CARD_RANKS:
+            return False
+
         # pile is empty => any card can be played
         #                  (also if it's not the 1st card this turn).
         if len(self.deck) == 0:

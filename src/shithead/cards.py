@@ -63,6 +63,12 @@ class Card():
         :return: True => this card < other card.
         :rtype: bool
         '''
+        # HACK: in order to be able to use dummy cards with rank '0'
+        if self.rank == '0':
+            return True     # dummy card is always smaller
+        if other.rank == '0':
+            return False
+
         if CARD_RANKS.index(self.rank) == CARD_RANKS.index(other.rank):
             # both cards have the same rank => compare suits
             return CARD_SUITS.index(self.suit) < CARD_SUITS.index(other.suit)

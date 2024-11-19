@@ -560,6 +560,98 @@ class State:
 
         return (n_turns, n_draws, hands[0])
 
+    def estimate_turns_to_fup(self):
+        """
+        Estimate the number of turns the current player plays from hand.
+
+        We assume that every player can exactly play 1 card on his turn.
+        Players with more than 3 cards just reduce their hands by 1 card.
+        If there are still cards in the talon, players with 3 cards reduce the
+        talon by 1 card, while their hand size stays at 3 cards. Otherwise,
+        they reduce their hand size by one. Returns the number of turns
+        till the one of the players has reduced his hand to 0.
+
+        :return:        number of turns till hand of current player is empty.
+        :rtype:         int
+        """
+        hands = []                      # list of players hand sizes
+        n_talon = len(self.talon)       # number of cards in talon
+        n_players = len(self.players)   # number of players
+        cur = self.player               # index of current player in players
+        for player in self.players:
+            hands.append(len(player.hand))
+        # set turn counter to have current player at multiples of n_players
+        n_turns = 0
+        while hands[cur] > 0:           # current player still has hand cards
+#            print(f"### n_turns: {n_turns} talon: {n_talon} hands: {' '.join([str(hand) for hand in hands])}")
+            # the current player plays turn 0, n_players, 2*n_players, ...
+            if hands[(n_turns + cur) % n_players] > 3:
+                # don't refill from talon
+                hands[(n_turns + cur) % n_players] -= 1
+            else:
+                if n_talon > 0:
+                    # refill from talon => 3 cards in hand
+                    n_talon -= 1
+                else:
+                    # reduce size of hand
+                    hands[(n_turns + cur) % n_players] -= 1
+            # next turn
+            n_turns += 1
+#        print(f"### n_turns: {n_turns}")
+#        print(f"### estimated turns: {int(n_turns / n_players)}")
+        return int(n_turns / n_players)
+
+    def estimate_remaining_hand(self, eff_size):
+        '''
+        Estimate current player's hand size when 1st player gets rid of hand.
+
+        In order to decide wether the current player shall voluntarily take the
+        discard pile, we want to know if he can get rid of these cards in time.
+        We replace the actual hand size of the current player with the
+        effective size after TAKE, i.e. the number of turns necessary to get
+        rid of these cards, considered that multiple cards of same rank can be
+        played in one turn and additional cards can be played after '10' and
+        'Q'. Starting with the next player, we assume that each player reduces
+        his hand by 1 and refills to 3 as long as there are cards in the talon.
+        As soon as one of the players reduces his hand to 0, we return the
+        number of cards still in the hand of current player.
+
+        :param eff_size:    effective hand size of current player after TAKE.
+        :type eff_size:     int
+        :return:            hand size of current player when 1st player has
+                            hand size 0.
+        :rtype:             int
+        '''
+        hands = []                      # list of players hand sizes
+        n_talon = len(self.talon)       # number of cards in talon
+        n_players = len(self.players)   # number of players
+        cur = self.player               # index of current player in players
+        for player in self.players:
+            # add player's hand size to list
+            hands.append(len(player.hand))
+        # replace hand size of current player with effective size.
+        hands[cur] = eff_size
+        # start with the next player after the current player
+        idx = (cur + 1) % n_players
+        while True:
+            if hands[idx] > 3:
+                # >3 cards on hand (no refill) => decrement hand size
+                hands[idx] -= 1
+            elif n_talon > 0:
+                # 3 cards on hand => decrement talon size
+                n_talon -= 1
+            else:
+                # <= 3 cards on hand but no talon left => decrement hand size
+                hands[idx] -= 1
+            if hands[idx] <= 0:
+                break
+            idx = (idx + 1) % n_players
+
+        return hands[cur]
+
+
+
+
     def log_one_line(self, turn_count):
         '''
         Creates log message with one line overview over game state.
