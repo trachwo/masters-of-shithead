@@ -1676,11 +1676,11 @@ class BullShit(AiPlayer):
         immediately ends his turn. I.e. there's no recursion involved.
         We just evaluate the player's hand after the 'TAKE' action to find its
         playability and the smallest number of turns necessary to get rid of
-        these cards. We use the found number of turns as hand size to estimate
-        the number of cards this player will have in hand, than the 1st player
-        has gotten rid of his hand cards and starts playing face up table
-        cards. If the estimated number is too large, the playability is reduced
-        to 0, because it's too risiky to take the discard pile.
+        these cards. We use the found number of turns as initial hand size to
+        estimate the number of cards this player will have in hand, than the
+        1st player has gotten rid of his hand cards and starts playing face up
+        table cards. If the estimated number is too large, the playability is
+        reduced to 0, because it's too risky to take the discard pile.
 
         :param state:       current state of the game.
         :type state:        State
@@ -1701,24 +1701,24 @@ class BullShit(AiPlayer):
         # 'TAKE' ends players turn => evaluate players hand
         analyzer = Analyzer(next_state, self.name)
         # calculate the average playability of the hand cards
-        # and the minimum number of turns to get rid of them
         playab = analyzer.calc_avg_playability(False)
+        # and the minimum number of turns to get rid of them
         n_turns = analyzer.get_number_of_turns(False)
 
-        # estimate number of cards in current player's hand, when the 1st
-        # player gets rid of all hand cards, starting with 1 card per turn as
-        # calculated by the analyzer.
+        # estimate the number of cards in player's hand, when the 1st player
+        # gets rid of all hand cards.
+        # we assume that the player can get rid of 1 card per turn, therefore
+        # we set his initial hand size equal to the number of turns calculated
+        # by the analyzer.
         rem_hand = state.estimate_remaining_hand(n_turns)
-#        print(f"### play: TAKE: {n_turns} => remaining hand cards: {rem_hand}")
         if rem_hand > TAKE_LIMIT:
             # Too many cards on hand when 1st opponent gets rid of all hand
             # cards => don't voluntarily take the discard pile
             playab = 0
 
-#        print(f"### play: 'TAKE' playability: {playab:.2f}")
         return playab
 
-    def find_refill_playability(self, state, depth, playseq):
+    def find_refill_playability(self, state, depth, cache, playseq):
         """
         Find playability when player refills its hand.
 
@@ -1728,12 +1728,10 @@ class BullShit(AiPlayer):
         The replaced cards are added to the burnt cards, they are still unknown
         (we need them for the playability calculation).
         After the refill, it is possible that more cards can be played (same
-        rank as 1st card, or after '10'/'Q' etc.). I.e. we call
-        find_best_playability() recursively. Since 'REFILL' is only a legal
-        play if the player has less than 3 cards on hand, we shouldn't get into
-        the 'too many recursions' problem.
-        NOTE: we can't use the cache here, since the new state is no longer
-              compatible with the original state.
+        rank as 1st card, or after '10'/'Q' etc., but not the dummy cards!!!).
+        I.e. we call find_best_playability() recursively. Since 'REFILL' is
+        only a legal play if the player has less than 3 cards on hand, we
+        shouldn't get into the 'too many recursions' problem.
         The recursion ends after an 'END' play or if there are only dummy cards
         left in the player's hand.
         NOTE: if there are 3 dummy cards on hand after killing the discard pile
@@ -1741,7 +1739,7 @@ class BullShit(AiPlayer):
               prematurely, since dummy cards cannot be played on the discard
               pile.
         When calculating the playability of the remaining hand cards, each
-        dummy card gets average playability of the remaining unknown cards.
+        dummy card has the average playability of the remaining unknown cards.
 
         :param state:       current state of the game.
         :type state:        State
@@ -1779,41 +1777,15 @@ class BullShit(AiPlayer):
         # => play more cards or 'END'
         best_playab = 0
         legal_plays = next_state.get_legal_plays()
-#        print(f"### legal plays after REFILL: {' '.join([str(p) for p in legal_plays])}")
         for next_play in legal_plays:
             playab = self.find_best_playability(
-                next_state, next_play, depth + 1, None, playseq)
-            # NOTE since cache=None playability cannot be -1
-            if playab > best_playab:
-                best_playab = playab
+                next_state, next_play, depth + 1, cache, playseq)
+            if playab == -1:
+                # finding best playability failed (too many recursions)
+                return -1
+            best_playab = max(playab, best_playab)
 
         return best_playab
-
-#    def calculate_playability(self, state):
-#        """
-#        Calculate playability of player's cards at end of turn.
-#
-#        Calculate the playability of this player's hand or face up table cards
-#        after he has ended his turn. The playability of the player's cards is
-#        the probability, that it can be played on a discard pile with a random
-#        opponent card (known or unknown) at the top.
-#
-#        :param state:       current state of the game.
-#        :type state:        State
-#        :return:            average playability of hand or face up table cards.
-#        :rtype:             float
-#        """
-#
-#        # check if this player is still in the Game (not OUT)
-#        if self.name in [p.name for p in state.players]:
-#            # get playability of player's cards after this play.
-#            analyzer = Analyzer(state, self.name)
-#            playab, n_turns = analyzer.calc_avg_playability()
-#        else:
-#            # this player is out => best possible outcome
-#            playab = 10.0
-#
-#        return  playab
 
     def find_best_playability(self, state, play, depth, cache, playseq):
         """
@@ -1851,7 +1823,6 @@ class BullShit(AiPlayer):
 
             if len(cache) > MAX_RECURSIONS:
                 # cache grows too big => recursion takes too long
-#                print('### ABORT recursions ###')
                 return -1   # break out of recursion
 
         if play.action == 'TAKE':
@@ -1862,7 +1833,7 @@ class BullShit(AiPlayer):
             # refilling means uncovering unknown cards, doing this with the
             # original state would be cheating.
             # => refill with dummy cards (= average talon card playability)
-            return self.find_refill_playability(state, depth, playseq)
+            return self.find_refill_playability(state, depth, cache, playseq)
 
         if play.action == 'HAND' and self.hand[play.index].rank == '0':
             # don't recursively follow the play of dummy cards
@@ -1874,12 +1845,12 @@ class BullShit(AiPlayer):
         best_playab = 0
         # check if this player's turn is finished
         if next_state.players[next_state.player].name != self.name:
+            # current player has changed
+            # => calculate value of previous player's remaining cards.
             analyzer = Analyzer(next_state, self.name)
             best_playab = analyzer.calc_avg_playability(False)
         else:
             plays = next_state.get_legal_plays()
-            # if talon is empty, play as many cards as possible
-
             # call find_best_playability() recursively for each of the legal
             # plays of the new state and return the highest value found.
             for next_play in plays:
@@ -1887,19 +1858,19 @@ class BullShit(AiPlayer):
                     next_state, next_play, depth + 1, cache, playseq)
                 if playab == -1:
                     return -1   # break out of recursions
-                if playab > best_playab:
-                    best_playab = playab
-        if depth == 1:
-            analyzer = Analyzer(next_state, self.name)
-            analyzer.calc_rank_playabilities(False)
-#            print(f"### play: {play} playability: {best_playab:.2f}")
+                best_playab = max(playab, best_playab)
         if cache is not None:
+            # add playability found for this sequence of play to the cache
             cache[playseq] = best_playab
         return best_playab
 
     def select_by_playability(self, plays, state):
         """
         Select play with best playability.
+
+        Select the best play by calculating the playability of the player's
+        remaining cards after each possible play has been applied to the
+        current state.
 
         :param plays:   plays legal for this player in this game state.
         :type plays:    list
@@ -1908,9 +1879,6 @@ class BullShit(AiPlayer):
         :return:        selected play.
         :rtype:         Play
         """
-        # copy the original state and redistribute the unknown cards.
-#        state = State.simulation_state(state)
-#        print("######## simulation state #################")
         cache = {}      # playability cache
         playseq = ''    #  play sequence used as key for the playability cache
         best_playab = 0
@@ -1918,7 +1886,7 @@ class BullShit(AiPlayer):
 
         if len(state.talon) == 0 and len(plays) > 1:
             # remove 'END" from possible plays
-            # always play more cards of same rank if talon is empty
+            # => always play more cards of same rank if talon is empty
             plays = [play for play in plays if play.action != 'END']
 
         if len(plays) == 1:
@@ -1935,8 +1903,6 @@ class BullShit(AiPlayer):
             if playab > best_playab:
                 best_playab = playab
                 best_play = play
-#        print(f"### cache: {len(cache)} best play: {str(best_play)}")
-#        print(cache)
         return best_play
 
     def select_play(self, plays, state):
@@ -1946,12 +1912,11 @@ class BullShit(AiPlayer):
         BullShit:
             - swaps cards if fup_table has been specified.
             - always shows the starting card, if it's on hand.
-            - calculates playability to decide whether taking the discard pile
-              is worth it.
+            - calculates playability of hand cards after 'TAKE' and the minimum
+              number of turns to get rid of these cards, in order to decide
+              whether taking the discard pile is worth it.
             - calculates playability for each possile play combination this
               turn to decide which card to play first.
-            - calculates playability for each possile play combination this
-              turn to decide, whether to play another card or to refill.
             - calculates playability for each possile play combination this
               turn to decide, whether to play another card or to kill the
               discard pile.
@@ -1974,9 +1939,6 @@ class BullShit(AiPlayer):
         :return:        selected play.
         :rtype:         Play
         '''
-#        state.print()
-#        print(f"### legal plays: {' '.join([str(p) for p in plays])} ")
-
         # handle all cases where there is only one option:
         if len(plays) == 1:
             # only one option ('TAKE', 'REFILL', 'KILL', 'END', 'OUT')
@@ -2004,9 +1966,8 @@ class BullShit(AiPlayer):
             if self.fdown_random:
                 # select face down table cards randomly
                 return random.choice(_plays)
-            else:
-                # for AI evaluation pick from left to right
-                return _plays[0]
+            # for AI evaluation pick from left to right
+            return _plays[0]
 
         # if we get here, we are in the PLAY_GAME phase,
         # with more than 1 plays to select from, no FDOWN plays,
@@ -2016,16 +1977,9 @@ class BullShit(AiPlayer):
             return best_play
 
         # finding play with best playability failed (too many recursions)
-        # => just play the worst playable card
+        # => just play the worst playable card (CheapShit strategy)
         if 'HAND' in actions:
-#            # get list with ranks in hand cards
-#            ranks = [card.rank for card in self.hand]
-#            # count ranks in hand
-#            rank_count = Counter(ranks)
-#            print(rank_count)
-#            if len(rank_count) > 7:
-#                # player has too many different cards on hand
-#                # => recursion may take too long
+            # player plays from hand cards
             if 'END' in actions:
                 # not 1st play this turn
                 # => play another hand card (same rank as before)
@@ -2033,83 +1987,17 @@ class BullShit(AiPlayer):
                 rank = self.hand[_plays[0].index].rank
                 if rank in ('2', '3', 'A', 'K', '10'):
                     # don't waste good cards
-#                    print("### END")
                     return Play('END')
 
                 # play another card with this rank
-#                print(f"### {str(_plays[0])}")
                 return _plays[0]
 
-            else:
-                # 1st play this turn
-                # => play the worst playable card
-                hand_plays = [play for play in plays if play.action == 'HAND']
-                cheapest = self.find_cheapest_play(
-                    hand_plays, RANK_TO_VALUE_CHEAP_SHIT)
-#                print(f"### {str(cheapest)}")
-                return cheapest
-
-#        # check if we have to pick up a face up table card after taking the
-#        # discard pile
-#        if 'GET' in actions:
-#            # use the analyzer module to select a card to pick up, which leaves
-#            # us with the remaining face up table cards with the best
-#            # playability.
-#            best_combi = analyzer.find_best_fup_pick(state, self.get_fup_rank)
-#            if len(best_combi.seq) == 0:
-#                # already pick up at least one card and could pick up another
-#                # one of same rank, but it's better to end the turn instead.
-#                if 'END' in actions:
-#                    return Play('END')  # end turn
-#                else:
-#                    raise ValueError("'END' is not in legal plays")
-#            else:
-#                # return the play which corresponds to the rank selected by
-#                # the analyzer
-#                play = self.rank_to_play(best_combi.seq[0], plays)
-#                if play is not None:
-#                    return play
-#                else:
-#                    raise ValueError(
-#                        f"rank {best_combi.seq[0]} does not correspond to one"
-#                        " of the legal plays!")
-#
-#        # use the analyzer module to find the best play sequence for hand or
-#        # face up table cards
-#        best_combi = analyzer.find_best_play(state)
-#        if len(best_combi.seq) == 0:
-#            # no card play
-#            if state.n_played == 0:
-#                # 1st play => 'TAKE'
-#                if 'TAKE' in actions:
-#                    return Play('TAKE')
-#                else:
-#                    raise ValueError("'TAKE' is not in legal plays")
-#            else:
-#                # 2nd, 3rd, ... play => 'REFILL', 'KILL', 'END'
-#                if 'REFILL' in actions:
-#                    return Play('REFILL')
-#                elif 'KILL' in actions:
-#                    return Play('KILL')
-#                elif 'END' in actions:
-#                    return Play('END')
-#                else:
-#                    raise ValueError("Neither 'REFILL', 'KILL', nor 'END' in"
-#                                     " legal plays")
-#        else:
-#            # play a hand or face up table card
-#            play = self.rank_to_play(best_combi.seq[0], plays)
-#            if play is not None:
-#                return play
-#            else:
-#                state.print()
-#                plays_str = ' '.join([str(play) for play in plays])
-#                print(f"### plays: {plays_str}")
-#                combis = analyzer.find_all_play_combis(state)
-#                print(f"plays: {[c.seq for c in combis]}")
-#                raise ValueError(
-#                    f"rank {best_combi.seq[0]} does not correspond to one of"
-#                    " the legal plays!")
+            # 1st play this turn
+            # => play the worst playable card
+            hand_plays = [play for play in plays if play.action == 'HAND']
+            cheapest = self.find_cheapest_play(
+                hand_plays, RANK_TO_VALUE_CHEAP_SHIT)
+            return cheapest
 
     def copy(self):
         '''
