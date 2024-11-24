@@ -65,7 +65,7 @@ class Card():
         '''
         # HACK: in order to be able to use dummy cards with rank '0'
         if self.rank == '0':
-            return True     # dummy card is always smaller
+            return False     # dummy card is always bigger
         if other.rank == '0':
             return False
 

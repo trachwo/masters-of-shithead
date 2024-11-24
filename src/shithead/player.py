@@ -427,7 +427,7 @@ class Player:
         count = Counter(hand)   # count ranks in hand
         # since all cards with same rank can be played in one turn, we start
         # with one turn per rank in this hand
-        turns = len(count.keys())
+        turns = len(count)
         # but after playing the '10's, 'Q's, or each set of >=4 cards of same
         # rank, we can play one rank for free.
         for rank, cnt in count.items():
@@ -450,7 +450,7 @@ class Player:
         With 3 cards on hand we only should take the discard pile if it has
         good cards in it and if we have a chance to get our hand back down to
         3 again before the talon runs out (note that taking cards with ranks
-        we already have on hand don't increase the necessary number of turns!).
+        we already have on hand doesn't increase the necessary number of turns!).
 
         :param state:   game state.
         :type state:    State
@@ -471,10 +471,7 @@ class Player:
             no_take_turns = self.estimate_turns_per_hand(hand)
             take_turns = self.estimate_turns_per_hand(hand + discard)
             # if we take the discard pile we use 1 additional turn
-            if take_turns + 1 < no_take_turns:
-                return True
-            else:
-                return False
+            return take_turns + 1 < no_take_turns
 
         # only 3 cards or less on hand and talon is empty
         # => don't take the discard pile
@@ -507,13 +504,14 @@ class Player:
         if take_turns <= 3:
             return True    # taking the discard pile makes no difference
 
-        _, _, n_hand = state.estimate_remaining_draws(take_turns)
-        if n_hand > 3:
-            # can't get rid of hand cards before talon runs out
-            return False
-        else:
-            # enough turns remaining to get rid of additional cards
-            return True
+        # >3 turns to get rid of hand cards after taking the discard pile
+        # => use number of turns as starting hand size to estimate the number
+        #    of cards in this player's hand, when the 1st player gets rid of
+        #    all hand cards.
+        rem_hand = state.estimate_remaining_hand(take_turns)
+        # Too many cards on hand when 1st opponent gets rid of all hand
+        # cards => don't voluntarily take the discard pile
+        return rem_hand <= TAKE_LIMIT
 
     def select_simulated_play(self, plays, state):
         '''
@@ -658,7 +656,7 @@ class Player:
 
         # if we get here, there's no match
         return None
-    
+
     def play_to_hash(self, play):
         '''
         Hash play for use in play sequence.
@@ -676,6 +674,8 @@ class Player:
         '''
         # for card plays return the rank of the card.
         if play.action == 'HAND':
+            if play.index > len(self.hand) - 1:
+                print(f"### Play: {str(play)} Hand: {str(self.hand)}")
             return self.hand[play.index].rank
         elif play.action == 'FUP':
             return self.face_up[play.index].rank
@@ -1757,12 +1757,18 @@ class BullShit(AiPlayer):
         next_state = state.copy()
         # refilling means uncovering unknown cards, doing this with the
         # current state would be cheating.
-        # => replace the top talon card (-> burnt) with a dummy card
-        next_state.burnt.add_card(next_state.talon.pop_card())
-        next_state.n_burnt += 1
-        next_state.talon.add_card(Card(0, 'Clubs', '0'))
+        # => replace the top talon cards (-> burnt) with dummy cards
+        nof_refills = 3 - len(next_state.players[next_state.player].hand)
+        nof_refills = min(nof_refills, len(next_state.talon))
+        for _ in range(nof_refills):
+            # move top talon cards to the burnt cards
+            next_state.burnt.add_card(next_state.talon.pop_card())
+            next_state.n_burnt += 1
+        for _ in range(nof_refills):
+            # put same number of dummy cards on top of the talon
+            next_state.talon.add_card(Card(0, 'Clubs', '0'))
         # apply specified play to the current state
-        # => dummy card is moved from talon to player's hand
+        # => dummy cards are moved from talon to player's hand
         next_state = Game.next_state(next_state, Play('REFILL'))
         # count number of dummy cards in hand
         hand = next_state.players[next_state.player].hand

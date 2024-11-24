@@ -493,10 +493,10 @@ def ai_test():
 #    players.append(plr.ShitHappens('Happens', fup_table, False))
     players.append(plr.CheapShit('Cheap1', fup_table, False))
     players.append(plr.CheapShit('Cheap2', fup_table, False))
-#    players.append(plr.TakeShit('Take', fup_table, False))
+    players.append(plr.TakeShit('Take', fup_table, False))
     players.append(plr.BullShit('Bull', fup_table, False))
-#    players.append(plr.DeepShit('Deep', fup_table, False))
-#    players.append(plr.DeeperShit('Deeper', fup_table, False))
+    players.append(plr.DeepShit('Deep', fup_table, False))
+    players.append(plr.DeeperShit('Deeper', fup_table, False))
 
     # creat list of players in original order
     names = [player.name for player in players]
