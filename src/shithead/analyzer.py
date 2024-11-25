@@ -18,16 +18,12 @@ most of the time against the other AIs.
 06.05.2023 Wolfgang Trachsler
 """
 
-from random import shuffle
-from itertools import permutations
 from collections import Counter
 import json
 
 # local imports (modules in same package)
-from .cards import Card, Deck, CARD_RANKS
+from .cards import CARD_RANKS
 from . import player as plr  # to avoid confusion with variable 'player'
-from .game import Game
-from .discard import Discard
 from .state import State
 from .fup_table import FupTable, FUP_TABLE_FILE
 
@@ -50,12 +46,6 @@ CAN_BE_PLAYED_ON = {
     'K': ['2', '4', '5', '6', '8', '9', 'J', 'Q', 'K'],
     'A': ['2', '4', '5', '6', '8', '9', 'J', 'Q', 'K', 'A'],
 }
-
-# to get a good average we take 'SAMPLE_RATE * len(unknown_cards)' samples
-SAMPLE_RATE = 2
-
-# number of samples when calculating average talon card playability
-N_SAMPLES = 1
 
 
 class Analyzer:
@@ -81,10 +71,8 @@ class Analyzer:
                 self.player = player
                 break
 
-        self.unknown = []
-        self.seen = []
-        self.unknown_str = ''
-        self.seen_str = ''
+        self.unknown = []           # ranks of unknown cards
+        self.seen = []              # ranks of known opponent cards
         self.playabs = {}           # playabilities per rank
         self.play_seq = []          # list of ranks in play order
         self.n_turns = 0            # number of turns
@@ -121,11 +109,11 @@ class Analyzer:
         n_cards = len(ranks)
         count_str = []
         probs = {}
-        probs_str= []
+        probs_str = []
         playabs_str = []
 
         # count cards per rank
-        count = Counter(ranks) # count per rank
+        count = Counter(ranks)  # count per rank
         if verbose:
             for rank in CARD_RANKS:
                 if rank in count:
@@ -219,7 +207,7 @@ class Analyzer:
 
         avg = 0
         if len(playabs) > 0:
-            avg =  sum(playabs) / len(playabs)
+            avg = sum(playabs) / len(playabs)
 
         if verbose:
             playabs_str = [f"{playab:.2f}" for playab in playabs]
@@ -390,7 +378,7 @@ class Analyzer:
         :return:            number of turns.
         :rtype:             int
         """
-        # make sure that average playability has been calculated.
+        # make sure the play sequence has been determined.
         if len(self.play_seq) == 0:
             self.get_play_sequence(verbose)
 
@@ -414,8 +402,8 @@ class Analyzer:
                 else:
                     # change of rank
                     if (same_rank_count < 4
-                        and self.play_seq[idx - 1] != '10'
-                        and self.play_seq[idx - 1] != 'Q'):
+                            and self.play_seq[idx - 1] != '10'
+                            and self.play_seq[idx - 1] != 'Q'):
                         # discard not killed and not played on 'Q'
                         # => increment turn counter
                         n_turns += 1
@@ -446,7 +434,7 @@ class Analyzer:
         :return:            number of turns.
         :rtype:             int
         """
-        # make sure that average playability has been calculated.
+        # make sure the play sequence has been determined.
         if len(self.play_seq) == 0:
             self.get_play_sequence(verbose)
 
@@ -474,13 +462,15 @@ class Analyzer:
                 else:
                     # change of rank
                     if (same_rank_count < 4
-                        and self.play_seq[idx - 1] != '10'
-                        and self.play_seq[idx - 1] != 'Q'):
+                            and self.play_seq[idx - 1] != '10'
+                            and self.play_seq[idx - 1] != 'Q'):
                         # discard not killed and not played on 'Q'
-                        # => increment turn counter
+                        # => add rank to effective sequence
                         eff_seq.append(rank)
                     else:
+                        # could be played for free
                         if rank in good_ranks:
+                            # only add good rank to effective sequence
                             eff_seq.append(rank)
                     # reset same rank counter
                     same_rank_count = 1
@@ -537,7 +527,7 @@ class Analyzer:
         else:
             # >3 cards in play sequence => get effective play sequence
             eff_seq = self.get_effective_seq(verbose)
-            # calculate average playability for effective play sequence 
+            # calculate average playability for effective play sequence
             avg = self.calc_seq_playability(eff_seq, verbose)
 
         if verbose:
@@ -551,8 +541,8 @@ def restore_game_state(filename, verbose=False):
     Restores a game state from json-file.
 
     Loads state info from the provided json-file.
-    Creates a list of players (all of type 'CheapShit') and uses it to create
-    the initial game state.
+    Creates a list of players (2 x 'CheapShit' and 1 x BullShit) and uses it
+    to create the initial game state.
     Uses the loaded game state info to transform this state into the loaded
     game state.
     NOTE: in the json-file change the log-level in "log_info" to "No Secrets",
@@ -654,9 +644,6 @@ def main():
 
     # NOTE: in the json-file change the log-level in "log_info" to
     #       "No Secrets", since "One Line" will crash!!!
-#    filename = 'shithead/analyzer_games/wolbert_turn22.json'
-#    filename = 'shithead/analyzer_games/wolbert_turn40.json'
-#    filename = 'shithead/analyzer_games/player2_turn11.json'
 
     # restore the end game state from json-file
     filename = 'shithead/analyzer_games/wolbert_turn16.json'
@@ -665,10 +652,6 @@ def main():
     # print state overview
     print(f'\n### Game state loaded from {filename}')
     state.print()
-
-    # estimate number of turns for current player to get rid of his hand cards
-#    est_turns_to_fup = state.estimate_turns_to_fup()
-#    print(f"### {state.players[state.player].name} estimated turns to FUP: {est_turns_to_fup}")
 
     # create an analyzer for the loaded game state
     analyzer = Analyzer(state, 'Wolbert')
@@ -720,7 +703,7 @@ def main():
     print("\n### calculate hand playabilities with  1 dummy ### ")
     analyzer.calc_avg_playability(True)
 
-    # Wolbert large hand 
+    # Wolbert large hand
     filename = 'shithead/analyzer_games/wolbert_turn22.json'
     state = restore_game_state(filename, False)
     print(f'\n### Game state loaded from {filename}')
@@ -729,7 +712,7 @@ def main():
     print("\n### calculate hand playabilities ### ")
     analyzer.calc_avg_playability(True)
 
-    # Wolbert large hand 
+    # Wolbert large hand
     filename = 'shithead/analyzer_games/wolbert_turn40.json'
     state = restore_game_state(filename, False)
     print(f'\n### Game state loaded from {filename}')
