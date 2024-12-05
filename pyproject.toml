@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "masters-of-shithead"
-version = "1.0.3"
+version = "1.0.5"
 description = "Shithead Card Game"
 readme = "README.md"
 authors = [{ name = "Wolfgang Trachsler", email = "wolbert@bluewin.ch" }]
@@ -17,6 +17,7 @@ classifiers = [
 keywords = ["shithead", "card", "game"]
 dependencies = [
     "arcade >= 2.6.17",
+    "numpy >= 1.24.4",
 ]
 requires-python = ">=3.7.11"
 

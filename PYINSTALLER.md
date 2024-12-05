@@ -17,11 +17,14 @@ $ cd ~/my-path/masters-of-shithead
 $ source venv/bin/activate
 (shithead) $
 ```
-In case of a new virtual environment, install the arcade and the pyinstaller package first:
+In case of a new virtual environment, install the arcade, numpy and the pyinstaller packages first:
 ```
 (shithead) $ pip install arcade
+(shithead) $ pip install numpy
 (shithead) $ pip install pyinstaller
 ```
+**NOTE**: At the time of writing I wasn't able to install the arcade library on Python 3.11 or later. Use pyenv to install Python 3.10.1  and make it the default version with **'pyenv global 3.10.1'**.  
+
 Create the entry-point script:
 ```
 (shithead) $ cd src
@@ -146,11 +149,14 @@ D:\Projects\masters-of-shithead\> C:\Users\my-user\AppData\Local\Programs\Python
 D:\Projects\masters-of-shithead\> venv\Scripts\activate
 (shithead) D:\Projects\masters-of-shithead\>
 ```
-In case of a new virtual environment, install the arcade and the pyinstaller package first:
+In case of a new virtual environment, install the arcade, numpy, and the pyinstaller packages first:
 ```
 (shithead) D:\Projects\masters-of-shithead\> pip install arcade
+(shithead) D:\Projects\masters-of-shithead\> pip install numpy
 (shithead) D:\Projects\masters-of-shithead\> pip install pyinstaller
 ```
+**NOTE**: At the time of writing I wasn't able to install the arcade library on Python 3.11 or later. Use pyenv-win to install Python 3.10.1  and make it the default version with **'pyenv global 3.10.1'**.  
+
 Create the entry-point script *shithead_start.py* in 'D:\Projects\masters-of-shithead\src' with an editor:
 ```
 from shithead.__main__ import main
@@ -228,8 +234,10 @@ To create a desktop shortcut with the icon *'shithead/shithead4.ico'*:
 ```
 [right mouse click] on desktop
 [New] -> [Shortcut]
-Location of the item: D:\Projects\masters-of-shithead\shithead.exe -> [Next]
+Location of the item: D:\Projects\masters-of-shithead\src\dist\shithead.exe -> [Next]
 Type a name for this shortcut: Shithead -> [Finish]
 ```
 Now the icon should appear on the desktop (it's already included in shithead.exe) and the game can be started with a double click.
-This opens a console, where errors and log messages are displayed, but unfortunately Windows cannot display all of the used unicode characters (♢, ♡ ,↻, ↺).
+This opens a console, where errors and log messages are displayed.  
+**Note**: The default font of the console cannot display all of the used unicode characters (♢, ♡ ,↻, ↺).  
+=> change it to another font, e.g. 'Nsimsun'.

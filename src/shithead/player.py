@@ -450,7 +450,8 @@ class Player:
         With 3 cards on hand we only should take the discard pile if it has
         good cards in it and if we have a chance to get our hand back down to
         3 again before the talon runs out (note that taking cards with ranks
-        we already have on hand doesn't increase the necessary number of turns!).
+        we already have on hand doesn't increase the necessary number of
+        turns!).
 
         :param state:   game state.
         :type state:    State
@@ -690,7 +691,6 @@ class Player:
         else:
             # for all others just return the action attribut
             return play.action
-
 
     def select_play(self, plays, state):
         '''
@@ -1745,6 +1745,10 @@ class BullShit(AiPlayer):
         :type state:        State
         :param depth:       recursion depth
         :type depth:        int
+        :param cache:       playability cache.
+        :type cache:        dict
+        :param playseq:     key for playability cache.
+        :type playseq:      str
         :return:            playability after 'TAKE' play.
         :rtype:             float
         """
@@ -1795,7 +1799,7 @@ class BullShit(AiPlayer):
 
     def find_best_playability(self, state, play, depth, cache, playseq):
         """
-        Find best playability for play applied to specified play.
+        Find best playability for play applied to specified state.
 
         Apply the specified play to the specified state. If the resulting state
         has a new current player, calculate the playablility of the previous
@@ -1812,7 +1816,7 @@ class BullShit(AiPlayer):
         :param cache:           playability cache
         :type cache:            dict
         :param playseq:         play sequence
-        :type playseq:          str      
+        :type playseq:          str
         :return:                best playability after this play.
         :rtype:                 float
         """
@@ -1886,7 +1890,7 @@ class BullShit(AiPlayer):
         :rtype:         Play
         """
         cache = {}      # playability cache
-        playseq = ''    #  play sequence used as key for the playability cache
+        playseq = ''    # play sequence used as key for the playability cache
         best_playab = 0
         best_play = plays[0]
 

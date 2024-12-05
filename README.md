@@ -1,15 +1,73 @@
 # Introduction
+
 Play a game of **Shithead** against 1 to 5 AI players using the arcade library.  
 Shithead is a **UNO** (**Mau Mau**, **Tschau Sepp**) type of card game, where each player tries to get rid of his cards as fast as possible.  
 There's no winner, but the last player with cards is declared **Shithead** and has to deal for the next round.
+
 # Installation
+
+This describes how to download the source code and install the Shithead package locally.  
+If you don't want to install **Python** and the necessary libraries on your machine, you can download the **PyInstaller** generated executable for Linux or Windows instead.  
+See README_EXECUTABLE.md or README_EXECUTABLE.html for details.
 
 ## Python
 
 Install Python3 (PIP is included by default in version 3.4 or higher):  
 -> <https://realpython.com/installing-python/>
 
-## 
+At the time of writing I wasn't able to install the arcade library on Python 3.11 or later.  
+Use pyenv to install older Python versions (e.g. 3.10.1).
+
+### Linux
+
+See <https://realpython.com/intro-to-pyenv/> on how to install and use pyenv on Linux.  
+
+Find a specific version:
+```
+$ pyenv install --list | grep " 3\.[678]"
+  3.6.0
+  3.6-dev
+  ...
+```
+Install a python version:
+```
+$ pyenv install -v 3.10.1
+...
+```
+And make it the default python version on this machine:
+```
+$ pyenv global 3.10.1
+```
+
+### Windows
+
+See <https://github.com/pyenv-win/pyenv-win> for details.
+
+Start **powershell as admin** and set execution policy to unrestricted in order to be able to execute the install script.
+```
+C:\Users\my-user\> Set-ExecutionPolicy Unrestricted
+```
+Install pyenv-win:
+```
+C:\Users\my-user\> Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "./install-pyenv-win.ps1"; &"./install-pyenv-win.ps1"
+
+```
+Find an available python version:
+```
+C:\Users\my-user\> pyenv install -l | findstr 3.10
+3.10.0a1-win32
+3.10.0a1
+...
+```
+Install a python version:
+```
+C:\Users\my-user\> pyenv isntall 3.10.1
+...
+```
+And make it the default python version on this system:
+```
+C:\Users\my-user\> pyenv global 3.10.1
+```
 
 ## Install the masters-of-shithead Package locally
 
@@ -24,15 +82,16 @@ $ python3 -m venv venv --prompt="shithead"
 $ source venv/bin/activate
 (shithead) $
 ```
-Install the arcade and the setuptools packages:
+Install additional packages:
 ```
 (shithead) $ pip install arcade
+(shithead) $ pip install numpy
 (shithead) $ pip install setuptools
 ```
 Install the masters-of-shithead package locally:
 ```
 (shithead) $ cd ~/my-path/masters-of-shithead
-(shithead) $ python -m pip install -e .
+(shithead) $ python3 -m pip install -e .
 ```
 Now the shithead game can be started from everywhere:
 ```
@@ -61,16 +120,23 @@ Get the path to the Python executable:
 C:\Users\my-user\> where.exe python
 C:\Users\my-user\AppData\Local\Programs\Python\Python310\python.exe
 ```
+Or if pyenv-win was used:
+```
+C:\Users\my-user\.pyenv\pyenv-win\shims\python
+```
+
 Create (only the 1st time) and activate a virtual environment in the masters-of-shithead folder:
 ```
+C:\Users\my-user\> D:
 C:\Users\my-user\> cd my_path\masters-of-shithead
 C:\...\masters-of-shithead\> C:\Users\my_user\AppData\Local\Programs\Python\Python310\python -m venv venv --prompt="shithead"
 C:\...\masters-of-shithead\> venv\Scripts\activate
 (shithead) C:\...\masters-of-shithead\>
 ```
-Install the arcade and the setuptools packages:
+Install additional packages:
 ```
 (shithead) C:\...\masters-of-shithead\> pip install arcade
+(shithead) C:\...\masters-of-shithead\> pip install numpy
 (shithead) C:\...\masters-of-shithead\> pip install setuptools
 ```
 Install the masters-of-shithead package locally:
@@ -171,17 +237,20 @@ Player names can be entered into the corresponding fields.
 	- Plays the less valid cards ('4', '5', '6',...) first.
 	- Voluntarily takes the discard pile if it contains good cards.
 	- Plays '3' before '2' on 'A', 'K', or '7' ('Druck mache!').
-	- Uses simulation to find the best play when in the end game (only 2 players left and talon empty).
+	- Uses *Monte Carlo Tree Search* to find the best play when in the end game (only 2 players left and talon empty).
 5. **BullShit**:
-	- Uses statistics to find the best play and therefore plays very bad.
+	- Uses statistics to find the best play but doesn't play better than *CheapShit* or *TakeShit*.
 
 
 **FastPlay**
 - **No**: Game waits for mouse click after each AI player turn.
 - **Yes**: Game continues automatically.
+  
+**CardSpeed**
+- Card animation speed from **10** (slow) to **50** (fast).
 
 **LogLevel**
-- **One Line**: Logs one line per per play (turn, direction, talon, player, play, discard pile). Provides the best possibility to trace back, if you missed an opponent's play (unfortunately, microsoft doesn't know the unicodes for ♢, ♡ ,↻, and ↺).
+- **One Line**: Logs one line per per play (turn, direction, talon, player, play, discard pile). Provides the best possibility to trace back, if you missed an opponent's play (On Windows select a font which is able to display ♢, ♡ ,↻, and ↺, e.g. NSimSun).
 - **Game Display**: Logs all information visible to the human player (i.e. his own hand but not the other players' hands) as in a game using the CLI instead of the GUI.
 - **Perfect Memory**: Logs all information visible to the human player, plus it shows you cards in the opponents' hands, which have been face up once during the game (to level the field against DeepShit and BullShit, which have perfect memory).
 - **No Secret**: Discloses all cards in the game. Put in for debugging, but also great for cheaters.
@@ -313,7 +382,13 @@ From here you can click **'NEXT GAME'** to play another round, or **'EXIT GAME'*
 	Loads a table with ranked face up table card combinations from a JSON-file to help AI players to find the best combination during card swapping.
 
 - **analyzer.py**:  
-	Provides methods for AI players to select a play based on card statistics.
+	Provides methods for AI players to select a play based on card statistics (used by *BullShit*).
+
+- **monte_carlo_node.py**:  
+	Node used for *Monte Carlo* tree.
+
+- **monte_carlo.py**:  
+	Implements *Monte Carlo Tree Search (MCTS)* used by *DeepShit* during end game.
 
 - **rules.py**:  
 	Opens a new window to display the game rules loaded from a JSON-file.
@@ -353,7 +428,10 @@ None
 
 ## Windows
 
-- ♢, ♡ ,↻, and ↺ are not displayed in the console.
+- The windows command-line shell default font ('Consolas') is not able to display ♢, ♡ ,↻, and ↺.  
+  To fix that, right-click on its title bar, select 'Defaults' and switch to the 'Font' tab.  
+  Now change the font to one that can display these symbols (e.g. 'NSimSun") and click 'OK'.  
+  You have to do this as admin to make these changes permanent.
 - Text quality of game messages is poor and ↺ is barely recognizable.
 - The 'EXIT GAME' button doesn't work (just close the window).
 

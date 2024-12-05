@@ -515,92 +515,6 @@ class State:
 
         return seen_cards
 
-    def estimate_remaining_draws(self, size):
-        """
-        Estimate the number of times the current player can refill his hand.
-
-        We assume that every player can exactly play 1 card on his turn.
-        Players with more than 3 cards just reduce their hands by 1 card.
-        Players with 3 cards reduce the talon by 1 card, while their hand size
-        stays at 3 cards.
-        The size parameter is used for the current player in order to be able
-        to estimate the impact on taking the discard pile on the number of
-        remaining turns.
-
-        :param size:    number of cards in hand of current player.
-        :type size:     int
-        :return:        number of remaining turns, refills by current player,
-                        number of current player's hand cards.
-        :rtype:         Tuple
-        """
-        hands = []  # list of players hand sizes with current player at index 0
-        n_talon = len(self.talon)       # number of cards in talon
-        n_players = len(self.players)  # number of players
-        current = self.player          # index of current player in players
-        for i in range(n_players):
-            # create list with numbers of hand cards
-            if i == 0:
-                hands.append(size)
-            else:
-                hands.append(len(self.players[(current + i) % n_players].hand))
-        n_turns = 0     # turn counter
-        n_draws = 0     # number of draws by current player
-        while n_talon > 0:
-            if hands[n_turns % n_players] > 3:
-                # don't refill from talon
-                hands[n_turns % n_players] -= 1
-            else:
-                # refill from talon
-                n_talon -= 1
-                if n_turns % n_players == 0:
-                    # count draws of current player
-                    n_draws += 1
-            # next turn
-            n_turns += 1
-
-        return (n_turns, n_draws, hands[0])
-
-    def estimate_turns_to_fup(self):
-        """
-        Estimate the number of turns the current player plays from hand.
-
-        We assume that every player can exactly play 1 card on his turn.
-        Players with more than 3 cards just reduce their hands by 1 card.
-        If there are still cards in the talon, players with 3 cards reduce the
-        talon by 1 card, while their hand size stays at 3 cards. Otherwise,
-        they reduce their hand size by one. Returns the number of turns
-        till the one of the players has reduced his hand to 0.
-
-        :return:        number of turns till hand of current player is empty.
-        :rtype:         int
-        """
-        hands = []                      # list of players hand sizes
-        n_talon = len(self.talon)       # number of cards in talon
-        n_players = len(self.players)   # number of players
-        cur = self.player               # index of current player in players
-        for player in self.players:
-            hands.append(len(player.hand))
-        # set turn counter to have current player at multiples of n_players
-        n_turns = 0
-        while hands[cur] > 0:           # current player still has hand cards
-#            print(f"### n_turns: {n_turns} talon: {n_talon} hands: {' '.join([str(hand) for hand in hands])}")
-            # the current player plays turn 0, n_players, 2*n_players, ...
-            if hands[(n_turns + cur) % n_players] > 3:
-                # don't refill from talon
-                hands[(n_turns + cur) % n_players] -= 1
-            else:
-                if n_talon > 0:
-                    # refill from talon => 3 cards in hand
-                    n_talon -= 1
-                else:
-                    # reduce size of hand
-                    hands[(n_turns + cur) % n_players] -= 1
-            # next turn
-            n_turns += 1
-#        print(f"### n_turns: {n_turns}")
-#        print(f"### estimated turns: {int(n_turns / n_players)}")
-        return int(n_turns / n_players)
-
     def estimate_remaining_hand(self, eff_size):
         '''
         Estimate current player's hand size when 1st player gets rid of hand.
@@ -614,7 +528,7 @@ class State:
         'Q'. Starting with the next player, we assume that each player reduces
         his hand by 1 and refills to 3 as long as there are cards in the talon.
         As soon as one of the players reduces his hand to 0, we return the
-        number of cards still in the hand of current player.
+        number of cards still in the hand of the current player.
 
         :param eff_size:    effective hand size of current player after TAKE.
         :type eff_size:     int
@@ -648,9 +562,6 @@ class State:
             idx = (idx + 1) % n_players
 
         return hands[cur]
-
-
-
 
     def log_one_line(self, turn_count):
         '''

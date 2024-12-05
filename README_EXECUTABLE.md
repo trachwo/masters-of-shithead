@@ -1,4 +1,14 @@
+# Introduction
+
+Play a game of **Shithead** against 1 to 5 AI players using the arcade library.  
+Shithead is a **UNO** (**Mau Mau**, **Tschau Sepp**) type of card game, where each player tries to get rid of his cards as fast as possible.  
+There's no winner, but the last player with cards is declared **Shithead** and has to deal for the next round.
+
 # Installation and Start
+
+This describes how to download and install an executable which was generated with **PyInstaller** for either Linux or Windows 10/11, i.e. there's no need to install Python and additional libraries.  
+See README.md or README.html, if you want to use the source files to install the masters-of-shithead module locally on a system with Python installed.
+
 ## Linux
 
 Create a shithead directory on your machine:
@@ -46,7 +56,8 @@ Now you should see the 'Shithead' icon on the desktop:
 [right mouse click] on the icon
 Select 'Allow Launching'
 ```
-Now you should be able to start the shithead game with a double click on the icon. Note, that this comes with the disadvantage, of not having a console to show errors and log messages.
+Now you should be able to start the shithead game with a double click on the icon.  
+Note, that this comes with the disadvantage, of not having a console to show errors and log messages.
 
 ## Windows
 
@@ -69,8 +80,8 @@ To create a desktop shortcut:
 [New] -> [Shortcut] Location: 'D:\Games\Shithead\shithead.exe' [Next]
 Name: 'Shithead' -> [Finish]
 ```
-Now the icon should appear on the desktop (it's already included in shithead.exe) and the game can be started with a double click.
-This opens a console, where errors and log messages are displayed, but unfortunately Windows cannot display all of the used unicode characters (♢, ♡ ,↻, ↺).
+Now the icon should appear on the desktop (it's already included in shithead.exe) and the game can be started with a double click.  
+This opens a console, where errors and log messages are displayed (you have to select a font which is able to display ♢, ♡ ,↻, ↺, e.g. NSimSun).
 
 # Play the Game
 
@@ -114,17 +125,19 @@ Player names can be entered into the corresponding fields.
 	- Plays the less valid cards ('4', '5', '6',...) first.
 	- Voluntarily takes the discard pile if it contains good cards.
 	- Plays '3' before '2' on 'A', 'K', or '7' ('Druck mache!').
-	- Uses simulation to find the best play when in the end game (only 2 players left and talon empty).
+	- Uses *Monte Carlo Tree Search* to find the best play when in the end game (only 2 players left and talon empty).
 5. **BullShit**:
-	- Uses statistics to find the best play and therefore plays very bad.
-
+	- Uses statistics to find the best play but doesn't play better than *CheapShit* or *TakeShit*.
 
 **FastPlay**
 - **No**: Game waits for mouse click after each AI player turn.
 - **Yes**: Game continues automatically.
 
+**CardSpeed**
+- Card animation speed from **10** (slow) to **50** (fast).
+
 **LogLevel**
-- **One Line**: Logs one line per per play (turn, direction, talon, player, play, discard pile). Provides the best possibility to trace back, if you missed an opponent's play (unfortunately, microsoft doesn't know the unicodes for ♢, ♡ ,↻, and ↺).
+- **One Line**: Logs one line per per play (turn, direction, talon, player, play, discard pile). Provides the best possibility to trace back, if you missed an opponent's play (On Windows select a font which is able to display ♢, ♡ ,↻, and ↺, e.g. NSimSun).
 - **Game Display**: Logs all information visible to the human player (i.e. his own hand but not the other players' hands) as in a game using the CLI instead of the GUI.
 - **Perfect Memory**: Logs all information visible to the human player, plus it shows you cards in the opponents' hands, which have been face up once during the game (to level the field against DeepShit and BullShit, which have perfect memory).
 - **No Secret**: Discloses all cards in the game. Put in for debugging, but also great for cheaters.
@@ -183,11 +196,18 @@ From here you can click **'NEXT GAME'** to play another round, or **'EXIT GAME'*
 
 ## Linux
 
-None
+- When using a desktop shortcut, there's no console showing log messages.  
+  Workaround:
+  - enable writing of log to shithead.log
+  - cd /home/my_user
+  - tail -f shithead.log 
 
 ## Windows
 
-- ♢, ♡ ,↻, and ↺ are not displayed in the console.
+- The windows command-line shell default font ('Consolas') is not able to display ♢, ♡ ,↻, and ↺.  
+  To fix that, right-click on its title bar, select 'Defaults' and switch to the 'Font' tab.  
+  Now change the font to one that can display these symbols (e.g. 'NSimSun") and click 'OK'.  
+  You have to do this as admin to make these changes permanent.
 - Text quality of game messages is poor and ↺ is barely recognizable.
 - The 'EXIT GAME' button doesn't work (just close the window).
 
