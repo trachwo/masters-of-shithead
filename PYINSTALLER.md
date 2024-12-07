@@ -110,7 +110,7 @@ GenericName=Card Game
 Comment=Play Shithead against 1-5 AI Players
 Exec=/home/my-user/my-path/masters-of-shithead/src/dist/shithead
 Path=
-Icon=/home/my-user/my-path/masters-of-shithead/src/shithead/shithead4.ico
+Icon=/home/my-user/my-path/masters-of-shithead/src/shithead4.ico
 Type=Application
 Categories=Application
 ```
@@ -217,7 +217,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon="./shithead/shithead4.ico",
+    icon="./shithead4.ico",
 )
 ```
 Note, that we also entered the path to the icon with *'icon='*.
@@ -230,7 +230,7 @@ This should create a single file executable, which can be started with:
 ```
 (shithead) D:\Projects\masters-of-shithead\src\> .\dist\shithead.exe
 ```
-To create a desktop shortcut with the icon *'shithead/shithead4.ico'*:
+To create a desktop shortcut with the icon *'shithead4.ico'*:
 ```
 [right mouse click] on desktop
 [New] -> [Shortcut]

@@ -24,18 +24,18 @@ and make sure it can be executed:
 ```
 $ chmod ugo+x ~/my_path/shithead/shithead
 ```
-If you want to create a desktop shortcut (Ubuntu), also copy the desktop-file and the icon to this directory:
+If you want to create a desktop shortcut (Ubuntu), also copy the icon to this directory:
 ```
-$ cp masters-of-shithead/src/shithead.desktop ~/my_path/shithead/.
-$ cp masters-of-shithead/src/shithead/shithead4.ico ~/my_path/shithead/.
+$ cp masters-of-shithead/src/shithead4.ico ~/my_path/shithead/.
 ```
 Start the game from the command line (with the console to check the log and error messages):
 ```
 $ ~/my_path/shithead/shithead
 ```
-To create a desktop shortcut edit shithead.desktop and enter the full path ('~' is not expanded) for executable and icon:
+To create a desktop shortcut copy shithead.desktop to the desktop and edit it to enter the full path ('~' is not expanded) for executable and icon:
 ```
-$ vi ~/my_path/shithead/shithead.desktop
+$ cp masters-of-shithead/src/shithead.desktop ~/Desktop/.
+$ vi ~/Desktop/shithead.desktop
 [Desktop Entry]
 ...
 Exec=/home/my_user/my_path/shithead/shithead
@@ -43,21 +43,17 @@ Path=
 Icon=/home/my_user/my_path/shithead/shithead4.ico
 ...
 ```
-Copy shithead.desktop to the desktop:
-```
-$ cp ~/my_path/shithead/shithead.desktop ~/Desktop/.
-```
 and make sure it is executable:
-
+```
 $ chmod ugo+x ~/Desktop/shithead.desktop
-
+```
 Now you should see the 'Shithead' icon on the desktop:
 ```
 [right mouse click] on the icon
 Select 'Allow Launching'
 ```
 Now you should be able to start the shithead game with a double click on the icon.  
-Note, that this comes with the disadvantage, of not having a console to show errors and log messages.
+Note, that this comes with the caveat, that no console for showing errors and log messages will be opened.
 
 ## Windows
 
