@@ -1,31 +1,29 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
-block_cipher = None
-
-
 a = Analysis(
     ['shithead_start.py'],
     pathex=[],
     binaries=[],
-    datas=[('./shithead/title.json','shithead'), ('./shithead/rules.py','shithead'), ('./shithead/face_up_table.json', 'shithead'), ('./shithead/rules_eng.json', 'shithead'), ('./shithead/rules_ger.json', 'shithead')],
+    datas=[('./shithead/title.json','shithead'),\
+	       ('./shithead/rules.py','shithead'),\
+		   ('./shithead/face_up_table.json', 'shithead'),\
+		   ('./shithead/rules_eng.json', 'shithead'),\
+		   ('./shithead/rules_ger.json', 'shithead')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
+    optimize=0,
 )
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
-    a.zipfiles,
     a.datas,
     [],
     name='shithead',
@@ -41,5 +39,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon="./shithead/shithead4.ico",
 )
