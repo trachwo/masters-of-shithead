@@ -313,6 +313,7 @@ DEAL_DELAY = 0.5
 TAKE_DELAY = 0.05
 KILL_DELAY = 0.05
 
+FONT_NAME = "Union"
 DEFAULT_FONT_SIZE = 14
 TEXT_FONT_SIZE = 12
 TEXT_VERTICAL_OFFSET = CARD_VERTICAL_OFFSET / 2
@@ -522,7 +523,8 @@ class Message:
                     self.color,                 # text color
                     self.font_size,             # font size
                     anchor_x='center',          # x-ccord => center of line
-                    anchor_y='top'              # y-coord => top of line
+                    anchor_y='top',             # y-coord => top of line
+                    font_name = FONT_NAME       # used font -> check unicodes
             )
 
 
@@ -1149,7 +1151,8 @@ class CardMover:
                 arcade.color.WHITE,
                 DEFAULT_FONT_SIZE,
                 anchor_x='center',
-                anchor_y='top')
+                anchor_y='top',
+                font_name = FONT_NAME)
 
     def draw_discard_count(self):
         '''
@@ -1163,7 +1166,8 @@ class CardMover:
                 arcade.color.WHITE,
                 DEFAULT_FONT_SIZE,
                 anchor_x='center',
-                anchor_y='top')
+                anchor_y='top',
+                font_name = FONT_NAME)
 
     def draw_removed_count(self):
         '''
@@ -1176,7 +1180,8 @@ class CardMover:
                 arcade.color.WHITE,
                 DEFAULT_FONT_SIZE,
                 anchor_x='center',
-                anchor_y='top')
+                anchor_y='top',
+                font_name = FONT_NAME)
 
     def draw_opponent_count(self, players):
         '''
@@ -1198,7 +1203,8 @@ class CardMover:
                     arcade.color.WHITE,
                     DEFAULT_FONT_SIZE,
                     anchor_x='center',
-                    anchor_y='top')
+                    anchor_y='top',
+                    font_name = FONT_NAME)
 
     def draw_player_names(self, state):
         '''
