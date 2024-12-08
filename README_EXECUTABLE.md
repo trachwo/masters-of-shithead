@@ -7,9 +7,12 @@ There's no winner, but the last player with cards is declared **Shithead** and h
 # Installation and Start
 
 This describes how to download and install an executable which was generated with **PyInstaller** for either Linux or Windows 10/11, i.e. there's no need to install Python and additional libraries.  
-See README.md or README.html, if you want to use the source files to install the masters-of-shithead module locally on a system with Python installed.
+
+**NOTE:** Downloading the pyinstaller executable may trigger a virus warning (e.g Google Drive thought it was infected).
 
 ## Linux
+
+Download *shithead*, *shithead.desktop*, and *shithead4.ico*.  
 
 Create a shithead directory on your machine:
 ```
@@ -18,23 +21,23 @@ $ mkdir shithead
 ```
 Copy the executable to this directory:
 ```
-$ cp masters-of-shithead/bin/linux/shithead ~/my_path/shithead/.
+$ cp shithead ~/my_path/shithead/.
 ```
 and make sure it can be executed:
 ```
 $ chmod ugo+x ~/my_path/shithead/shithead
 ```
-If you want to create a desktop shortcut (Ubuntu), also copy the icon to this directory:
-```
-$ cp masters-of-shithead/src/shithead4.ico ~/my_path/shithead/.
-```
 Start the game from the command line (with the console to check the log and error messages):
 ```
 $ ~/my_path/shithead/shithead
 ```
+If you want to create a desktop shortcut (Ubuntu), also copy the icon to this directory:
+```
+$ cp shithead4.ico ~/my_path/shithead/.
+```
 To create a desktop shortcut copy shithead.desktop to the desktop and edit it to enter the full path ('~' is not expanded) for executable and icon:
 ```
-$ cp masters-of-shithead/src/shithead.desktop ~/Desktop/.
+$ cp shithead.desktop ~/Desktop/.
 $ vi ~/Desktop/shithead.desktop
 [Desktop Entry]
 ...
@@ -57,9 +60,11 @@ Note, that this comes with the caveat, that no console for showing errors and lo
 
 ## Windows
 
+Download *shithead.exe*.  
+
 Create a shithead folder on your machine (e.g. 'D:\Games\Shithead)
 
-Copy masters-of-shithead/bin/windows/shithead.exe to this folder.
+Copy shithead.exe to this folder.
 
 Start the game from the command prompt:
 ```
@@ -104,7 +109,7 @@ Configuration files are stored at the location of the executable (e.g. '~/my_pat
 **Players**  
 *Player0* is always the human player.  
 *Player1-Player5* are AI players.  
-*Player1* must alway be in the game (minimum of 2 players).  
+*Player1* must always be in the game (minimum of 2 players).  
 *Player2-Player5* can be added for a 3 to 6 player game, by selecting an AI-Type.  
 Player names can be entered into the corresponding fields.
 
@@ -123,7 +128,7 @@ Player names can be entered into the corresponding fields.
 	- Plays '3' before '2' on 'A', 'K', or '7' ('Druck mache!').
 	- Uses *Monte Carlo Tree Search* to find the best play when in the end game (only 2 players left and talon empty).
 5. **BullShit**:
-	- Uses statistics to find the best play but doesn't play better than *CheapShit* or *TakeShit*.
+	- Uses statistics to find the best play, but doesn't play better than *CheapShit* or *TakeShit*.
 
 **FastPlay**
 - **No**: Game waits for mouse click after each AI player turn.

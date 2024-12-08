@@ -7,9 +7,8 @@ There's no winner, but the last player with cards is declared **Shithead** and h
 # Installation
 
 This describes how to download the source code and install the Shithead package locally.  
-If you don't want to install **Python** and the necessary libraries on your machine, you can download the **PyInstaller** generated executable for Linux or Windows instead. See README_EXECUTABLE.md or README_EXECUTABLE.html for details.  
-See PYINSTALLER.md or PYINSTALLER.html to generate an executable on your machine.
-
+See PYINSTALLER.md if you want to generate an executable on your machine.
+See README_EXECUTABLE.md on how to install and start an executable.
 
 
 ## Python
