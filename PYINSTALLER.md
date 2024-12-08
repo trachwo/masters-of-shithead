@@ -145,7 +145,7 @@ Create a virtual environment for the 'masters-of-shithead' project:
 ```
 C:\Users\my-user\> D:
 D:\> cd Projects\masters-of-shithead
-D:\Projects\masters-of-shithead\> C:\Users\my-user\AppData\Local\Programs\Python\Python310\python venv venv --prompt="shithead"
+D:\Projects\masters-of-shithead\> C:\Users\my-user\AppData\Local\Programs\Python\Python310\python -m venv venv --prompt="shithead"
 D:\Projects\masters-of-shithead\> venv\Scripts\activate
 (shithead) D:\Projects\masters-of-shithead\>
 ```
@@ -168,7 +168,6 @@ if __name__ == '__main__':
 In order to get a preliminary spec-file for a single file executable, we call *pyinstaller* with this entry-point script and the *'--onefile'* option:
 ```
 (shithead) D:\Projects\masters-of-shithead\> cd src
-(shithead) D:\Projects\masters-of-shithead\src\> pyinstaller shithead_start.py --name shithead --onefile
 (shithead) D:\Projects\masters-of-shithead\src\> pyinstaller shithead_start.py --name shithead --onefile
 ```
 This creates the *shithead.spec* file and the new directories *build* and *dist*. But the *shithead* executable in *dist* is not usable yet, because some additional non-code files are missing. To fix this, we have to enter these files into the *datas=[]* list in *shithead.spec*:
