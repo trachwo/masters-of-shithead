@@ -183,6 +183,7 @@ the gui:
 
 import math
 import json
+import platform
 
 import arcade
 
@@ -313,7 +314,13 @@ DEAL_DELAY = 0.5
 TAKE_DELAY = 0.05
 KILL_DELAY = 0.05
 
-FONT_NAME = "Union"
+# We need a font which is able to display the card suits and direction arrows.
+if platform.system() == 'Linux':
+    # works for Ubuntu 20, 22, and 24
+    FONT_NAME = "Monospace"
+else:
+    # works for windows 10 and 11
+    FONT_NAME = "Bahnschrift"
 DEFAULT_FONT_SIZE = 14
 TEXT_FONT_SIZE = 12
 TEXT_VERTICAL_OFFSET = CARD_VERTICAL_OFFSET / 2

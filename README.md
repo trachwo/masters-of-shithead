@@ -433,6 +433,5 @@ None
   To fix that, right-click on its title bar, select 'Defaults' and switch to the 'Font' tab.  
   Now change the font to one that can display these symbols (e.g. 'NSimSun") and click 'OK'.  
   You have to do this as admin to make these changes permanent.
-- Text quality of game messages is poor and ↺ is barely recognizable.
 - The 'EXIT GAME' button doesn't work (just close the window).
 

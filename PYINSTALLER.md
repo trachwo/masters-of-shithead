@@ -1,6 +1,6 @@
 # Creating Shithead Executables with pyinstaller
 
-**Note**, This is a possibility to run masters-of-shithead without installing Python, but unfortunately the generated executables are not very portable (an executable generated on Ubuntu 20 does not run on Ubuntu 22).
+Generate an executable which can be run on a machine with the same operating system (Linux or Windows) without installing Python and any additional libraries.
 
 ## Linux
 
